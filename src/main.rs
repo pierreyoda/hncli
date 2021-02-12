@@ -1,5 +1,15 @@
-mod api;
+use api::HnClient;
+use errors::HnCliError;
 
-fn main() {
-    println!("Hello, world!");
+mod api;
+mod errors;
+
+#[tokio::main]
+async fn main() -> Result<(), HnCliError> {
+    let client = HnClient::new()?;
+
+    let test = client.get_item(1).await?;
+    dbg!(test);
+
+    Ok(())
 }

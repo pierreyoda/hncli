@@ -1,7 +1,17 @@
+//! See https://github.com/HackerNews/API.
+
 use serde::Deserialize;
 
-pub type ItemIdScalar = u32;
-pub type ItemDateScalar = u64;
+pub type HnItemIdScalar = u32;
+pub type HnItemDateScalar = u64;
+
+/// An `Item` in the HackerNews API covers everything except `User`s.
+#[derive(Debug, Deserialize)]
+#[serde(tag = "type")]
+#[serde(rename_all = "lowercase")]
+pub enum HnItem {
+    Story(HnStory),
+}
 
 /// A `Story` in the HackerNews API.
 ///
@@ -23,9 +33,9 @@ pub type ItemDateScalar = u64;
 #[derive(Debug, Deserialize)]
 pub struct HnStory {
     /// Unique ID of this Item.
-    id: ItemIdScalar,
+    id: HnItemIdScalar,
     /// Unix timestamp for the creation time.
-    time: ItemDateScalar,
+    time: HnItemDateScalar,
     /// Username of the story's author.
     by: String,
     /// Score of the story.
