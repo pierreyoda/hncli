@@ -1,15 +1,26 @@
+use std::io;
+
 use api::HnClient;
 use errors::HnCliError;
+use tui::{backend::CrosstermBackend, Terminal};
+use ui::UserInterface;
 
 mod api;
 mod errors;
+mod ui;
 
 #[tokio::main]
 async fn main() -> Result<(), HnCliError> {
+    // HackerNews client setup
     let client = HnClient::new()?;
 
-    let test = client.get_item(1).await?;
-    dbg!(test);
+    // TUI setup
+    let stdout = io::stdout();
+    let backend = CrosstermBackend::new(stdout);
+    let terminal = Terminal::new(backend).map_err(HnCliError::IoError)?;
+    let mut ui = UserInterface::new(terminal, client)?;
 
-    Ok(())
+    // UI setup & run
+    let events_receiver = ui.setup()?;
+    ui.run(events_receiver)
 }
