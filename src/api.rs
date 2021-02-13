@@ -10,6 +10,8 @@ pub mod types;
 const HACKER_NEWS_API_BASE_URL: &str = "https://hacker-news.firebaseio.com/v0";
 
 /// The internal Hacker News API client.
+///
+/// TODO: add simple caching, with `time`-based invalidation
 pub struct HnClient {
     base_url: &'static str,
     client: Client,
