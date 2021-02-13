@@ -8,7 +8,7 @@ pub type HnItemDateScalar = u64;
 /// An `Item` in the HackerNews API covers everything except `User`s.
 ///
 /// Used for deserialization, with dispatch on `type`.
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(tag = "type")]
 #[serde(rename_all = "lowercase")]
 pub enum HnItem {
@@ -17,6 +17,15 @@ pub enum HnItem {
     Job(HnJob),
     // TODO: Poll(HnPoll),
     // TODO: PollOpt(HnPollOption),
+}
+
+impl HnItem {
+    pub fn as_story(self) -> Option<HnStory> {
+        match self {
+            HnItem::Story(story) => Some(story),
+            _ => None,
+        }
+    }
 }
 
 /// A `Story` in the HackerNews API.
@@ -36,7 +45,7 @@ pub enum HnItem {
 ///   "url" : "http://www.getdropbox.com/u/2/screencast.html"
 /// }
 /// ```
-#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 pub struct HnStory {
     /// Unique ID of this Item.
     id: HnItemIdScalar,
@@ -73,7 +82,7 @@ pub struct HnStory {
 ///    "type" : "comment"
 /// }
 /// ```
-#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 pub struct HnComment {
     /// Unique ID of this Item.
     id: HnItemIdScalar,
@@ -105,7 +114,7 @@ pub struct HnComment {
 ///   "url" : ""
 /// }
 /// ```
-#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 pub struct HnJob {
     /// Unique ID of this Item.
     id: HnItemIdScalar,
@@ -137,7 +146,7 @@ pub struct HnJob {
 ///     "submitted" : [ 8265435, 8168423, 8090946, /** ... */ ]
 /// }
 /// ```
-#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 pub struct HnUser {
     /// **Case-sensitive**, unique username.
     id: String,

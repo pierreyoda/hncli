@@ -1,7 +1,8 @@
 use std::time::Duration;
 
+use futures::future::join_all;
 use reqwest::Client;
-use types::{HnItem, HnItemIdScalar};
+use types::{HnItem, HnItemIdScalar, HnStory};
 
 use crate::errors::{HnCliError, Result};
 
@@ -9,11 +10,56 @@ pub mod types;
 
 const HACKER_NEWS_API_BASE_URL: &str = "https://hacker-news.firebaseio.com/v0";
 
+pub enum HnStoriesSorting {
+    New,
+    Top,
+    Best,
+}
+
+impl HnStoriesSorting {
+    /// Get the corresponding resource URL fragment.
+    ///
+    /// See [here](https://github.com/HackerNews/API#new-top-and-best-stories).
+    pub fn get_resource(&self) -> &str {
+        use HnStoriesSorting::*;
+
+        match self {
+            New => "newstories",
+            Top => "topstories",
+            Best => "beststories",
+        }
+    }
+}
+
+pub enum HnStoriesSections {
+    Ask,
+    Show,
+    Jobs,
+}
+
+impl HnStoriesSections {
+    /// Get the corresponding resource URL fragment.
+    ///
+    /// See [here](https://github.com/HackerNews/API#ask-show-and-job-stories).
+    pub fn get_resource(&self) -> &str {
+        use HnStoriesSections::*;
+
+        match self {
+            Ask => "askstories",
+            Show => "showstories",
+            Jobs => "jobstories",
+        }
+    }
+}
+
 /// The internal Hacker News API client.
 ///
-/// TODO: add simple caching, with `time`-based invalidation
+/// TODO: add simple caching, with `time`-based invalidation.
+/// TODO: integrate error recovery with caching strategy
 pub struct HnClient {
+    /// Base URL of the Hacker News API.
     base_url: &'static str,
+    /// `reqwest` client.
     client: Client,
 }
 
@@ -26,10 +72,62 @@ impl HnClient {
         })
     }
 
+    /// Try to fetch the stories of the home page (up to 500), with the given sorting strategy.
+    pub async fn get_home_stories_listing(
+        &self,
+        sorting: HnStoriesSorting,
+    ) -> Result<Vec<HnStory>> {
+        let stories_ids = self.get_home_stories_ids_listing(sorting).await?;
+        let items = self.get_items(&stories_ids[..]).await?;
+        Ok(items
+            .iter()
+            // TODO: avoid cloning here once caching is implemented?
+            .map(|item| item.clone().as_story().expect("item must be a story"))
+            .collect())
+    }
+
+    /// Try to fetch the stories' IDs of the home page (up to 500), with the given sorting strategy.
+    pub async fn get_home_stories_ids_listing(
+        &self,
+        sorting: HnStoriesSorting,
+    ) -> Result<Vec<HnItemIdScalar>> {
+        self.client
+            .get(&format!(
+                "{}/{}.json",
+                self.base_url,
+                sorting.get_resource()
+            ))
+            .send()
+            .await?
+            .json()
+            .await
+            .map_err(HnCliError::HttpError)
+    }
+
     /// Try to fetch the `HnItem` by its given ID.
     pub async fn get_item(&self, id: HnItemIdScalar) -> Result<HnItem> {
         self.client
             .get(&format!("{}/item/{}.json", self.base_url, id))
+            .send()
+            .await?
+            .json()
+            .await
+            .map_err(HnCliError::HttpError)
+    }
+
+    /// Try to *concurrently* fetch multiple `HnItem`s by their given IDs.
+    pub async fn get_items(&self, ids: &[HnItemIdScalar]) -> Result<Vec<HnItem>> {
+        // TODO: can we easily parallelize this over multiple threads for big (500) fetches?
+        join_all(ids.iter().map(|id| self.get_item(*id)))
+            .await
+            .into_iter()
+            .collect()
+    }
+
+    /// Try to fetch the ID of the latest `HnItem` inserted into the Firebase store.
+    pub async fn get_max_item_id(&self) -> Result<HnItemIdScalar> {
+        self.client
+            .get(&format!("{}/maxitem.json", self.base_url))
             .send()
             .await?
             .json()
