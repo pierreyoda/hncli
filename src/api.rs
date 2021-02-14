@@ -10,6 +10,7 @@ pub mod types;
 
 const HACKER_NEWS_API_BASE_URL: &str = "https://hacker-news.firebaseio.com/v0";
 
+#[derive(Debug)]
 pub enum HnStoriesSorting {
     New,
     Top,
@@ -31,6 +32,7 @@ impl HnStoriesSorting {
     }
 }
 
+#[derive(Debug)]
 pub enum HnStoriesSections {
     Ask,
     Show,

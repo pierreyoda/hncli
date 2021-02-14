@@ -6,6 +6,7 @@ use tui::{backend::CrosstermBackend, Terminal};
 use ui::UserInterface;
 
 mod api;
+mod app;
 mod errors;
 mod ui;
 

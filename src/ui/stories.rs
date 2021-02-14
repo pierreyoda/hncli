@@ -1,23 +1,28 @@
-use std::{convert::TryFrom, io::Stdout};
+//! The stories panel lists all the given Hacker News stories.
+
+use std::convert::TryFrom;
 
 use chrono::{DateTime, Utc};
-use tui::{
-    backend::CrosstermBackend,
-    layout::Rect,
-    style::{Color, Modifier, Style},
-    text::{Span, Spans},
-    widgets::{Block, BorderType, Borders, List, ListItem},
-    Frame,
-};
+
+use async_trait::async_trait;
 
 use crate::{
-    api::types::{HnItemIdScalar, HnStory},
-    errors::HnCliError,
+    api::{
+        types::{HnItemIdScalar, HnStory},
+        HnClient, HnStoriesSorting,
+    },
+    app::App,
+    errors::{HnCliError, Result},
 };
 
-use super::utils::datetime_from_hn_time;
+use super::{
+    common::{UiComponent, UiTickScalar},
+    handlers::Key,
+    utils::{datetime_from_hn_time, StatefulList},
+};
 
-const HOME_MAX_DISPLAYED_STORIES: usize = 20;
+// pub mod handler;
+// pub mod renderer;
 
 /// A display-ready Hacker News story.
 #[derive(Clone, Debug)]
@@ -39,7 +44,7 @@ pub struct DisplayableHackerNewsStory {
 impl TryFrom<HnStory> for DisplayableHackerNewsStory {
     type Error = HnCliError;
 
-    fn try_from(value: HnStory) -> Result<Self, Self::Error> {
+    fn try_from(value: HnStory) -> Result<Self> {
         Ok(Self {
             id: value.id,
             posted_at: datetime_from_hn_time(value.time),
@@ -49,55 +54,66 @@ impl TryFrom<HnStory> for DisplayableHackerNewsStory {
             url_hostname: value.url.map(|url| {
                 url::Url::parse(&url[..])
                     .map_err(HnCliError::UrlParsingError)
-                    .expect("URL parsing error") // TODO: improve this
+                    .expect("story URL parsing error") // TODO: avoid expect here
                     .host_str()
-                    .expect("URL must have an hostname")
+                    .expect("story URL must have an hostname")
                     .to_owned()
             }),
         })
     }
 }
 
-/// Renders a panel of *selectable* Hacker News stories.
-pub fn render_stories_panel(
-    f: &mut Frame<CrosstermBackend<Stdout>>,
-    in_rect: Rect,
-    ranked_stories: &[DisplayableHackerNewsStory],
-    selected_story_id: Option<HnItemIdScalar>,
-) {
-    // Data
-    let stories: Vec<&DisplayableHackerNewsStory> = ranked_stories
-        .iter()
-        .take(HOME_MAX_DISPLAYED_STORIES)
-        .collect();
+#[derive(Debug)]
+pub struct StoriesPanel {
+    ticks_since_last_update: u64,
+    list_cutoff: usize,
+    list_state: StatefulList<DisplayableHackerNewsStory>,
+}
+// TODO: load from configuration
+const HOME_MAX_DISPLAYED_STORIES: usize = 20;
+const MEAN_TICKS_BETWEEN_UPDATES: UiTickScalar = 60;
 
-    // Layout
-    let layout_stories_block = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::default().fg(Color::White))
-        .title("Stories")
-        .border_type(BorderType::Plain);
+impl Default for StoriesPanel {
+    fn default() -> Self {
+        Self {
+            ticks_since_last_update: 0,
+            list_cutoff: HOME_MAX_DISPLAYED_STORIES,
+            list_state: StatefulList::with_items(vec![]),
+        }
+    }
+}
 
-    // Stories list
-    let list_stories_items: Vec<ListItem> = stories
-        .iter()
-        .map(|story| {
-            ListItem::new(Spans::from(vec![Span::styled(
-                story.title.clone(),
-                Style::default(),
-            )]))
-        })
-        .collect();
+const STORIES_PANEL_ID: &str = "panel_stories";
+#[async_trait]
+impl UiComponent for StoriesPanel {
+    fn id(&self) -> &'static str {
+        STORIES_PANEL_ID
+    }
 
-    let list_stories = List::new(list_stories_items)
-        .block(layout_stories_block)
-        .highlight_style(
-            Style::default()
-                .bg(Color::Yellow)
-                .fg(Color::Black)
-                .add_modifier(Modifier::BOLD),
-        )
-        .highlight_symbol(">> ");
+    fn should_update(&mut self, elapsed_ticks: UiTickScalar) -> Result<bool> {
+        self.ticks_since_last_update += elapsed_ticks;
 
-    f.render_widget(list_stories, in_rect)
+        Ok(self.ticks_since_last_update >= MEAN_TICKS_BETWEEN_UPDATES)
+    }
+
+    async fn update(&mut self, client: &mut HnClient, app: &mut App) -> Result<()> {
+        self.ticks_since_last_update = 0;
+
+        let stories = client.get_home_stories(HnStoriesSorting::Top).await?;
+        let cut_stories_iter = stories.iter().take(self.list_cutoff);
+        let displayable_stories: Vec<DisplayableHackerNewsStory> = cut_stories_iter
+            .map(|story| {
+                DisplayableHackerNewsStory::try_from(story.clone())
+                    .expect("can map DisplayableHackerNewsStory")
+            })
+            .collect();
+
+        Ok(())
+    }
+
+    fn key_handler(&mut self, key: &Key, app: &mut App) -> Result<bool> {
+        dbg!(key);
+
+        Ok(false)
+    }
 }

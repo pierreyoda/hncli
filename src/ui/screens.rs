@@ -7,7 +7,7 @@ use tui::{
     Frame,
 };
 
-use super::stories::{render_stories_panel, DisplayableHackerNewsStory};
+use super::stories::DisplayableHackerNewsStory;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum MainScreenPanels {
@@ -25,7 +25,7 @@ pub fn render_home_screen(
         .constraints([Constraint::Percentage(25), Constraint::Percentage(75)].as_ref())
         .split(in_rect);
 
-    render_stories_panel(f, chunks[0], ranked_stories, None)
+    // render_stories_panel(f, chunks[0], ranked_stories, None)
 }
 
 #[derive(Clone, Debug)]

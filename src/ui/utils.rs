@@ -1,7 +1,12 @@
 use chrono::{DateTime, NaiveDateTime, Utc};
+use num_traits::Num;
 use tui::widgets::ListState;
 
 use crate::api::types::HnItemDateScalar;
+
+pub trait ItemWithId<N: Copy + Num + Ord> {
+    fn get_id(&self) -> N;
+}
 
 /// Wrapper around a tui `ListState` to provide wrap-around navigation.
 #[derive(Debug)]
@@ -17,6 +22,13 @@ impl<T> StatefulList<T> {
             state: ListState::default(),
             items,
         }
+    }
+
+    /// Replace the current items with the given ones.
+    pub fn replace_items(&mut self, items: Vec<T>) {
+        self.items = items;
+        // TODO: simple reconciliation algorithm
+        self.unselect();
     }
 
     /// Select the next item, starting at 0 if none is selected or
