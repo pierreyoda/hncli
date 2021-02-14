@@ -7,21 +7,16 @@ use std::{
 };
 
 use common::{UiComponent, UiTickScalar};
+use components::{navigation::Navigation, stories::StoriesPanel};
 use crossterm::{
-    event::{self, Event, KeyCode},
+    event::{self, Event},
     terminal::{disable_raw_mode, enable_raw_mode},
 };
-use event::KeyEvent;
 use handlers::Key;
 use mpsc::Receiver;
-use screens::UserInterfaceScreen;
-use stories::StoriesPanel;
 use tui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
-    style::{Color, Modifier, Style},
-    text::{Span, Spans},
-    widgets::{Block, Borders, Tabs},
     Terminal,
 };
 
@@ -32,10 +27,10 @@ use crate::{
 };
 
 mod common;
+mod components;
 mod handlers;
 mod panels;
 mod screens;
-mod stories;
 mod utils;
 
 type TerminalUi = Terminal<CrosstermBackend<Stdout>>;
@@ -50,14 +45,17 @@ pub struct ComponentWrapper {
     component: Box<dyn UiComponent>,
     ticks_elapsed: UiTickScalar,
     active: bool,
+    // FIXME: this probably won't do
+    chunk_index: usize,
 }
 
 impl ComponentWrapper {
-    pub fn from_component(component: Box<dyn UiComponent>) -> Self {
+    pub fn from_component(component: Box<dyn UiComponent>, chunk_index: usize) -> Self {
         Self {
             component,
             ticks_elapsed: 0,
             active: true,
+            chunk_index,
         }
     }
 }
@@ -109,24 +107,28 @@ impl UserInterface {
         });
 
         // components
+        // TODO: create register_component function (or macro) here
+        let navigation = Box::new(Navigation::default());
+        self.components.insert(
+            navigation.id(),
+            ComponentWrapper::from_component(navigation, 0),
+        );
         let stories_panel = Box::new(StoriesPanel::default());
         self.components.insert(
             stories_panel.id(),
-            ComponentWrapper::from_component(stories_panel),
+            ComponentWrapper::from_component(stories_panel, 1),
         );
 
         Ok(rx)
     }
 
-    /// Launches the main UI loop.
+    /// Launch the main UI loop.
     pub async fn run(&mut self, rx: Receiver<UserInterfaceEvent>) -> Result<()> {
         enable_raw_mode()?;
         self.terminal.hide_cursor()?;
 
-        let mut current_screen: UserInterfaceScreen = UserInterfaceScreen::Home;
-        let screen_titles: Vec<&str> = vec!["Home", "Ask HN", "Show HN", "Jobs"];
-
         'ui: loop {
+            let components = &self.components;
             self.terminal
                 .draw(|frame| {
                     let size = frame.size();
@@ -144,33 +146,17 @@ impl UserInterface {
                         )
                         .split(size);
 
-                    let screens = screen_titles
-                        .iter()
-                        .map(|title| {
-                            // underline the first (shortcut) character
-                            let (first, rest) = title.split_at(1);
-                            Spans::from(vec![
-                                Span::styled(
-                                    first,
-                                    Style::default()
-                                        .fg(Color::Yellow)
-                                        .add_modifier(Modifier::BOLD)
-                                        .add_modifier(Modifier::UNDERLINED),
-                                ),
-                                Span::styled(rest, Style::default().fg(Color::White)),
-                            ])
-                        })
-                        .collect();
-
-                    let screens_tabs = Tabs::new(screens)
-                        .select(current_screen.clone().into())
-                        .block(Block::default().title("Menu").borders(Borders::ALL))
-                        .style(Style::default().fg(Color::White))
-                        .highlight_style(Style::default().fg(Color::Yellow))
-                        .divider(Span::raw("|"));
-
-                    frame.render_widget(screens_tabs, chunks[0]);
-                    // render_home_screen(frame, chunks[1], &displayable_stories[..]);
+                    // render components
+                    for wrapper in components.values() {
+                        if !wrapper.active {
+                            continue;
+                        }
+                        let inside = chunks[wrapper.chunk_index];
+                        wrapper
+                            .component
+                            .render(frame, inside)
+                            .expect("no component rendering error");
+                    }
                 })
                 .map_err(HnCliError::IoError)?;
 
@@ -184,12 +170,6 @@ impl UserInterface {
                     }
                     key => self.handle_key_event(&key)?,
                 },
-                //     KeyCode::Char('h') => current_screen = UserInterfaceScreen::Home,
-                //     KeyCode::Char('a') => current_screen = UserInterfaceScreen::AskHackerNews,
-                //     KeyCode::Char('s') => current_screen = UserInterfaceScreen::ShowHackerNews,
-                //     KeyCode::Char('j') => current_screen = UserInterfaceScreen::Jobs,
-                //     _ => {}
-                // },
                 UserInterfaceEvent::Tick => {
                     self.update().await?;
                 }

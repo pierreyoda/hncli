@@ -7,7 +7,7 @@ use tui::{
     Frame,
 };
 
-use super::stories::DisplayableHackerNewsStory;
+use super::components::stories::DisplayableHackerNewsStory;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum MainScreenPanels {

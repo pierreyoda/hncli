@@ -1,10 +1,11 @@
 //! The stories panel lists all the given Hacker News stories.
 
-use std::convert::TryFrom;
+use std::{convert::TryFrom, io::Stdout};
 
 use chrono::{DateTime, Utc};
 
 use async_trait::async_trait;
+use tui::{backend::CrosstermBackend, layout::Rect};
 
 use crate::{
     api::{
@@ -13,16 +14,12 @@ use crate::{
     },
     app::App,
     errors::{HnCliError, Result},
+    ui::{
+        common::{UiComponent, UiTickScalar},
+        handlers::Key,
+        utils::{datetime_from_hn_time, StatefulList},
+    },
 };
-
-use super::{
-    common::{UiComponent, UiTickScalar},
-    handlers::Key,
-    utils::{datetime_from_hn_time, StatefulList},
-};
-
-// pub mod handler;
-// pub mod renderer;
 
 /// A display-ready Hacker News story.
 #[derive(Clone, Debug)]
@@ -69,9 +66,10 @@ pub struct StoriesPanel {
     list_cutoff: usize,
     list_state: StatefulList<DisplayableHackerNewsStory>,
 }
+
 // TODO: load from configuration
 const HOME_MAX_DISPLAYED_STORIES: usize = 20;
-const MEAN_TICKS_BETWEEN_UPDATES: UiTickScalar = 60;
+const MEAN_TICKS_BETWEEN_UPDATES: UiTickScalar = 600; // approx. every minute
 
 impl Default for StoriesPanel {
     fn default() -> Self {
@@ -84,6 +82,7 @@ impl Default for StoriesPanel {
 }
 
 const STORIES_PANEL_ID: &str = "panel_stories";
+
 #[async_trait]
 impl UiComponent for StoriesPanel {
     fn id(&self) -> &'static str {
@@ -107,13 +106,16 @@ impl UiComponent for StoriesPanel {
                     .expect("can map DisplayableHackerNewsStory")
             })
             .collect();
+        self.list_state.replace_items(displayable_stories);
 
         Ok(())
     }
 
     fn key_handler(&mut self, key: &Key, app: &mut App) -> Result<bool> {
-        dbg!(key);
-
         Ok(false)
+    }
+
+    fn render(&self, f: &mut tui::Frame<CrosstermBackend<Stdout>>, inside: Rect) -> Result<()> {
+        Ok(())
     }
 }

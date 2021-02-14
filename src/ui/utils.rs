@@ -36,13 +36,7 @@ impl<T> StatefulList<T> {
     pub fn next(&mut self) {
         self.state.select(Some(match self.state.selected() {
             None => 0,
-            Some(i) => {
-                if i >= self.items.len() - 1 {
-                    0
-                } else {
-                    i + 1
-                }
-            }
+            Some(i) => (i + 1) % self.items.len(),
         }));
     }
 
