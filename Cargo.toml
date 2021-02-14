@@ -13,3 +13,5 @@ serde_json = "1.0.62"
 thiserror = "1.0.23"
 crossterm = "0.19.0"
 tui = { version = "0.14", default-features = false, features = ["crossterm"] }
+chrono = "0.4.19"
+url = "2.2.0"

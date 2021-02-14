@@ -2,6 +2,7 @@ use std::{io, sync::mpsc::RecvError};
 
 use crossterm::ErrorKind;
 use thiserror::Error;
+use url::ParseError;
 
 use crate::api::types::HnItemIdScalar;
 
@@ -15,6 +16,8 @@ pub enum HnCliError {
     ThreadingError(#[from] RecvError),
     #[error("Crossterm error")]
     CrosstermError(#[from] ErrorKind),
+    #[error("URL parsing error")]
+    UrlParsingError(#[from] ParseError),
     #[error("The HN item with ID {0} was not found")]
     ItemNotFound(HnItemIdScalar),
     #[error("The HN user with ID {0} was not found")]

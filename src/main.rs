@@ -22,5 +22,5 @@ async fn main() -> Result<(), HnCliError> {
 
     // UI setup & run
     let events_receiver = ui.setup()?;
-    ui.run(events_receiver)
+    ui.run(events_receiver).await
 }

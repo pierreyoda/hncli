@@ -73,10 +73,7 @@ impl HnClient {
     }
 
     /// Try to fetch the stories of the home page (up to 500), with the given sorting strategy.
-    pub async fn get_home_stories_listing(
-        &self,
-        sorting: HnStoriesSorting,
-    ) -> Result<Vec<HnStory>> {
+    pub async fn get_home_stories(&self, sorting: HnStoriesSorting) -> Result<Vec<HnStory>> {
         let stories_ids = self.get_home_stories_ids_listing(sorting).await?;
         let items = self.get_items(&stories_ids[..]).await?;
         Ok(items

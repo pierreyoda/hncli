@@ -1,4 +1,5 @@
 use std::{
+    convert::TryFrom,
     io::Stdout,
     sync::mpsc,
     thread,
@@ -10,7 +11,8 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode},
 };
 use mpsc::Receiver;
-use screens::UserInterfaceScreen;
+use screens::{render_home_screen, UserInterfaceScreen};
+use stories::DisplayableHackerNewsStory;
 use tui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
@@ -21,11 +23,13 @@ use tui::{
 };
 
 use crate::{
-    api::HnClient,
+    api::{HnClient, HnStoriesSorting},
     errors::{HnCliError, Result},
 };
 
 mod screens;
+mod stories;
+mod utils;
 
 type TerminalUi = Terminal<CrosstermBackend<Stdout>>;
 
@@ -76,11 +80,23 @@ impl UserInterface {
     }
 
     /// Launches the main UI loop.
-    pub fn run(&mut self, rx: Receiver<UserInterfaceEvent>) -> Result<()> {
+    pub async fn run(&mut self, rx: Receiver<UserInterfaceEvent>) -> Result<()> {
         enable_raw_mode()?;
 
         let mut current_screen: UserInterfaceScreen = UserInterfaceScreen::Home;
         let screen_titles: Vec<&str> = vec!["Home", "Ask HN", "Show HN", "Jobs"];
+
+        // TODO: fetch and/or store in screen?
+        // let stories = self.client.get_home_stories(HnStoriesSorting::Top).await?;
+        // dbg!(stories.clone());
+        // let displayable_stories: Vec<DisplayableHackerNewsStory> = stories
+        //     .iter()
+        //     .map(|story| {
+        //         DisplayableHackerNewsStory::try_from(story.clone())
+        //             .expect("can map DisplayableHackerNewsStory")
+        //     })
+        //     .collect();
+        // dbg!(displayable_stories.clone());
 
         'ui: loop {
             self.terminal
@@ -92,6 +108,7 @@ impl UserInterface {
                         .margin(2)
                         .constraints(
                             [
+                                Constraint::Percentage(100),
                                 Constraint::Length(3),
                                 Constraint::Min(2),
                                 Constraint::Length(2),
@@ -126,6 +143,7 @@ impl UserInterface {
                         .divider(Span::raw("|"));
 
                     frame.render_widget(screens_tabs, chunks[0]);
+                    // render_home_screen(frame, chunks[1], &displayable_stories[..]);
                 })
                 .map_err(HnCliError::IoError)?;
 

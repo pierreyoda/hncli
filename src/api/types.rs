@@ -48,23 +48,23 @@ impl HnItem {
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 pub struct HnStory {
     /// Unique ID of this Item.
-    id: HnItemIdScalar,
+    pub id: HnItemIdScalar,
     /// Unix timestamp for the creation time.
-    time: HnItemDateScalar,
+    pub time: HnItemDateScalar,
     /// Username of the story's author.
-    by: String,
+    pub by: String,
     /// Score of the story.
-    score: u32,
+    pub score: u32,
     /// Title of the story.
-    title: String,
+    pub title: String,
     /// *HTML* text of the story, if any.
-    text: Option<String>,
+    pub text: Option<String>,
     /// URL of the story, if any.
-    url: Option<String>,
+    pub url: Option<String>,
     /// Total number of comments on the story.
-    descendants: u32,
+    pub descendants: u32,
     /// IDs of the comments on the story, if any, in ranked display order.
-    kids: Option<Vec<u32>>,
+    pub kids: Option<Vec<u32>>,
 }
 
 /// A `Comment` in the HackerNews API.
@@ -85,17 +85,17 @@ pub struct HnStory {
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 pub struct HnComment {
     /// Unique ID of this Item.
-    id: HnItemIdScalar,
+    pub id: HnItemIdScalar,
     /// Unix timestamp for the creation time.
-    time: HnItemDateScalar,
+    pub time: HnItemDateScalar,
     /// Username of the comment's author.
-    by: String,
+    pub by: String,
     /// The comment's parent, either a story or another comment.
-    parent: HnItemIdScalar,
+    pub parent: HnItemIdScalar,
     /// The IDs of the comment's sub-comments, in ranked display order.
-    kids: Option<Vec<HnItemIdScalar>>,
+    pub kids: Option<Vec<HnItemIdScalar>>,
     /// *HTML* text of the comment.
-    text: String,
+    pub text: String,
 }
 
 /// A `Job` posting in the HackerNews API.
@@ -117,19 +117,19 @@ pub struct HnComment {
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 pub struct HnJob {
     /// Unique ID of this Item.
-    id: HnItemIdScalar,
+    pub id: HnItemIdScalar,
     /// Unix timestamp for the creation time.
-    time: HnItemDateScalar,
+    pub time: HnItemDateScalar,
     /// Username of the job's author.
-    by: String,
+    pub by: String,
     /// Score of the job.
-    score: u32,
+    pub score: u32,
     /// Title of the job.
-    title: String,
+    pub title: String,
     /// *HTML* text of the job, if any.
-    text: Option<String>,
+    pub text: Option<String>,
     /// URL of the job, if any.
-    url: Option<String>,
+    pub url: Option<String>,
 }
 
 /// A `User` in the HackerNews API.
@@ -149,15 +149,15 @@ pub struct HnJob {
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 pub struct HnUser {
     /// **Case-sensitive**, unique username.
-    id: String,
+    pub id: String,
     /// Unix timestamp for the user's registration date.
-    created: HnItemDateScalar,
+    pub created: HnItemDateScalar,
     /// Total karma of the user.
-    karma: u32,
+    pub karma: u32,
     /// *HTML* description of the user, if any.
-    about: Option<String>,
+    pub about: Option<String>,
     /// IDs of the user's submitted items.
-    submitted: Vec<HnItemIdScalar>,
+    pub submitted: Vec<HnItemIdScalar>,
 }
 
 #[cfg(test)]
