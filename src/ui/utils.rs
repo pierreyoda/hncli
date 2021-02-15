@@ -24,6 +24,11 @@ impl<T> StatefulList<T> {
         }
     }
 
+    /// Get the stored items.
+    pub fn get_items(&self) -> &Vec<T> {
+        &self.items
+    }
+
     /// Replace the current items with the given ones.
     pub fn replace_items(&mut self, items: Vec<T>) {
         self.items = items;

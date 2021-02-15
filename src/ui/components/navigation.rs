@@ -8,7 +8,7 @@ use tui::{
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Span, Spans},
-    widgets::{Block, Borders, Tabs},
+    widgets::{Block, BorderType, Borders, Tabs},
     Frame,
 };
 
@@ -17,7 +17,7 @@ use crate::{
     app,
     errors::Result,
     ui::{
-        common::{UiComponent, UiTickScalar},
+        common::{UiComponent, UiComponentId, UiTickScalar},
         handlers,
     },
 };
@@ -55,11 +55,11 @@ impl Navigation {
     }
 }
 
-const NAVIGATION_ID: &str = "navigation";
+pub const NAVIGATION_ID: UiComponentId = "navigation";
 
 #[async_trait]
 impl UiComponent for Navigation {
-    fn id(&self) -> &'static str {
+    fn id(&self) -> UiComponentId {
         NAVIGATION_ID
     }
 
@@ -129,7 +129,12 @@ impl UiComponent for Navigation {
 
         let tabs = Tabs::new(tabs_titles)
             .select(self.selected_index)
-            .block(Block::default().title("Menu").borders(Borders::ALL))
+            .block(
+                Block::default()
+                    .title("Menu")
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Rounded),
+            )
             .style(Style::default().fg(Color::White))
             .highlight_style(Style::default().fg(Color::Yellow))
             .divider(Span::raw("|"));

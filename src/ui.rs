@@ -6,7 +6,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use common::{UiComponent, UiTickScalar};
+use common::{UiComponent, UiComponentId, UiTickScalar};
 use components::{navigation::Navigation, stories::StoriesPanel};
 use crossterm::{
     event::{self, Event},
@@ -26,8 +26,8 @@ use crate::{
     errors::{HnCliError, Result},
 };
 
-mod common;
-mod components;
+pub mod common;
+pub mod components;
 mod handlers;
 mod panels;
 mod screens;
@@ -44,9 +44,8 @@ pub enum UserInterfaceEvent {
 pub struct ComponentWrapper {
     component: Box<dyn UiComponent>,
     ticks_elapsed: UiTickScalar,
+    /// An active component will update itself.
     active: bool,
-    // FIXME: this probably won't do
-    chunk_index: usize,
 }
 
 impl ComponentWrapper {
@@ -55,7 +54,6 @@ impl ComponentWrapper {
             component,
             ticks_elapsed: 0,
             active: true,
-            chunk_index,
         }
     }
 }
@@ -65,7 +63,7 @@ pub struct UserInterface {
     client: HnClient,
     app: App,
     /// Components registry.
-    components: HashMap<&'static str, ComponentWrapper>,
+    components: HashMap<UiComponentId, ComponentWrapper>,
 }
 
 impl UserInterface {
@@ -128,34 +126,37 @@ impl UserInterface {
         self.terminal.hide_cursor()?;
 
         'ui: loop {
+            let app = &mut self.app;
             let components = &self.components;
             self.terminal
                 .draw(|frame| {
+                    // compute main layout chunks
                     let size = frame.size();
-
-                    let chunks = Layout::default()
+                    let chunks_main = Layout::default()
                         .direction(Direction::Vertical)
                         .margin(2)
                         .constraints(
                             [
                                 Constraint::Length(3),
                                 Constraint::Min(2),
-                                Constraint::Length(2),
+                                Constraint::Length(3),
                             ]
                             .as_ref(),
                         )
                         .split(size);
 
+                    // refresh application chunks
+                    app.update_layout(&chunks_main[..]);
+
                     // render components
-                    for wrapper in components.values() {
-                        if !wrapper.active {
-                            continue;
+                    for (id, wrapper) in components.iter() {
+                        match app.get_component_rendering_rect(id) {
+                            None => (), // no rendering
+                            Some(inside_rect) => wrapper
+                                .component
+                                .render(frame, *inside_rect)
+                                .expect("no component rendering error"),
                         }
-                        let inside = chunks[wrapper.chunk_index];
-                        wrapper
-                            .component
-                            .render(frame, inside)
-                            .expect("no component rendering error");
                     }
                 })
                 .map_err(HnCliError::IoError)?;

@@ -5,17 +5,23 @@ use std::{convert::TryFrom, io::Stdout};
 use chrono::{DateTime, Utc};
 
 use async_trait::async_trait;
-use tui::{backend::CrosstermBackend, layout::Rect};
+use tui::{
+    backend::CrosstermBackend,
+    layout::Rect,
+    style::{Color, Modifier, Style},
+    text::{Span, Spans},
+    widgets::{Block, BorderType, Borders, List, ListItem},
+};
 
 use crate::{
     api::{
         types::{HnItemIdScalar, HnStory},
-        HnClient, HnStoriesSorting,
+        HnClient,
     },
     app::App,
     errors::{HnCliError, Result},
     ui::{
-        common::{UiComponent, UiTickScalar},
+        common::{UiComponent, UiComponentId, UiTickScalar},
         handlers::Key,
         utils::{datetime_from_hn_time, StatefulList},
     },
@@ -81,11 +87,11 @@ impl Default for StoriesPanel {
     }
 }
 
-const STORIES_PANEL_ID: &str = "panel_stories";
+pub const STORIES_PANEL_ID: UiComponentId = "panel_stories";
 
 #[async_trait]
 impl UiComponent for StoriesPanel {
-    fn id(&self) -> &'static str {
+    fn id(&self) -> UiComponentId {
         STORIES_PANEL_ID
     }
 
@@ -98,15 +104,15 @@ impl UiComponent for StoriesPanel {
     async fn update(&mut self, client: &mut HnClient, app: &mut App) -> Result<()> {
         self.ticks_since_last_update = 0;
 
-        let stories = client.get_home_stories(HnStoriesSorting::Top).await?;
-        let cut_stories_iter = stories.iter().take(self.list_cutoff);
-        let displayable_stories: Vec<DisplayableHackerNewsStory> = cut_stories_iter
-            .map(|story| {
-                DisplayableHackerNewsStory::try_from(story.clone())
-                    .expect("can map DisplayableHackerNewsStory")
-            })
-            .collect();
-        self.list_state.replace_items(displayable_stories);
+        // let stories = client.get_home_stories(HnStoriesSorting::Top).await?;
+        // let cut_stories_iter = stories.iter().take(self.list_cutoff);
+        // let displayable_stories: Vec<DisplayableHackerNewsStory> = cut_stories_iter
+        //     .map(|story| {
+        //         DisplayableHackerNewsStory::try_from(story.clone())
+        //             .expect("can map DisplayableHackerNewsStory")
+        //     })
+        //     .collect();
+        // self.list_state.replace_items(displayable_stories);
 
         Ok(())
     }
@@ -116,6 +122,37 @@ impl UiComponent for StoriesPanel {
     }
 
     fn render(&self, f: &mut tui::Frame<CrosstermBackend<Stdout>>, inside: Rect) -> Result<()> {
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded)
+            .style(Style::default().fg(Color::White))
+            .title("Stories");
+
+        // List Items
+        let stories = self.list_state.get_items();
+        let list_stories_items: Vec<ListItem> = stories
+            .iter()
+            .map(|story| {
+                ListItem::new(Spans::from(vec![Span::styled(
+                    story.title.clone(),
+                    Style::default(),
+                )]))
+            })
+            .collect();
+
+        // List
+        let list_stories = List::new(list_stories_items)
+            .block(block)
+            .highlight_style(
+                Style::default()
+                    .bg(Color::Yellow)
+                    .fg(Color::Black)
+                    .add_modifier(Modifier::BOLD),
+            )
+            .highlight_symbol(">> ");
+
+        f.render_widget(list_stories, inside);
+
         Ok(())
     }
 }

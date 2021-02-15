@@ -10,13 +10,16 @@ use super::handlers::Key;
 /// A `tick` is a UI update, in the order of the hundred milliseconds.
 pub type UiTickScalar = u64;
 
+/// A hashable type for application-unique component IDs.
+pub type UiComponentId = &'static str;
+
 /// A `Component` in this Terminal UI context is a self-contained
 /// widget or group of widgets with each their own updating and
 /// rendering logic.
 #[async_trait]
 pub trait UiComponent {
     /// Must return a constant, **application-unique** component ID.
-    fn id(&self) -> &'static str;
+    fn id(&self) -> UiComponentId;
 
     /// Must return `true` if the state should update itself.
     fn should_update(&mut self, elapsed_ticks: UiTickScalar) -> Result<bool>;
