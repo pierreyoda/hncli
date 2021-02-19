@@ -22,6 +22,8 @@ pub enum HnCliError {
     ItemNotFound(HnItemIdScalar),
     #[error("The HN user with ID {0} was not found")]
     UserNotFound(String),
+    #[error("The HN item with ID {0} could not be processed")]
+    HnItemProcessingError(String),
 }
 
 /// A `Result` alias where the `Err` case is `HnCliError`.

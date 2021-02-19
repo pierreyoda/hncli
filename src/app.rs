@@ -73,8 +73,8 @@ pub struct App {
     /// This is the responsability of `App` since `UserInterface` should not be
     /// aware of any business logic, for instance with regards to navigation.
     layout_components: HashMap<UiComponentId, Rect>,
-    /// Home screen: current stories sorting.
-    home_stories_sorting: HnStoriesSorting,
+    /// Main screen(s): current stories sorting.
+    main_stories_sorting: HnStoriesSorting,
 }
 
 impl Default for App {
@@ -82,7 +82,7 @@ impl Default for App {
         Self {
             navigation_stack: vec![DEFAULT_ROUTE_STATE],
             layout_components: HashMap::new(),
-            home_stories_sorting: HnStoriesSorting::Top,
+            main_stories_sorting: HnStoriesSorting::Top,
         }
     }
 }
@@ -105,7 +105,7 @@ impl App {
                 let main_screen_chunks = Layout::default()
                     .direction(Direction::Horizontal)
                     .horizontal_margin(0)
-                    .constraints([Constraint::Percentage(30), Constraint::Percentage(100)].as_ref())
+                    .constraints([Constraint::Percentage(40), Constraint::Percentage(100)].as_ref())
                     .split(layout_chunks[1]);
 
                 self.layout_components
@@ -121,5 +121,10 @@ impl App {
     /// Get, if any, the rendering `Rect` target for the given component.
     pub fn get_component_rendering_rect(&self, id: &UiComponentId) -> Option<&Rect> {
         self.layout_components.get(id)
+    }
+
+    /// Get the current stories sorting for the main screen (left panel).
+    pub fn get_main_stories_sorting(&self) -> &HnStoriesSorting {
+        &self.main_stories_sorting
     }
 }

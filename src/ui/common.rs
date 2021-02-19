@@ -22,7 +22,7 @@ pub trait UiComponent {
     fn id(&self) -> UiComponentId;
 
     /// Must return `true` if the state should update itself.
-    fn should_update(&mut self, elapsed_ticks: UiTickScalar) -> Result<bool>;
+    fn should_update(&mut self, elapsed_ticks: UiTickScalar, app: &App) -> Result<bool>;
 
     /// Update the state from various sources.
     async fn update(&mut self, client: &mut HnClient, app: &mut App) -> Result<()>;

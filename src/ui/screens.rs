@@ -7,7 +7,7 @@ use tui::{
     Frame,
 };
 
-use super::components::stories::DisplayableHackerNewsStory;
+use super::components::stories::DisplayableHackerNewsItem;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum MainScreenPanels {
@@ -18,7 +18,7 @@ pub enum MainScreenPanels {
 pub fn render_home_screen(
     f: &mut Frame<CrosstermBackend<Stdout>>,
     in_rect: Rect,
-    ranked_stories: &[DisplayableHackerNewsStory],
+    ranked_stories: &[DisplayableHackerNewsItem],
 ) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)

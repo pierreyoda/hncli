@@ -49,7 +49,7 @@ pub struct ComponentWrapper {
 }
 
 impl ComponentWrapper {
-    pub fn from_component(component: Box<dyn UiComponent>, chunk_index: usize) -> Self {
+    pub fn from_component(component: Box<dyn UiComponent>) -> Self {
         Self {
             component,
             ticks_elapsed: 0,
@@ -66,10 +66,14 @@ pub struct UserInterface {
     components: HashMap<UiComponentId, ComponentWrapper>,
 }
 
+pub const UI_TICK_RATE_MS: u64 = 100;
+
 impl UserInterface {
     /// Create a new `UserInterface` instance and prepare the terminal for it.
     pub fn new(mut terminal: TerminalUi, client: HnClient) -> Result<Self> {
-        terminal.clear().map_err(HnCliError::IoError)?;
+        enable_raw_mode()?;
+        terminal.clear()?;
+        terminal.hide_cursor()?;
         Ok(Self {
             terminal,
             client,
@@ -81,7 +85,7 @@ impl UserInterface {
     /// Set up the Event Loop channels and the various UI components.
     pub fn setup(&mut self) -> Result<Receiver<UserInterfaceEvent>> {
         // event loop
-        let tick_rate = Duration::from_millis(100);
+        let tick_rate = Duration::from_millis(UI_TICK_RATE_MS);
         let (tx, rx) = mpsc::channel();
         thread::spawn(move || {
             let mut last_tick = Instant::now();
@@ -91,10 +95,9 @@ impl UserInterface {
                     .unwrap_or_else(|| Duration::from_secs(0));
 
                 if event::poll(timeout).expect("poll works") {
-                    if let Event::Key(key_event) = event::read().expect("can read events") {
+                    if let Event::Key(key_event) = event::read().unwrap() {
                         let key: Key = key_event.into();
-                        tx.send(UserInterfaceEvent::KeyEvent(key))
-                            .expect("can send events");
+                        tx.send(UserInterfaceEvent::KeyEvent(key)).unwrap();
                     }
                 }
 
@@ -109,12 +112,12 @@ impl UserInterface {
         let navigation = Box::new(Navigation::default());
         self.components.insert(
             navigation.id(),
-            ComponentWrapper::from_component(navigation, 0),
+            ComponentWrapper::from_component(navigation),
         );
         let stories_panel = Box::new(StoriesPanel::default());
         self.components.insert(
             stories_panel.id(),
-            ComponentWrapper::from_component(stories_panel, 1),
+            ComponentWrapper::from_component(stories_panel),
         );
 
         Ok(rx)
@@ -122,7 +125,6 @@ impl UserInterface {
 
     /// Launch the main UI loop.
     pub async fn run(&mut self, rx: Receiver<UserInterfaceEvent>) -> Result<()> {
-        enable_raw_mode()?;
         self.terminal.hide_cursor()?;
 
         'ui: loop {
@@ -185,11 +187,16 @@ impl UserInterface {
         for wrapper in self.components.values_mut() {
             wrapper.ticks_elapsed += 1;
             // TODO: better error handling (per-component?)
-            if wrapper.active && wrapper.component.should_update(wrapper.ticks_elapsed)? {
+            if wrapper.active
+                && wrapper
+                    .component
+                    .should_update(wrapper.ticks_elapsed, &self.app)?
+            {
                 wrapper
                     .component
                     .update(&mut self.client, &mut self.app)
                     .await?;
+                wrapper.ticks_elapsed = 0;
             }
         }
 

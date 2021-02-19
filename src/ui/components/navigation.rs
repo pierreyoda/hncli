@@ -63,7 +63,7 @@ impl UiComponent for Navigation {
         NAVIGATION_ID
     }
 
-    fn should_update(&mut self, _elapsed_ticks: UiTickScalar) -> Result<bool> {
+    fn should_update(&mut self, _elapsed_ticks: UiTickScalar, _app: &App) -> Result<bool> {
         Ok(false)
     }
 

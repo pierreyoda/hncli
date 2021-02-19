@@ -10,7 +10,7 @@ pub mod types;
 
 const HACKER_NEWS_API_BASE_URL: &str = "https://hacker-news.firebaseio.com/v0";
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum HnStoriesSorting {
     New,
     Top,
@@ -74,15 +74,13 @@ impl HnClient {
         })
     }
 
-    /// Try to fetch the stories of the home page (up to 500), with the given sorting strategy.
-    pub async fn get_home_stories(&self, sorting: HnStoriesSorting) -> Result<Vec<HnStory>> {
+    /// Try to fetch the items of the home page, with the given sorting strategy.
+    pub async fn get_home_items(&self, sorting: HnStoriesSorting) -> Result<Vec<HnItem>> {
         let stories_ids = self.get_home_stories_ids_listing(sorting).await?;
-        let items = self.get_items(&stories_ids[..]).await?;
-        Ok(items
-            .iter()
-            // TODO: avoid cloning here once caching is implemented?
-            .map(|item| item.clone().as_story().expect("item must be a story"))
-            .collect())
+        let stories_ids_cutoff: Vec<HnItemIdScalar> =
+            stories_ids.iter().take(50).copied().collect();
+        let items = self.get_items(&stories_ids_cutoff[..]).await?;
+        Ok(items)
     }
 
     /// Try to fetch the stories' IDs of the home page (up to 500), with the given sorting strategy.

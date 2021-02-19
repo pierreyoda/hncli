@@ -20,10 +20,14 @@ pub enum HnItem {
 }
 
 impl HnItem {
-    pub fn as_story(self) -> Option<HnStory> {
+    /// Get the ID of the item.
+    pub fn get_id(&self) -> HnItemIdScalar {
+        use HnItem::*;
+
         match self {
-            HnItem::Story(story) => Some(story),
-            _ => None,
+            Story(story) => story.id,
+            Comment(comment) => comment.id,
+            Job(job) => job.id,
         }
     }
 }
