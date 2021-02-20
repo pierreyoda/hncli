@@ -34,5 +34,10 @@ pub trait UiComponent {
     fn key_handler(&mut self, key: &Key, app: &mut App) -> Result<bool>;
 
     /// Renderer for the component.
-    fn render(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) -> Result<()>;
+    fn render(
+        &self,
+        f: &mut Frame<CrosstermBackend<Stdout>>,
+        inside: Rect,
+        app: &App,
+    ) -> Result<()>;
 }

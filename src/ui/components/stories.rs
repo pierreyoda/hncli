@@ -15,10 +15,10 @@ use tui::{
 
 use crate::{
     api::{
-        types::{HnComment, HnItem, HnItemIdScalar, HnJob, HnStory},
+        types::{HnItem, HnItemIdScalar},
         HnClient, HnStoriesSorting,
     },
-    app::App,
+    app::{App, AppBlock},
     errors::{HnCliError, Result},
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
@@ -26,6 +26,8 @@ use crate::{
         utils::{datetime_from_hn_time, StatefulList},
     },
 };
+
+use super::common::{COMMON_BLOCK_FOCUS_COLOR, COMMON_BLOCK_NORMAL_COLOR};
 
 /// A display-ready Hacker News story or job posting.
 #[derive(Clone, Debug)]
@@ -153,11 +155,22 @@ impl UiComponent for StoriesPanel {
         Ok(false)
     }
 
-    fn render(&self, f: &mut tui::Frame<CrosstermBackend<Stdout>>, inside: Rect) -> Result<()> {
+    fn render(
+        &self,
+        f: &mut tui::Frame<CrosstermBackend<Stdout>>,
+        inside: Rect,
+        app: &App,
+    ) -> Result<()> {
         let block = Block::default()
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded)
-            .style(Style::default().fg(Color::White))
+            .style(
+                Style::default().fg(if app.has_current_focus(AppBlock::HomeStories) {
+                    COMMON_BLOCK_FOCUS_COLOR
+                } else {
+                    COMMON_BLOCK_NORMAL_COLOR
+                }),
+            )
             .title("Stories");
 
         // List Items
@@ -166,8 +179,8 @@ impl UiComponent for StoriesPanel {
             .iter()
             .map(|item| {
                 ListItem::new(Spans::from(vec![Span::styled(
-                    format!("{}", item.title),
-                    Style::default(),
+                    item.title.clone(),
+                    Style::default().fg(Color::White),
                 )]))
             })
             .collect();
@@ -175,6 +188,7 @@ impl UiComponent for StoriesPanel {
         // List
         let list_stories = List::new(list_stories_items)
             .block(block)
+            .style(Style::default().fg(Color::White))
             .highlight_style(
                 Style::default()
                     .bg(Color::Yellow)

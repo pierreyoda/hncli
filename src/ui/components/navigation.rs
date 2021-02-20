@@ -1,6 +1,6 @@
 use std::io::Stdout;
 
-use app::App;
+use app::{App, AppBlock};
 use async_trait::async_trait;
 use handlers::Key;
 use tui::{
@@ -21,6 +21,8 @@ use crate::{
         handlers,
     },
 };
+
+use super::common::{COMMON_BLOCK_FOCUS_COLOR, COMMON_BLOCK_NORMAL_COLOR};
 
 /// The Navigation bar provides a convenient way to switch between screens
 /// screens by either pressing the hotkey associated with the title, or by
@@ -104,7 +106,12 @@ impl UiComponent for Navigation {
         })
     }
 
-    fn render(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) -> Result<()> {
+    fn render(
+        &self,
+        f: &mut Frame<CrosstermBackend<Stdout>>,
+        inside: Rect,
+        app: &App,
+    ) -> Result<()> {
         let tabs_titles: Vec<Spans> = self
             .titles
             .iter()
@@ -131,9 +138,16 @@ impl UiComponent for Navigation {
             .select(self.selected_index)
             .block(
                 Block::default()
-                    .title("Menu")
+                    .style(
+                        Style::default().fg(if app.has_current_focus(AppBlock::Navigation) {
+                            COMMON_BLOCK_FOCUS_COLOR
+                        } else {
+                            COMMON_BLOCK_NORMAL_COLOR
+                        }),
+                    )
                     .borders(Borders::ALL)
-                    .border_type(BorderType::Rounded),
+                    .border_type(BorderType::Rounded)
+                    .title("Menu"),
             )
             .style(Style::default().fg(Color::White))
             .highlight_style(Style::default().fg(Color::Yellow))

@@ -28,7 +28,7 @@ use crate::{
 
 pub mod common;
 pub mod components;
-mod handlers;
+pub mod handlers;
 mod panels;
 mod screens;
 mod utils;
@@ -156,7 +156,7 @@ impl UserInterface {
                             None => (), // no rendering
                             Some(inside_rect) => wrapper
                                 .component
-                                .render(frame, *inside_rect)
+                                .render(frame, *inside_rect, app)
                                 .expect("no component rendering error"),
                         }
                     }
@@ -171,7 +171,11 @@ impl UserInterface {
                         self.terminal.show_cursor()?;
                         break 'ui;
                     }
-                    key => self.handle_key_event(&key)?,
+                    key => {
+                        if !self.app.handle_key_event(&key) {
+                            self.handle_key_event(&key)?;
+                        }
+                    }
                 },
                 UserInterfaceEvent::Tick => {
                     self.update().await?;

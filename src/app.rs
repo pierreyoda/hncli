@@ -4,10 +4,10 @@ use tui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
     api::HnStoriesSorting,
-    errors::Result,
     ui::{
         common::UiComponentId,
         components::{navigation::NAVIGATION_ID, stories::STORIES_PANEL_ID},
+        handlers::Key,
     },
 };
 
@@ -25,14 +25,18 @@ use crate::{
 /// |         |                              |
 /// ------------------------------------------
 /// ```
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum AppBlock {
     /// Welcome splash screen.
     SplashScreen,
+    /// Navigation.
+    Navigation,
     /// Stories list on the home page, sortable by "Top", "Best" or "New".
     HomeStories,
     /// Comments thread on a story.
     StoryThread,
+    /// Options.
+    Options,
     /// Help screen.
     Help,
 }
@@ -62,6 +66,11 @@ const DEFAULT_ROUTE_STATE: RouteState = RouteState {
 /// Global application state.
 #[derive(Debug)]
 pub struct App {
+    /// Currently focus `AppBlock` in the application.
+    ///
+    /// If no application has focus (gained with the 'Escape' key),
+    /// then the global application has focus which allows for moving between blocks.
+    current_focus: Option<AppBlock>,
     /// The current navigation stack.
     ///
     /// Example: home > story #1 details > comment #2 thread.
@@ -80,6 +89,7 @@ pub struct App {
 impl Default for App {
     fn default() -> Self {
         Self {
+            current_focus: None,
             navigation_stack: vec![DEFAULT_ROUTE_STATE],
             layout_components: HashMap::new(),
             main_stories_sorting: HnStoriesSorting::Top,
@@ -91,6 +101,85 @@ impl App {
     /// Get the current route state.
     pub fn get_current_route(&self) -> &RouteState {
         self.navigation_stack.last().unwrap_or(&DEFAULT_ROUTE_STATE)
+    }
+
+    fn get_current_route_mut(&mut self) -> &mut RouteState {
+        self.navigation_stack.last_mut().unwrap()
+    }
+
+    /// Set the current route state.
+    pub fn set_current_route(&mut self, active: Option<AppBlock>, hovered: Option<AppBlock>) {
+        let current_route = self.get_current_route_mut();
+        if let Some(active_block) = active {
+            current_route.active_block = active_block;
+        }
+        if let Some(hovered_block) = hovered {
+            current_route.hovered_block = hovered_block;
+        }
+    }
+
+    /// Has the given block the current focus?
+    pub fn has_current_focus(&self, block: AppBlock) -> bool {
+        block == self.get_current_route().hovered_block
+    }
+
+    /// Handle an incoming key event, at the application level. Returns true if
+    /// the event is to be captured (swallowed) and not passed down to components.
+    ///
+    /// For keyboard navigation between blocks, here is the current application layout:
+    ///
+    /// ```md
+    /// ------------------------------------------
+    /// |              navigation                |
+    /// ------------------------------------------
+    /// |         |                              |
+    /// |         |                              |
+    /// | stories |       thread                 |
+    /// |         |                              |
+    /// |         |                              |
+    /// ------------------------------------------
+    /// |      block options (eg. sorting)       |
+    /// ------------------------------------------
+    /// ```
+    pub fn handle_key_event(&mut self, key: &Key) -> bool {
+        let current_route = self.get_current_route_mut();
+        let can_horizontally_navigate = matches!(
+            current_route.active_block,
+            AppBlock::HomeStories | AppBlock::StoryThread
+        );
+
+        match key {
+            Key::Escape => self.current_focus = None,
+            Key::Enter => {
+                current_route.active_block = current_route.hovered_block;
+            }
+            Key::Down => match current_route.hovered_block {
+                AppBlock::Navigation => current_route.hovered_block = AppBlock::Options,
+                AppBlock::HomeStories | AppBlock::StoryThread => {
+                    current_route.hovered_block = AppBlock::Navigation
+                }
+                AppBlock::Options => current_route.hovered_block = AppBlock::HomeStories,
+                _ => (),
+            },
+            Key::Down => match current_route.hovered_block {
+                AppBlock::Navigation => current_route.hovered_block = AppBlock::HomeStories,
+                AppBlock::HomeStories | AppBlock::StoryThread => {
+                    current_route.hovered_block = AppBlock::Options
+                }
+                AppBlock::Options => current_route.hovered_block = AppBlock::Navigation,
+                _ => (),
+            },
+            Key::Left | Key::Right if can_horizontally_navigate => {
+                match current_route.hovered_block {
+                    AppBlock::HomeStories => current_route.hovered_block = AppBlock::StoryThread,
+                    AppBlock::StoryThread => current_route.hovered_block = AppBlock::HomeStories,
+                    _ => (),
+                }
+            }
+            _ => return false,
+        }
+
+        true
     }
 
     /// Update the components' layout according to the main one
