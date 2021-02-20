@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use futures::future::join_all;
 use reqwest::Client;
-use types::{HnItem, HnItemIdScalar, HnStory};
+use types::{HnItem, HnItemIdScalar};
 
 use crate::errors::{HnCliError, Result};
 

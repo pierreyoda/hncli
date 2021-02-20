@@ -2,9 +2,9 @@
 
 use std::{convert::TryFrom, io::Stdout};
 
+use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 
-use async_trait::async_trait;
 use tui::{
     backend::CrosstermBackend,
     layout::Rect,

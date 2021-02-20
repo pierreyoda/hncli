@@ -1,7 +1,8 @@
 use std::io::Stdout;
 
-use app::{App, AppBlock};
 use async_trait::async_trait;
+
+use app::{App, AppBlock};
 use handlers::Key;
 use tui::{
     backend::CrosstermBackend,

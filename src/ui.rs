@@ -1,24 +1,20 @@
 use std::{
     collections::HashMap,
     io::Stdout,
-    sync::mpsc,
+    sync::mpsc::{self, Receiver},
     thread,
     time::{Duration, Instant},
 };
 
-use common::{UiComponent, UiComponentId, UiTickScalar};
-use components::{navigation::Navigation, stories::StoriesPanel};
 use crossterm::{
     event::{self, Event},
     terminal::{disable_raw_mode, enable_raw_mode},
 };
+use tui::{backend::CrosstermBackend, Terminal};
+
+use common::{UiComponent, UiComponentId, UiTickScalar};
+use components::{help::Help, navigation::Navigation, options::Options, stories::StoriesPanel};
 use handlers::Key;
-use mpsc::Receiver;
-use tui::{
-    backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout},
-    Terminal,
-};
 
 use crate::{
     api::HnClient,
@@ -108,17 +104,10 @@ impl UserInterface {
         });
 
         // components
-        // TODO: create register_component function (or macro) here
-        let navigation = Box::new(Navigation::default());
-        self.components.insert(
-            navigation.id(),
-            ComponentWrapper::from_component(navigation),
-        );
-        let stories_panel = Box::new(StoriesPanel::default());
-        self.components.insert(
-            stories_panel.id(),
-            ComponentWrapper::from_component(stories_panel),
-        );
+        self.register_component(Help::default());
+        self.register_component(Navigation::default());
+        self.register_component(StoriesPanel::default());
+        self.register_component(Options::default());
 
         Ok(rx)
     }
@@ -132,23 +121,8 @@ impl UserInterface {
             let components = &self.components;
             self.terminal
                 .draw(|frame| {
-                    // compute main layout chunks
-                    let size = frame.size();
-                    let chunks_main = Layout::default()
-                        .direction(Direction::Vertical)
-                        .margin(2)
-                        .constraints(
-                            [
-                                Constraint::Length(3),
-                                Constraint::Min(2),
-                                Constraint::Length(3),
-                            ]
-                            .as_ref(),
-                        )
-                        .split(size);
-
                     // refresh application chunks
-                    app.update_layout(&chunks_main[..]);
+                    app.update_layout(frame.size());
 
                     // render components
                     for (id, wrapper) in components.iter() {
@@ -219,5 +193,13 @@ impl UserInterface {
         }
 
         Ok(())
+    }
+
+    fn register_component<C: UiComponent + 'static>(&mut self, component: C) {
+        let boxed_component = Box::new(component);
+        self.components.insert(
+            boxed_component.id(),
+            ComponentWrapper::from_component(boxed_component),
+        );
     }
 }

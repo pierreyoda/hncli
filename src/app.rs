@@ -6,13 +6,15 @@ use crate::{
     api::HnStoriesSorting,
     ui::{
         common::UiComponentId,
-        components::{navigation::NAVIGATION_ID, stories::STORIES_PANEL_ID},
+        components::{
+            help::HELP_ID, navigation::NAVIGATION_ID, options::OPTIONS_ID,
+            stories::STORIES_PANEL_ID,
+        },
         handlers::Key,
     },
 };
 
 /// A block is a keyboard-navigable section of the UI.
-///
 ///
 /// # Example with two blocks
 ///
@@ -118,6 +120,24 @@ impl App {
         }
     }
 
+    /// Push a new navigation route state.
+    pub fn push_navigation_stack(&mut self, route: Route, block: AppBlock) {
+        self.navigation_stack.push(RouteState {
+            route,
+            active_block: block,
+            hovered_block: block,
+        });
+    }
+
+    /// Go to the previous navigation route state.
+    pub fn pop_navigation_stack(&mut self) -> Option<RouteState> {
+        if self.navigation_stack.is_empty() {
+            None
+        } else {
+            self.navigation_stack.pop()
+        }
+    }
+
     /// Has the given block the current focus?
     pub fn has_current_focus(&self, block: AppBlock) -> bool {
         block == self.get_current_route().hovered_block
@@ -138,7 +158,7 @@ impl App {
     /// |         |                              |
     /// |         |                              |
     /// ------------------------------------------
-    /// |      block options (eg. sorting)       |
+    /// |          options (eg. sorting)         |
     /// ------------------------------------------
     /// ```
     pub fn handle_key_event(&mut self, key: &Key) -> bool {
@@ -150,10 +170,8 @@ impl App {
 
         match key {
             Key::Escape => self.current_focus = None,
-            Key::Enter => {
-                current_route.active_block = current_route.hovered_block;
-            }
-            Key::Down => match current_route.hovered_block {
+            Key::Enter => current_route.active_block = current_route.hovered_block,
+            Key::Up => match current_route.hovered_block {
                 AppBlock::Navigation => current_route.hovered_block = AppBlock::Options,
                 AppBlock::HomeStories | AppBlock::StoryThread => {
                     current_route.hovered_block = AppBlock::Navigation
@@ -176,18 +194,45 @@ impl App {
                     _ => (),
                 }
             }
+            Key::Char('h') => self.push_navigation_stack(Route::Help, AppBlock::Help),
             _ => return false,
         }
 
         true
     }
 
-    /// Update the components' layout according to the main one
-    /// (with automatic resizing).
-    pub fn update_layout(&mut self, layout_chunks: &[Rect]) {
+    /// Update the components' layout according to current terminal
+    /// frame size (with automatic resizing).
+    pub fn update_layout(&mut self, frame_size: Rect) {
         use Route::*;
 
         self.layout_components.clear();
+
+        // main layout chunks
+        let main_layout_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .margin(2)
+            .constraints(
+                [
+                    Constraint::Length(3),
+                    Constraint::Min(2),
+                    Constraint::Length(3),
+                ]
+                .as_ref(),
+            )
+            .split(frame_size);
+
+        if matches!(self.get_current_route().route, Help) {
+            let full_screen_chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .horizontal_margin(0)
+                .constraints([Constraint::Percentage(100)].as_ref())
+                .split(main_layout_chunks[0]);
+
+            self.layout_components
+                .insert(HELP_ID, full_screen_chunks[0]);
+            return;
+        }
 
         match self.get_current_route().route {
             Home | Ask | Show | Jobs => {
@@ -195,7 +240,7 @@ impl App {
                     .direction(Direction::Horizontal)
                     .horizontal_margin(0)
                     .constraints([Constraint::Percentage(40), Constraint::Percentage(100)].as_ref())
-                    .split(layout_chunks[1]);
+                    .split(main_layout_chunks[1]);
 
                 self.layout_components
                     .insert(STORIES_PANEL_ID, main_screen_chunks[0]);
@@ -204,7 +249,9 @@ impl App {
         }
 
         self.layout_components
-            .insert(NAVIGATION_ID, layout_chunks[0]);
+            .insert(NAVIGATION_ID, main_layout_chunks[0]);
+        self.layout_components
+            .insert(OPTIONS_ID, main_layout_chunks[2]);
     }
 
     /// Get, if any, the rendering `Rect` target for the given component.
