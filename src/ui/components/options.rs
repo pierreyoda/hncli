@@ -1,4 +1,7 @@
-use std::{convert::TryInto, io::Stdout};
+use std::{
+    convert::{TryFrom, TryInto},
+    io::Stdout,
+};
 
 use async_trait::async_trait;
 use tui::{
@@ -12,7 +15,7 @@ use tui::{
 
 use crate::{
     api::{HnClient, HnStoriesSorting},
-    app::App,
+    app::{App, AppBlock},
     errors::{HnCliError, Result},
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
@@ -20,7 +23,9 @@ use crate::{
     },
 };
 
-#[derive(Debug, PartialEq, Eq)]
+use super::common::get_layout_block_style;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 enum HomeOptions {
     SortNewest,
     SortTop,
@@ -59,14 +64,24 @@ const SORTING_OPTIONS_LIST: [HomeOptions; 3] = [
 /// for the current active component.
 #[derive(Debug)]
 pub struct Options {
+    /// Used to implement basic keyboard 'debouncing'
+    /// between key presses.
+    ///
+    /// Reset when pressing another key.
+    ticks_since_last_press: UiTickScalar,
+    /// Index of the currently selected sorting option for
+    /// items sorting.
     selected_sorting_index: usize,
 }
+
+const MIN_TICKS_BETWEEN_PRESSES: UiTickScalar = 5; // approx. 500ms
 
 impl Default for Options {
     fn default() -> Self {
         Self {
+            ticks_since_last_press: MIN_TICKS_BETWEEN_PRESSES,
             // TODO: load from configuration
-            selected_sorting_index: 0,
+            selected_sorting_index: 1,
         }
     }
 }
@@ -79,7 +94,9 @@ impl UiComponent for Options {
         OPTIONS_ID
     }
 
-    fn should_update(&mut self, _elapsed_ticks: UiTickScalar, _app: &App) -> Result<bool> {
+    fn should_update(&mut self, elapsed_ticks: UiTickScalar, _app: &App) -> Result<bool> {
+        self.ticks_since_last_press += elapsed_ticks;
+
         Ok(false)
     }
 
@@ -89,11 +106,19 @@ impl UiComponent for Options {
 
     fn key_handler(&mut self, key: &Key, app: &mut App) -> Result<bool> {
         Ok(match key {
-            Key::Escape | Key::Enter | Key::Char('q') => {
-                app.pop_navigation_stack();
+            Key::Char('s') if self.ticks_since_last_press >= MIN_TICKS_BETWEEN_PRESSES => {
+                self.selected_sorting_index =
+                    (self.selected_sorting_index + 1) % SORTING_OPTIONS_LIST.len();
+                let sorting_type = SORTING_OPTIONS_LIST[self.selected_sorting_index]
+                    .clone()
+                    .try_into()?;
+                app.set_main_stories_sorting(sorting_type);
                 true
             }
-            _ => false,
+            _ => {
+                self.ticks_since_last_press = MIN_TICKS_BETWEEN_PRESSES;
+                false
+            }
         })
     }
 
@@ -101,9 +126,10 @@ impl UiComponent for Options {
         &self,
         f: &mut Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
-        _app: &App,
+        app: &App,
     ) -> Result<()> {
         let block = Block::default()
+            .style(get_layout_block_style(app, AppBlock::Options))
             .border_type(BorderType::Thick)
             .borders(Borders::ALL)
             .title("Options (S to toggle sorting)");

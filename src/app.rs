@@ -138,6 +138,13 @@ impl App {
         }
     }
 
+    /// Is the application in global focus?
+    ///
+    /// If true, this means that no particular block is currently actively selected.
+    pub fn in_global_focus(&self) -> bool {
+        self.current_focus.is_none()
+    }
+
     /// Has the given block the current focus?
     pub fn has_current_focus(&self, block: AppBlock) -> bool {
         block == self.get_current_route().hovered_block
@@ -262,5 +269,10 @@ impl App {
     /// Get the current stories sorting for the main screen (left panel).
     pub fn get_main_stories_sorting(&self) -> &HnStoriesSorting {
         &self.main_stories_sorting
+    }
+
+    /// Set the current stories sorting for the main screen (left panel).
+    pub fn set_main_stories_sorting(&mut self, sorting: HnStoriesSorting) {
+        self.main_stories_sorting = sorting;
     }
 }

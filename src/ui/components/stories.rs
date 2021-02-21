@@ -27,7 +27,7 @@ use crate::{
     },
 };
 
-use super::common::{COMMON_BLOCK_FOCUS_COLOR, COMMON_BLOCK_NORMAL_COLOR};
+use super::common::get_layout_block_style;
 
 /// A display-ready Hacker News story or job posting.
 #[derive(Clone, Debug)]
@@ -132,10 +132,10 @@ impl UiComponent for StoriesPanel {
     async fn update(&mut self, client: &mut HnClient, app: &mut App) -> Result<()> {
         self.ticks_since_last_update = 0;
 
-        let sorting_type = app.get_main_stories_sorting().clone();
+        let sorting_type = *app.get_main_stories_sorting();
 
         // Data fetching
-        let stories = client.get_home_items(HnStoriesSorting::Top).await?;
+        let stories = client.get_home_items(sorting_type).await?;
         let cut_stories_iter = stories.iter().take(self.list_cutoff);
         let displayable_stories: Vec<DisplayableHackerNewsItem> = cut_stories_iter
             .cloned()
@@ -162,15 +162,9 @@ impl UiComponent for StoriesPanel {
         app: &App,
     ) -> Result<()> {
         let block = Block::default()
+            .style(get_layout_block_style(app, AppBlock::HomeStories))
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded)
-            .style(
-                Style::default().fg(if app.has_current_focus(AppBlock::HomeStories) {
-                    COMMON_BLOCK_FOCUS_COLOR
-                } else {
-                    COMMON_BLOCK_NORMAL_COLOR
-                }),
-            )
             .title("Stories");
 
         // List Items

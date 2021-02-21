@@ -23,7 +23,7 @@ use crate::{
     },
 };
 
-use super::common::{COMMON_BLOCK_FOCUS_COLOR, COMMON_BLOCK_NORMAL_COLOR};
+use super::common::get_layout_block_style;
 
 /// The Navigation bar provides a convenient way to switch between screens
 /// screens by either pressing the hotkey associated with the title, or by
@@ -74,7 +74,11 @@ impl UiComponent for Navigation {
         Ok(())
     }
 
-    fn key_handler(&mut self, key: &Key, _app: &mut App) -> Result<bool> {
+    fn key_handler(&mut self, key: &Key, app: &mut App) -> Result<bool> {
+        if !app.in_global_focus() && app.get_current_route().active_block != AppBlock::Navigation {
+            return Ok(false);
+        }
+
         Ok(match key {
             Key::Left => {
                 self.previous();
@@ -85,22 +89,22 @@ impl UiComponent for Navigation {
                 true
             }
             Key::Char(c) => match c {
-                'h' => {
-                    self.selected_index = 0;
-                    true
-                }
-                'a' => {
-                    self.selected_index = 1;
-                    true
-                }
-                's' => {
-                    self.selected_index = 2;
-                    true
-                }
-                'j' => {
-                    self.selected_index = 3;
-                    true
-                }
+                // 'h' => {
+                //     self.selected_index = 0;
+                //     true
+                // }
+                // 'a' => {
+                //     self.selected_index = 1;
+                //     true
+                // }
+                // 's' => {
+                //     self.selected_index = 2;
+                //     true
+                // }
+                // 'j' => {
+                //     self.selected_index = 3;
+                //     true
+                // }
                 _ => false,
             },
             _ => false,
@@ -139,13 +143,7 @@ impl UiComponent for Navigation {
             .select(self.selected_index)
             .block(
                 Block::default()
-                    .style(
-                        Style::default().fg(if app.has_current_focus(AppBlock::Navigation) {
-                            COMMON_BLOCK_FOCUS_COLOR
-                        } else {
-                            COMMON_BLOCK_NORMAL_COLOR
-                        }),
-                    )
+                    .style(get_layout_block_style(app, AppBlock::Navigation))
                     .borders(Borders::ALL)
                     .border_type(BorderType::Rounded)
                     .title("Menu"),
