@@ -53,7 +53,7 @@ impl UiComponent for Help {
 
     fn key_handler(&mut self, key: &Key, app: &mut App) -> Result<bool> {
         Ok(match key {
-            Key::Escape | Key::Enter | Key::Char('q') => {
+            Key::Escape | Key::Enter | Key::Char('h') => {
                 app.pop_navigation_stack();
                 true
             }

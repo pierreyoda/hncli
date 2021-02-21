@@ -168,9 +168,11 @@ impl App {
             AppBlock::HomeStories | AppBlock::StoryThread
         );
 
+        let in_help = current_route.route == Route::Help;
         match key {
-            Key::Escape => self.current_focus = None,
-            Key::Enter => current_route.active_block = current_route.hovered_block,
+            Key::Escape if !in_help => self.current_focus = None,
+            Key::Enter if !in_help => current_route.active_block = current_route.hovered_block,
+            Key::Char('h') if !in_help => self.push_navigation_stack(Route::Help, AppBlock::Help),
             Key::Up => match current_route.hovered_block {
                 AppBlock::Navigation => current_route.hovered_block = AppBlock::Options,
                 AppBlock::HomeStories | AppBlock::StoryThread => {
@@ -194,7 +196,6 @@ impl App {
                     _ => (),
                 }
             }
-            Key::Char('h') => self.push_navigation_stack(Route::Help, AppBlock::Help),
             _ => return false,
         }
 
@@ -203,6 +204,9 @@ impl App {
 
     /// Update the components' layout according to current terminal
     /// frame size (with automatic resizing).
+    ///
+    /// Also organically takes care of routing, since components not found in the
+    /// `layout_components` hash are not rendered. This is done for simplicity purposes.
     pub fn update_layout(&mut self, frame_size: Rect) {
         use Route::*;
 
@@ -222,18 +226,6 @@ impl App {
             )
             .split(frame_size);
 
-        if matches!(self.get_current_route().route, Help) {
-            let full_screen_chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .horizontal_margin(0)
-                .constraints([Constraint::Percentage(100)].as_ref())
-                .split(main_layout_chunks[0]);
-
-            self.layout_components
-                .insert(HELP_ID, full_screen_chunks[0]);
-            return;
-        }
-
         match self.get_current_route().route {
             Home | Ask | Show | Jobs => {
                 let main_screen_chunks = Layout::default()
@@ -243,15 +235,23 @@ impl App {
                     .split(main_layout_chunks[1]);
 
                 self.layout_components
+                    .insert(NAVIGATION_ID, main_layout_chunks[0]);
+                self.layout_components
                     .insert(STORIES_PANEL_ID, main_screen_chunks[0]);
+                self.layout_components
+                    .insert(OPTIONS_ID, main_layout_chunks[2]);
             }
-            Help => {}
-        }
+            Help => {
+                let full_screen_chunks = Layout::default()
+                    .direction(Direction::Vertical)
+                    .horizontal_margin(0)
+                    .constraints([Constraint::Percentage(100)].as_ref())
+                    .split(main_layout_chunks[0]);
 
-        self.layout_components
-            .insert(NAVIGATION_ID, main_layout_chunks[0]);
-        self.layout_components
-            .insert(OPTIONS_ID, main_layout_chunks[2]);
+                self.layout_components
+                    .insert(HELP_ID, full_screen_chunks[0]);
+            }
+        }
     }
 
     /// Get, if any, the rendering `Rect` target for the given component.
