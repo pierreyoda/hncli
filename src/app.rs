@@ -7,8 +7,10 @@ use crate::{
     ui::{
         common::UiComponentId,
         components::{
-            help::HELP_ID, navigation::NAVIGATION_ID, options::OPTIONS_ID,
-            stories::STORIES_PANEL_ID,
+            help::HELP_ID,
+            navigation::NAVIGATION_ID,
+            options::OPTIONS_ID,
+            stories::{DisplayableHackerNewsItem, STORIES_PANEL_ID},
         },
         handlers::Key,
     },
@@ -33,10 +35,10 @@ pub enum AppBlock {
     SplashScreen,
     /// Navigation.
     Navigation,
-    /// Stories list on the home page, sortable by "Top", "Best" or "New".
-    HomeStories,
-    /// Comments thread on a story.
-    StoryThread,
+    /// Stories/job postings list on the home page, sortable by "Top", "Best" or "New".
+    HomeItems,
+    /// Story or job posting details, along with its comments.
+    ItemThread,
     /// Options.
     Options,
     /// Help screen.
@@ -62,7 +64,7 @@ pub struct RouteState {
 const DEFAULT_ROUTE_STATE: RouteState = RouteState {
     route: Route::Home,
     active_block: AppBlock::SplashScreen,
-    hovered_block: AppBlock::HomeStories,
+    hovered_block: AppBlock::HomeItems,
 };
 
 /// Global application state.
@@ -86,6 +88,8 @@ pub struct App {
     layout_components: HashMap<UiComponentId, Rect>,
     /// Main screen(s): current stories sorting.
     main_stories_sorting: HnStoriesSorting,
+    /// The currently viewed item (Story or Job posting).
+    currently_viewed_item: Option<DisplayableHackerNewsItem>,
 }
 
 impl Default for App {
@@ -95,6 +99,7 @@ impl Default for App {
             navigation_stack: vec![DEFAULT_ROUTE_STATE],
             layout_components: HashMap::new(),
             main_stories_sorting: HnStoriesSorting::Top,
+            currently_viewed_item: None,
         }
     }
 }
@@ -172,7 +177,7 @@ impl App {
         let current_route = self.get_current_route_mut();
         let can_horizontally_navigate = matches!(
             current_route.active_block,
-            AppBlock::HomeStories | AppBlock::StoryThread
+            AppBlock::HomeItems | AppBlock::ItemThread
         );
 
         let in_help = current_route.route == Route::Help;
@@ -182,15 +187,15 @@ impl App {
             Key::Char('h') if !in_help => self.push_navigation_stack(Route::Help, AppBlock::Help),
             Key::Up => match current_route.hovered_block {
                 AppBlock::Navigation => current_route.hovered_block = AppBlock::Options,
-                AppBlock::HomeStories | AppBlock::StoryThread => {
+                AppBlock::HomeItems | AppBlock::ItemThread => {
                     current_route.hovered_block = AppBlock::Navigation
                 }
-                AppBlock::Options => current_route.hovered_block = AppBlock::HomeStories,
+                AppBlock::Options => current_route.hovered_block = AppBlock::HomeItems,
                 _ => (),
             },
             Key::Down => match current_route.hovered_block {
-                AppBlock::Navigation => current_route.hovered_block = AppBlock::HomeStories,
-                AppBlock::HomeStories | AppBlock::StoryThread => {
+                AppBlock::Navigation => current_route.hovered_block = AppBlock::HomeItems,
+                AppBlock::HomeItems | AppBlock::ItemThread => {
                     current_route.hovered_block = AppBlock::Options
                 }
                 AppBlock::Options => current_route.hovered_block = AppBlock::Navigation,
@@ -198,8 +203,8 @@ impl App {
             },
             Key::Left | Key::Right if can_horizontally_navigate => {
                 match current_route.hovered_block {
-                    AppBlock::HomeStories => current_route.hovered_block = AppBlock::StoryThread,
-                    AppBlock::StoryThread => current_route.hovered_block = AppBlock::HomeStories,
+                    AppBlock::HomeItems => current_route.hovered_block = AppBlock::ItemThread,
+                    AppBlock::ItemThread => current_route.hovered_block = AppBlock::HomeItems,
                     _ => (),
                 }
             }
@@ -274,5 +279,15 @@ impl App {
     /// Set the current stories sorting for the main screen (left panel).
     pub fn set_main_stories_sorting(&mut self, sorting: HnStoriesSorting) {
         self.main_stories_sorting = sorting;
+    }
+
+    /// Get the currently viewed story/job item.
+    pub fn get_currently_viewed_item(&self) -> &Option<DisplayableHackerNewsItem> {
+        &self.currently_viewed_item
+    }
+
+    /// Set the currently viewed story/job item.
+    pub fn set_currently_viewed_item(&mut self, viewed: Option<DisplayableHackerNewsItem>) {
+        self.currently_viewed_item = viewed;
     }
 }

@@ -1,8 +1,8 @@
-use std::time::Duration;
+use std::{collections::HashMap, time::Duration};
 
 use futures::future::join_all;
 use reqwest::Client;
-use types::{HnItem, HnItemIdScalar};
+use types::{HnComment, HnItem, HnItemIdScalar};
 
 use crate::errors::{HnCliError, Result};
 
@@ -55,15 +55,15 @@ impl HnStoriesSections {
 }
 
 /// The internal Hacker News API client.
-///
-/// TODO: add simple caching, with `time`-based invalidation.
-/// TODO: integrate error recovery with caching strategy
 pub struct HnClient {
     /// Base URL of the Hacker News API.
     base_url: &'static str,
     /// `reqwest` client.
     client: Client,
 }
+
+/// Flat storage structure for a comments thread.
+pub type HnItemComments = HashMap<HnItemIdScalar, HnComment>;
 
 impl HnClient {
     pub fn new() -> Result<Self> {
@@ -99,6 +99,16 @@ impl HnClient {
             .json()
             .await
             .map_err(HnCliError::HttpError)
+    }
+
+    /// Try to fetch the comments of a story, starting from the main descendants.
+    pub async fn get_story_comments(
+        &self,
+        descendants_ids: &[HnItemIdScalar],
+    ) -> Result<HnItemComments> {
+        let descendants = self.get_items(descendants_ids).await?;
+
+        todo!()
     }
 
     /// Try to fetch the `HnItem` by its given ID.

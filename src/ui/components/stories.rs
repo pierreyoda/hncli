@@ -30,20 +30,46 @@ use crate::{
 use super::common::get_layout_block_style;
 
 /// A display-ready Hacker News story or job posting.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DisplayableHackerNewsItem {
     /// Unique ID.
-    id: HnItemIdScalar,
+    pub id: HnItemIdScalar,
     /// Posted at.
-    posted_at: DateTime<Utc>,
+    pub posted_at: DateTime<Utc>,
+    /// Posted since, formatted for display.
+    pub posted_since: String,
     /// Username of the poster.
-    by_username: String,
+    pub by_username: String,
     /// Title.
-    title: String,
+    pub title: String,
     /// Score.
-    score: u32,
+    pub score: u32,
     /// Hostname of the URL, if any.
-    url_hostname: Option<String>,
+    pub url_hostname: Option<String>,
+}
+
+const MINUTES_PER_DAY: i64 = 24 * 60;
+
+impl DisplayableHackerNewsItem {
+    pub fn formatted_posted_since(posted_at: &DateTime<Utc>) -> String {
+        let now = Utc::now();
+        let minutes = (now - *posted_at).num_minutes();
+        match minutes {
+            _ if minutes >= MINUTES_PER_DAY => {
+                format!("{} ago", Self::pluralized(minutes / MINUTES_PER_DAY, "day"))
+            }
+            _ if minutes >= 60 => format!("{} ago", Self::pluralized(minutes / 60, "hour")),
+            _ => format!("{} ago", Self::pluralized(minutes, "minute")),
+        }
+    }
+
+    fn pluralized(value: i64, word: &str) -> String {
+        if value > 1 {
+            format!("{} {}s", value, word)
+        } else {
+            format!("{} {}", value, word)
+        }
+    }
 }
 
 impl TryFrom<HnItem> for DisplayableHackerNewsItem {
@@ -51,36 +77,44 @@ impl TryFrom<HnItem> for DisplayableHackerNewsItem {
 
     fn try_from(value: HnItem) -> Result<Self> {
         match value {
-            HnItem::Story(story) => Ok(Self {
-                id: story.id,
-                posted_at: datetime_from_hn_time(story.time),
-                by_username: story.by,
-                title: story.title,
-                score: story.score,
-                url_hostname: story.url.map(|url| {
-                    url::Url::parse(&url[..])
-                        .map_err(HnCliError::UrlParsingError)
-                        .expect("story URL parsing error") // TODO: avoid expect here
-                        .host_str()
-                        .expect("story URL must have an hostname")
-                        .to_owned()
-                }),
-            }),
-            HnItem::Job(job) => Ok(Self {
-                id: job.id,
-                posted_at: datetime_from_hn_time(job.time),
-                by_username: job.by,
-                title: job.title,
-                score: job.score,
-                url_hostname: job.url.map(|url| {
-                    url::Url::parse(&url[..])
-                        .map_err(HnCliError::UrlParsingError)
-                        .expect("job URL parsing error") // TODO: avoid expect here
-                        .host_str()
-                        .expect("job URL must have an hostname")
-                        .to_owned()
-                }),
-            }),
+            HnItem::Story(story) => {
+                let posted_at = datetime_from_hn_time(story.time);
+                Ok(Self {
+                    id: story.id,
+                    posted_at,
+                    posted_since: Self::formatted_posted_since(&posted_at),
+                    by_username: story.by,
+                    title: story.title,
+                    score: story.score,
+                    url_hostname: story.url.map(|url| {
+                        url::Url::parse(&url[..])
+                            .map_err(HnCliError::UrlParsingError)
+                            .expect("story URL parsing error") // TODO: avoid expect here
+                            .host_str()
+                            .expect("story URL must have an hostname")
+                            .to_owned()
+                    }),
+                })
+            }
+            HnItem::Job(job) => {
+                let posted_at = datetime_from_hn_time(job.time);
+                Ok(Self {
+                    id: job.id,
+                    posted_at,
+                    posted_since: Self::formatted_posted_since(&posted_at),
+                    by_username: job.by,
+                    title: job.title,
+                    score: job.score,
+                    url_hostname: job.url.map(|url| {
+                        url::Url::parse(&url[..])
+                            .map_err(HnCliError::UrlParsingError)
+                            .expect("job URL parsing error") // TODO: avoid expect here
+                            .host_str()
+                            .expect("job URL must have an hostname")
+                            .to_owned()
+                    }),
+                })
+            }
             _ => Err(HnCliError::HnItemProcessingError(
                 value.get_id().to_string(),
             )),
@@ -144,6 +178,10 @@ impl UiComponent for StoriesPanel {
                     .expect("can map DisplayableHackerNewsItem")
             })
             .collect();
+
+        // TODO: temp, for testing
+        app.set_currently_viewed_item(Some(displayable_stories[0].clone()));
+
         self.list_state.replace_items(displayable_stories);
 
         self.sorting_type_for_last_update = Some(sorting_type);
@@ -152,7 +190,23 @@ impl UiComponent for StoriesPanel {
     }
 
     fn key_handler(&mut self, key: &Key, app: &mut App) -> Result<bool> {
-        Ok(false)
+        let selected = self.list_state.get_state().selected();
+        Ok(match key {
+            Key::Up | Key::Char('i') => {
+                self.list_state.previous();
+                true
+            }
+            Key::Down | Key::Char('k') => {
+                self.list_state.next();
+                true
+            }
+            Key::Enter if selected.is_some() => {
+                let items = self.list_state.get_items();
+                app.set_currently_viewed_item(Some(items[selected.unwrap()].clone()));
+                true
+            }
+            _ => false,
+        })
     }
 
     fn render(
@@ -162,7 +216,7 @@ impl UiComponent for StoriesPanel {
         app: &App,
     ) -> Result<()> {
         let block = Block::default()
-            .style(get_layout_block_style(app, AppBlock::HomeStories))
+            .style(get_layout_block_style(app, AppBlock::HomeItems))
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded)
             .title("Stories");
@@ -189,7 +243,8 @@ impl UiComponent for StoriesPanel {
                     .fg(Color::Black)
                     .add_modifier(Modifier::BOLD),
             )
-            .highlight_symbol(">> ");
+            .highlight_symbol(">> ")
+            .highlight_style(Style::default().fg(Color::Yellow));
 
         f.render_widget(list_stories, inside);
 

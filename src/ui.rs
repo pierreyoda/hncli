@@ -13,7 +13,9 @@ use crossterm::{
 use tui::{backend::CrosstermBackend, Terminal};
 
 use common::{UiComponent, UiComponentId, UiTickScalar};
-use components::{help::Help, navigation::Navigation, options::Options, stories::StoriesPanel};
+use components::{
+    help::Help, navigation::Navigation, options::Options, stories::StoriesPanel, thread::Thread,
+};
 use handlers::Key;
 
 use crate::{
@@ -107,6 +109,7 @@ impl UserInterface {
         self.register_component(Help::default());
         self.register_component(Navigation::default());
         self.register_component(StoriesPanel::default());
+        self.register_component(Thread::default());
         self.register_component(Options::default());
 
         Ok(rx)

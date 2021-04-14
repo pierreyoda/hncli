@@ -17,3 +17,4 @@ tui = { version = "0.14", default-features = false, features = ["crossterm"] }
 num-traits = "0.2.14"
 chrono = "0.4.19"
 url = "2.2.1"
+html2text = "0.2.1"
