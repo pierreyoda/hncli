@@ -9,7 +9,7 @@ use crate::api::types::HnItemIdScalar;
 #[derive(Debug, Error)]
 pub enum HnCliError {
     #[error("IO error")]
-    IoError(#[from] io::Error),
+    IoError(#[source] io::Error),
     #[error("HTTP client error")]
     HttpError(#[from] reqwest::Error),
     #[error("Threading error")]
