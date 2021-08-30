@@ -1,7 +1,4 @@
-use std::{
-    convert::{TryFrom, TryInto},
-    io::Stdout,
-};
+use std::{convert::TryInto, io::Stdout};
 
 use async_trait::async_trait;
 use tui::{
@@ -15,7 +12,7 @@ use tui::{
 
 use crate::{
     api::{HnClient, HnStoriesSorting},
-    app::{App, AppBlock},
+    app::AppHandle,
     errors::{HnCliError, Result},
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
@@ -23,7 +20,7 @@ use crate::{
     },
 };
 
-use super::common::get_layout_block_style;
+use super::common::COMMON_BLOCK_NORMAL_COLOR;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum HomeOptions {
@@ -94,17 +91,17 @@ impl UiComponent for Options {
         OPTIONS_ID
     }
 
-    fn should_update(&mut self, elapsed_ticks: UiTickScalar, _app: &App) -> Result<bool> {
+    fn should_update(&mut self, elapsed_ticks: UiTickScalar, _app: &AppHandle) -> Result<bool> {
         self.ticks_since_last_press += elapsed_ticks;
 
         Ok(false)
     }
 
-    async fn update(&mut self, _client: &mut HnClient, _app: &mut App) -> Result<()> {
+    async fn update(&mut self, _client: &mut HnClient, _app: &mut AppHandle) -> Result<()> {
         Ok(())
     }
 
-    fn key_handler(&mut self, key: &Key, app: &mut App) -> Result<bool> {
+    fn key_handler(&mut self, key: &Key, app: &mut AppHandle) -> Result<bool> {
         Ok(match key {
             Key::Char('s') if self.ticks_since_last_press >= MIN_TICKS_BETWEEN_PRESSES => {
                 self.selected_sorting_index =
@@ -112,7 +109,7 @@ impl UiComponent for Options {
                 let sorting_type = SORTING_OPTIONS_LIST[self.selected_sorting_index]
                     .clone()
                     .try_into()?;
-                app.set_main_stories_sorting(sorting_type);
+                app.get_state_mut().set_main_stories_sorting(sorting_type);
                 true
             }
             _ => {
@@ -126,10 +123,10 @@ impl UiComponent for Options {
         &self,
         f: &mut Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
-        app: &App,
+        app: &AppHandle,
     ) -> Result<()> {
         let block = Block::default()
-            .style(get_layout_block_style(app, AppBlock::Options))
+            .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
             .border_type(BorderType::Thick)
             .borders(Borders::ALL)
             .title("Options (S to toggle sorting)");

@@ -2,7 +2,6 @@ use std::io::Stdout;
 
 use async_trait::async_trait;
 
-use app::{App, AppBlock};
 use handlers::Key;
 use tui::{
     backend::CrosstermBackend,
@@ -15,7 +14,7 @@ use tui::{
 
 use crate::{
     api::HnClient,
-    app,
+    app::AppHandle,
     errors::Result,
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
@@ -23,7 +22,7 @@ use crate::{
     },
 };
 
-use super::common::get_layout_block_style;
+use super::common::COMMON_BLOCK_NORMAL_COLOR;
 
 /// The Navigation bar provides a convenient way to switch between screens
 /// screens by either pressing the hotkey associated with the title, or by
@@ -66,19 +65,15 @@ impl UiComponent for Navigation {
         NAVIGATION_ID
     }
 
-    fn should_update(&mut self, _elapsed_ticks: UiTickScalar, _app: &App) -> Result<bool> {
+    fn should_update(&mut self, _elapsed_ticks: UiTickScalar, _app: &AppHandle) -> Result<bool> {
         Ok(false)
     }
 
-    async fn update(&mut self, _client: &mut HnClient, _app: &mut App) -> Result<()> {
+    async fn update(&mut self, _client: &mut HnClient, _app: &mut AppHandle) -> Result<()> {
         Ok(())
     }
 
-    fn key_handler(&mut self, key: &Key, app: &mut App) -> Result<bool> {
-        if !app.in_global_focus() && app.get_current_route().active_block != AppBlock::Navigation {
-            return Ok(false);
-        }
-
+    fn key_handler(&mut self, key: &Key, _app: &mut AppHandle) -> Result<bool> {
         Ok(match key {
             Key::Left => {
                 self.previous();
@@ -115,7 +110,7 @@ impl UiComponent for Navigation {
         &self,
         f: &mut Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
-        app: &App,
+        _app: &AppHandle,
     ) -> Result<()> {
         let tabs_titles: Vec<Spans> = self
             .titles
@@ -143,7 +138,7 @@ impl UiComponent for Navigation {
             .select(self.selected_index)
             .block(
                 Block::default()
-                    .style(get_layout_block_style(app, AppBlock::Navigation))
+                    .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
                     .borders(Borders::ALL)
                     .border_type(BorderType::Rounded)
                     .title("Menu"),

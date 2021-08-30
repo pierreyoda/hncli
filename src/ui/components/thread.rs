@@ -1,23 +1,19 @@
-use std::{
-    convert::{TryFrom, TryInto},
-    io::Stdout,
-};
+use std::io::Stdout;
 
 use async_trait::async_trait;
 use html2text::from_read;
 use tui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Style},
-    text::{Span, Spans},
-    widgets::{Block, BorderType, Borders, Tabs},
+    style::Style,
+    widgets::{Block, BorderType, Borders},
     Frame,
 };
 
 use crate::{
-    api::{HnClient, HnStoriesSorting},
-    app::{App, AppBlock},
-    errors::{HnCliError, Result},
+    api::HnClient,
+    app::AppHandle,
+    errors::Result,
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
         handlers::Key,
@@ -25,7 +21,7 @@ use crate::{
 };
 
 use super::{
-    common::get_layout_block_style, stories::DisplayableHackerNewsItem,
+    common::COMMON_BLOCK_NORMAL_COLOR, stories::DisplayableHackerNewsItem,
     widgets::story_header::StoryHeader,
 };
 
@@ -59,21 +55,27 @@ impl UiComponent for Thread {
         THREAD_ID
     }
 
-    fn should_update(&mut self, elapsed_ticks: UiTickScalar, app: &App) -> Result<bool> {
+    fn should_update(&mut self, elapsed_ticks: UiTickScalar, app: &AppHandle) -> Result<bool> {
         self.ticks_since_last_update += elapsed_ticks;
 
-        // TODO: only compare IDs?
         Ok(self.ticks_since_last_update >= MEAN_TICKS_BETWEEN_UPDATES
-            || app.get_currently_viewed_item() != &self.item_details)
+            || match &self.item_details {
+                None => true,
+                Some(item) => match app.get_state().get_currently_viewed_item() {
+                    Some(app_item) => item.id != app_item.id,
+                    None => false,
+                },
+            })
     }
 
-    async fn update(&mut self, _client: &mut HnClient, app: &mut App) -> Result<()> {
-        self.item_details = app.get_currently_viewed_item().clone();
+    async fn update(&mut self, _client: &mut HnClient, app: &mut AppHandle) -> Result<()> {
+        self.ticks_since_last_update = 0;
+        self.item_details = app.get_state().get_currently_viewed_item().clone();
 
         Ok(())
     }
 
-    fn key_handler(&mut self, key: &Key, app: &mut App) -> Result<bool> {
+    fn key_handler(&mut self, key: &Key, _app: &mut AppHandle) -> Result<bool> {
         Ok(match key {
             _ => false,
         })
@@ -83,11 +85,11 @@ impl UiComponent for Thread {
         &self,
         f: &mut Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
-        app: &App,
+        _app: &AppHandle,
     ) -> Result<()> {
         // Layout
         let block = Block::default()
-            .style(get_layout_block_style(app, AppBlock::ItemThread))
+            .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
             .border_type(BorderType::Thick)
             .borders(Borders::ALL)
             .title("Thread");

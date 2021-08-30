@@ -18,7 +18,7 @@ use crate::{
         types::{HnItem, HnItemIdScalar},
         HnClient, HnStoriesSorting,
     },
-    app::{App, AppBlock},
+    app::AppHandle,
     errors::{HnCliError, Result},
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
@@ -27,7 +27,7 @@ use crate::{
     },
 };
 
-use super::common::get_layout_block_style;
+use super::common::COMMON_BLOCK_NORMAL_COLOR;
 
 /// A display-ready Hacker News story or job posting.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -153,20 +153,22 @@ impl UiComponent for StoriesPanel {
         STORIES_PANEL_ID
     }
 
-    fn should_update(&mut self, elapsed_ticks: UiTickScalar, app: &App) -> Result<bool> {
+    fn should_update(&mut self, elapsed_ticks: UiTickScalar, app: &AppHandle) -> Result<bool> {
         self.ticks_since_last_update += elapsed_ticks;
 
         Ok(self.ticks_since_last_update >= MEAN_TICKS_BETWEEN_UPDATES
             || match &self.sorting_type_for_last_update {
-                Some(last_sorting_type) => last_sorting_type != app.get_main_stories_sorting(),
+                Some(last_sorting_type) => {
+                    last_sorting_type != app.get_state().get_main_stories_sorting()
+                }
                 None => true, // first fetch
             })
     }
 
-    async fn update(&mut self, client: &mut HnClient, app: &mut App) -> Result<()> {
+    async fn update(&mut self, client: &mut HnClient, app: &mut AppHandle) -> Result<()> {
         self.ticks_since_last_update = 0;
 
-        let sorting_type = *app.get_main_stories_sorting();
+        let sorting_type = *app.get_state().get_main_stories_sorting();
 
         // Data fetching
         let stories = client.get_home_items(sorting_type).await?;
@@ -180,7 +182,8 @@ impl UiComponent for StoriesPanel {
             .collect();
 
         // TODO: temp, for testing
-        app.set_currently_viewed_item(Some(displayable_stories[0].clone()));
+        app.get_state_mut()
+            .set_currently_viewed_item(Some(displayable_stories[0].clone()));
 
         self.list_state.replace_items(displayable_stories);
 
@@ -189,7 +192,7 @@ impl UiComponent for StoriesPanel {
         Ok(())
     }
 
-    fn key_handler(&mut self, key: &Key, app: &mut App) -> Result<bool> {
+    fn key_handler(&mut self, key: &Key, app: &mut AppHandle) -> Result<bool> {
         let selected = self.list_state.get_state().selected();
         Ok(match key {
             Key::Up | Key::Char('i') => {
@@ -202,7 +205,8 @@ impl UiComponent for StoriesPanel {
             }
             Key::Enter if selected.is_some() => {
                 let items = self.list_state.get_items();
-                app.set_currently_viewed_item(Some(items[selected.unwrap()].clone()));
+                app.get_state_mut()
+                    .set_currently_viewed_item(Some(items[selected.unwrap()].clone()));
                 true
             }
             _ => false,
@@ -213,10 +217,10 @@ impl UiComponent for StoriesPanel {
         &self,
         f: &mut tui::Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
-        app: &App,
+        _app: &AppHandle,
     ) -> Result<()> {
         let block = Block::default()
-            .style(get_layout_block_style(app, AppBlock::HomeItems))
+            .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded)
             .title("Stories");

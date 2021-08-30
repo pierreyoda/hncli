@@ -1,276 +1,80 @@
-use std::collections::HashMap;
+use std::{
+    cell::{Ref, RefCell, RefMut},
+    collections::HashMap,
+    sync::Arc,
+};
 
-use tui::layout::{Constraint, Direction, Layout, Rect};
+use tui::layout::Rect;
 
 use crate::{
     api::HnStoriesSorting,
     ui::{
         common::UiComponentId,
-        components::{
-            help::HELP_ID,
-            navigation::NAVIGATION_ID,
-            options::OPTIONS_ID,
-            stories::{DisplayableHackerNewsItem, STORIES_PANEL_ID},
-        },
+        components::stories::DisplayableHackerNewsItem,
         handlers::Key,
+        router::{AppRoute, AppRouter},
+        screens::{Screen, ScreenComponentsRegistry, ScreenEventResponse},
     },
 };
 
-/// A block is a keyboard-navigable section of the UI.
+/// Manipulate application state from the screens and components.
 ///
-/// # Example with two blocks
-///
-/// ```md
-/// ------------------------------------------
-/// |         |                              |
-/// |         |                              |
-/// | stories |       thread                 |
-/// |         |                              |
-/// |         |                              |
-/// ------------------------------------------
-/// ```
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum AppBlock {
-    /// Welcome splash screen.
-    SplashScreen,
-    /// Navigation.
-    Navigation,
-    /// Stories/job postings list on the home page, sortable by "Top", "Best" or "New".
-    HomeItems,
-    /// Story or job posting details, along with its comments.
-    ItemThread,
-    /// Options.
-    Options,
-    /// Help screen.
-    Help,
+/// NB: Using mutable references (`&'a mut AppState`) would cause lifetime issues in the `ui` module.
+#[derive(Clone)]
+pub struct AppHandle {
+    state: Arc<RefCell<AppState>>,
+    router: Arc<RefCell<AppRouter>>,
+    screen: Arc<RefCell<Box<dyn Screen>>>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum Route {
-    Home,
-    Ask,
-    Show,
-    Jobs,
-    Help,
+impl AppHandle {
+    pub fn get_state(&self) -> Ref<AppState> {
+        self.state.borrow()
+    }
+
+    pub fn get_state_mut(&mut self) -> RefMut<AppState> {
+        self.state.try_borrow_mut().unwrap()
+    }
+
+    /// Push a new navigation route state.
+    pub fn router_push_navigation_stack(&mut self, route: AppRoute) {
+        let mut screen = self.screen.try_borrow_mut().unwrap();
+        let mut router = self.router.try_borrow_mut().unwrap();
+        router.push_navigation_stack(route.clone());
+        *screen = AppRouter::build_screen_from_route(&route);
+    }
+
+    /// Go to the previous navigation route state.
+    pub fn router_pop_navigation_stack(&mut self) -> Option<AppRoute> {
+        let mut screen = self.screen.try_borrow_mut().unwrap();
+        let mut router = self.router.try_borrow_mut().unwrap();
+        let previous = router.pop_navigation_stack();
+        *screen = AppRouter::build_screen_from_route(router.get_current_route());
+        previous
+    }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct RouteState {
-    pub route: Route,
-    pub active_block: AppBlock,
-    pub hovered_block: AppBlock,
-}
-
-const DEFAULT_ROUTE_STATE: RouteState = RouteState {
-    route: Route::Home,
-    active_block: AppBlock::SplashScreen,
-    hovered_block: AppBlock::HomeItems,
-};
+unsafe impl Send for AppHandle {}
 
 /// Global application state.
 #[derive(Debug)]
-pub struct App {
-    /// Currently focus `AppBlock` in the application.
-    ///
-    /// If no application has focus (gained with the 'Escape' key),
-    /// then the global application has focus which allows for moving between blocks.
-    current_focus: Option<AppBlock>,
-    /// The current navigation stack.
-    ///
-    /// Example: home > story #1 details > comment #2 thread.
-    navigation_stack: Vec<RouteState>,
-    /// The current layout state.
-    ///
-    /// Each component with a defined target `Rect` will be displayed.
-    ///
-    /// This is the responsability of `App` since `UserInterface` should not be
-    /// aware of any business logic, for instance with regards to navigation.
-    layout_components: HashMap<UiComponentId, Rect>,
+pub struct AppState {
     /// Main screen(s): current stories sorting.
     main_stories_sorting: HnStoriesSorting,
     /// The currently viewed item (Story or Job posting).
     currently_viewed_item: Option<DisplayableHackerNewsItem>,
 }
 
-impl Default for App {
+impl Default for AppState {
     fn default() -> Self {
         Self {
-            current_focus: None,
-            navigation_stack: vec![DEFAULT_ROUTE_STATE],
-            layout_components: HashMap::new(),
             main_stories_sorting: HnStoriesSorting::Top,
             currently_viewed_item: None,
         }
     }
 }
 
-impl App {
-    /// Get the current route state.
-    pub fn get_current_route(&self) -> &RouteState {
-        self.navigation_stack.last().unwrap_or(&DEFAULT_ROUTE_STATE)
-    }
-
-    fn get_current_route_mut(&mut self) -> &mut RouteState {
-        self.navigation_stack.last_mut().unwrap()
-    }
-
-    /// Set the current route state.
-    pub fn set_current_route(&mut self, active: Option<AppBlock>, hovered: Option<AppBlock>) {
-        let current_route = self.get_current_route_mut();
-        if let Some(active_block) = active {
-            current_route.active_block = active_block;
-        }
-        if let Some(hovered_block) = hovered {
-            current_route.hovered_block = hovered_block;
-        }
-    }
-
-    /// Push a new navigation route state.
-    pub fn push_navigation_stack(&mut self, route: Route, block: AppBlock) {
-        self.navigation_stack.push(RouteState {
-            route,
-            active_block: block,
-            hovered_block: block,
-        });
-    }
-
-    /// Go to the previous navigation route state.
-    pub fn pop_navigation_stack(&mut self) -> Option<RouteState> {
-        if self.navigation_stack.is_empty() {
-            None
-        } else {
-            self.navigation_stack.pop()
-        }
-    }
-
-    /// Is the application in global focus?
-    ///
-    /// If true, this means that no particular block is currently actively selected.
-    pub fn in_global_focus(&self) -> bool {
-        self.current_focus.is_none()
-    }
-
-    /// Has the given block the current focus?
-    pub fn has_current_focus(&self, block: AppBlock) -> bool {
-        block == self.get_current_route().hovered_block
-    }
-
-    /// Handle an incoming key event, at the application level. Returns true if
-    /// the event is to be captured (swallowed) and not passed down to components.
-    ///
-    /// For keyboard navigation between blocks, here is the current application layout:
-    ///
-    /// ```md
-    /// ------------------------------------------
-    /// |              navigation                |
-    /// ------------------------------------------
-    /// |         |                              |
-    /// |         |                              |
-    /// | stories |       thread                 |
-    /// |         |                              |
-    /// |         |                              |
-    /// ------------------------------------------
-    /// |          options (eg. sorting)         |
-    /// ------------------------------------------
-    /// ```
-    pub fn handle_key_event(&mut self, key: &Key) -> bool {
-        let current_route = self.get_current_route_mut();
-        let can_horizontally_navigate = matches!(
-            current_route.active_block,
-            AppBlock::HomeItems | AppBlock::ItemThread
-        );
-
-        let in_help = current_route.route == Route::Help;
-        match key {
-            Key::Escape if !in_help => self.current_focus = None,
-            Key::Enter if !in_help => current_route.active_block = current_route.hovered_block,
-            Key::Char('h') if !in_help => self.push_navigation_stack(Route::Help, AppBlock::Help),
-            Key::Up => match current_route.hovered_block {
-                AppBlock::Navigation => current_route.hovered_block = AppBlock::Options,
-                AppBlock::HomeItems | AppBlock::ItemThread => {
-                    current_route.hovered_block = AppBlock::Navigation
-                }
-                AppBlock::Options => current_route.hovered_block = AppBlock::HomeItems,
-                _ => (),
-            },
-            Key::Down => match current_route.hovered_block {
-                AppBlock::Navigation => current_route.hovered_block = AppBlock::HomeItems,
-                AppBlock::HomeItems | AppBlock::ItemThread => {
-                    current_route.hovered_block = AppBlock::Options
-                }
-                AppBlock::Options => current_route.hovered_block = AppBlock::Navigation,
-                _ => (),
-            },
-            Key::Left | Key::Right if can_horizontally_navigate => {
-                match current_route.hovered_block {
-                    AppBlock::HomeItems => current_route.hovered_block = AppBlock::ItemThread,
-                    AppBlock::ItemThread => current_route.hovered_block = AppBlock::HomeItems,
-                    _ => (),
-                }
-            }
-            _ => return false,
-        }
-
-        true
-    }
-
-    /// Update the components' layout according to current terminal
-    /// frame size (with automatic resizing).
-    ///
-    /// Also organically takes care of routing, since components not found in the
-    /// `layout_components` hash are not rendered. This is done for simplicity purposes.
-    pub fn update_layout(&mut self, frame_size: Rect) {
-        use Route::*;
-
-        self.layout_components.clear();
-
-        // main layout chunks
-        let main_layout_chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .margin(2)
-            .constraints(
-                [
-                    Constraint::Length(3),
-                    Constraint::Min(2),
-                    Constraint::Length(3),
-                ]
-                .as_ref(),
-            )
-            .split(frame_size);
-
-        match self.get_current_route().route {
-            Home | Ask | Show | Jobs => {
-                let main_screen_chunks = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .horizontal_margin(0)
-                    .constraints([Constraint::Percentage(40), Constraint::Percentage(100)].as_ref())
-                    .split(main_layout_chunks[1]);
-
-                self.layout_components
-                    .insert(NAVIGATION_ID, main_layout_chunks[0]);
-                self.layout_components
-                    .insert(STORIES_PANEL_ID, main_screen_chunks[0]);
-                self.layout_components
-                    .insert(OPTIONS_ID, main_layout_chunks[2]);
-            }
-            Help => {
-                let full_screen_chunks = Layout::default()
-                    .direction(Direction::Vertical)
-                    .horizontal_margin(0)
-                    .constraints([Constraint::Percentage(100)].as_ref())
-                    .split(main_layout_chunks[0]);
-
-                self.layout_components
-                    .insert(HELP_ID, full_screen_chunks[0]);
-            }
-        }
-    }
-
-    /// Get, if any, the rendering `Rect` target for the given component.
-    pub fn get_component_rendering_rect(&self, id: &UiComponentId) -> Option<&Rect> {
-        self.layout_components.get(id)
-    }
-
+impl AppState {
     /// Get the current stories sorting for the main screen (left panel).
     pub fn get_main_stories_sorting(&self) -> &HnStoriesSorting {
         &self.main_stories_sorting
@@ -291,3 +95,78 @@ impl App {
         self.currently_viewed_item = viewed;
     }
 }
+
+/// Global application.
+#[derive(Debug)]
+pub struct App {
+    /// Application state.
+    state: Arc<RefCell<AppState>>,
+    /// Application router.
+    router: Arc<RefCell<AppRouter>>,
+    /// Cached current Screen.
+    current_screen: Arc<RefCell<Box<dyn Screen>>>,
+    /// The current layout state.
+    ///
+    /// Each component with a defined target `Rect` will be displayed.
+    ///
+    /// This is the responsibility of `App` since `UserInterface` should not be
+    /// aware of any business logic, for instance with regards to navigation.
+    layout_components: ScreenComponentsRegistry,
+}
+
+impl App {
+    pub fn new() -> Self {
+        let initial_route = AppRoute::Home;
+        let (router, current_screen) = AppRouter::new(initial_route);
+        Self {
+            state: Arc::new(RefCell::new(Default::default())),
+            router: Arc::new(RefCell::new(router)),
+            current_screen: Arc::new(RefCell::new(current_screen)),
+            layout_components: HashMap::new(),
+        }
+    }
+
+    pub fn get_handle(&mut self) -> AppHandle {
+        AppHandle {
+            state: self.state.clone(),
+            router: self.router.clone(),
+            screen: self.current_screen.clone(),
+        }
+    }
+
+    /// Handle an incoming key event, at the application level. Returns true if
+    /// the event is to be captured (swallowed) and not passed down to components.
+    pub fn handle_key_event(&mut self, key: &Key) -> bool {
+        let mut handle = self.get_handle();
+        match self
+            .current_screen
+            .try_borrow_mut()
+            .unwrap()
+            .handle_key_event(key, &mut handle)
+        {
+            ScreenEventResponse::Caught => true,
+            ScreenEventResponse::PassThrough => false,
+        }
+    }
+
+    /// Update the components' layout according to current terminal
+    /// frame size (with automatic resizing).
+    ///
+    /// Also organically takes care of routing, since components not found in the
+    /// `layout_components` hash are not rendered. This is done for simplicity purposes.
+    pub fn update_layout(&mut self, frame_size: Rect) {
+        self.layout_components.clear();
+        let handle = self.get_handle();
+        self.current_screen
+            .try_borrow_mut()
+            .unwrap()
+            .compute_layout(frame_size, &mut self.layout_components, &handle);
+    }
+
+    /// Get, if any, the rendering `Rect` target for the given component.
+    pub fn get_component_rendering_rect(&self, id: &UiComponentId) -> Option<&Rect> {
+        self.layout_components.get(id)
+    }
+}
+
+unsafe impl Send for App {}

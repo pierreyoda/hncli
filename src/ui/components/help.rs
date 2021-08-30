@@ -2,7 +2,6 @@ use std::io::Stdout;
 
 use async_trait::async_trait;
 
-use app::App;
 use handlers::Key;
 use tui::{
     backend::CrosstermBackend,
@@ -15,7 +14,7 @@ use tui::{
 use super::common::HNCLI_VERSION;
 use crate::{
     api::HnClient,
-    app,
+    app::AppHandle,
     errors::Result,
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
@@ -43,29 +42,23 @@ impl UiComponent for Help {
         HELP_ID
     }
 
-    fn should_update(&mut self, _elapsed_ticks: UiTickScalar, _app: &App) -> Result<bool> {
+    fn should_update(&mut self, _elapsed_ticks: UiTickScalar, _app: &AppHandle) -> Result<bool> {
         Ok(false)
     }
 
-    async fn update(&mut self, _client: &mut HnClient, _app: &mut App) -> Result<()> {
+    async fn update(&mut self, _client: &mut HnClient, _app: &mut AppHandle) -> Result<()> {
         Ok(())
     }
 
-    fn key_handler(&mut self, key: &Key, app: &mut App) -> Result<bool> {
-        Ok(match key {
-            Key::Escape | Key::Enter | Key::Char('h') => {
-                app.pop_navigation_stack();
-                true
-            }
-            _ => false,
-        })
+    fn key_handler(&mut self, key: &Key, app: &mut AppHandle) -> Result<bool> {
+        Ok(false)
     }
 
     fn render(
         &self,
         f: &mut Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
-        _app: &App,
+        _app: &AppHandle,
     ) -> Result<()> {
         let block = Block::default()
             .border_type(BorderType::Thick)

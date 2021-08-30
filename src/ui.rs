@@ -1,7 +1,11 @@
 use std::{
+    cell::RefCell,
     collections::HashMap,
     io::Stdout,
-    sync::mpsc::{self, Receiver},
+    sync::{
+        mpsc::{self, Receiver},
+        Arc,
+    },
     thread,
     time::{Duration, Instant},
 };
@@ -27,8 +31,10 @@ use crate::{
 pub mod common;
 pub mod components;
 pub mod handlers;
+mod help;
 mod panels;
-mod screens;
+pub mod router;
+pub mod screens;
 mod utils;
 
 type TerminalUi = Terminal<CrosstermBackend<Stdout>>;
@@ -75,7 +81,7 @@ impl UserInterface {
         Ok(Self {
             terminal,
             client,
-            app: App::default(),
+            app: App::new(),
             components: HashMap::new(),
         })
     }
@@ -121,19 +127,20 @@ impl UserInterface {
 
         'ui: loop {
             let app = &mut self.app;
+            let app_handle = app.get_handle();
             let components = &self.components;
             self.terminal
                 .draw(|frame| {
-                    // refresh application chunks
+                    // // refresh application chunks
                     app.update_layout(frame.size());
 
-                    // render components
+                    // // render components
                     for (id, wrapper) in components.iter() {
                         match app.get_component_rendering_rect(id) {
                             None => (), // no rendering
                             Some(inside_rect) => wrapper
                                 .component
-                                .render(frame, *inside_rect, app)
+                                .render(frame, *inside_rect, &app_handle)
                                 .expect("no component rendering error"),
                         }
                     }
@@ -165,17 +172,18 @@ impl UserInterface {
 
     /// Check all active components for any necessary update.
     async fn update(&mut self) -> Result<()> {
+        let mut app_handle = self.app.get_handle();
         for wrapper in self.components.values_mut() {
             wrapper.ticks_elapsed += 1;
             // TODO: better error handling (per-component?)
             if wrapper.active
                 && wrapper
                     .component
-                    .should_update(wrapper.ticks_elapsed, &self.app)?
+                    .should_update(wrapper.ticks_elapsed, &app_handle)?
             {
                 wrapper
                     .component
-                    .update(&mut self.client, &mut self.app)
+                    .update(&mut self.client, &mut app_handle)
                     .await?;
                 wrapper.ticks_elapsed = 0;
             }
@@ -186,11 +194,12 @@ impl UserInterface {
 
     /// Handle an incoming key event through all active components.
     fn handle_key_event(&mut self, key: &Key) -> Result<()> {
+        let mut app_handle = self.app.get_handle();
         for wrapper in self.components.values_mut() {
             if !wrapper.active {
                 continue;
             }
-            if wrapper.component.key_handler(key, &mut self.app)? {
+            if wrapper.component.key_handler(key, &mut app_handle)? {
                 break;
             }
         }
