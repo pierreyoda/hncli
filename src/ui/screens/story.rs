@@ -9,6 +9,7 @@ use crate::{
         },
         handlers::Key,
         router::{AppRoute, AppRouter},
+        utils::open_browser_tab,
     },
 };
 
@@ -67,7 +68,12 @@ impl Screen for StoryDetailsScreen {
                 (ScreenEventResponse::Caught, None)
             }
             Key::Char('o') => {
-                // TODO: open link or hacker news discussion page in new browser tab
+                let item_link = self
+                    .item
+                    .url
+                    .clone()
+                    .unwrap_or(self.item.get_hacker_news_link());
+                open_browser_tab(item_link.as_str());
                 (ScreenEventResponse::Caught, None)
             }
             _ => (ScreenEventResponse::PassThrough, None),

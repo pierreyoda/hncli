@@ -138,11 +138,10 @@ impl App {
         // global help page toggle
         if matches!(key, Key::Char('h')) {
             if self.router.get_current_route().is_help() {
-                let mut context = self.get_context();
-                context.router_pop_navigation_stack();
+                self.get_context().router_pop_navigation_stack();
             } else {
-                let mut context = self.get_context();
-                context.router_push_navigation_stack(AppRoute::Help);
+                self.get_context()
+                    .router_push_navigation_stack(AppRoute::Help);
             }
             return true;
         }

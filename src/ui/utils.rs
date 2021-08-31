@@ -109,6 +109,11 @@ pub fn datetime_from_hn_time(time: HnItemDateScalar) -> DateTime<Utc> {
     DateTime::from_utc(naive, Utc)
 }
 
+/// Open a link in a new browser tab.
+pub fn open_browser_tab(url: &str) {
+    let _ = webbrowser::open(url);
+}
+
 #[cfg(test)]
 mod tests {
     use super::{datetime_from_hn_time, ItemWithId, StatefulList};

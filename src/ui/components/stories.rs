@@ -24,7 +24,7 @@ use crate::{
         common::{UiComponent, UiComponentId, UiTickScalar},
         handlers::Key,
         router::AppRoute,
-        utils::{datetime_from_hn_time, ItemWithId, StatefulList},
+        utils::{datetime_from_hn_time, open_browser_tab, ItemWithId, StatefulList},
     },
 };
 
@@ -45,6 +45,8 @@ pub struct DisplayableHackerNewsItem {
     pub title: String,
     /// Score.
     pub score: u32,
+    /// Item URL, if any.
+    pub url: Option<String>,
     /// Hostname of the URL, if any.
     pub url_hostname: Option<String>,
 }
@@ -58,6 +60,10 @@ impl ItemWithId<HnItemIdScalar> for DisplayableHackerNewsItem {
 const MINUTES_PER_DAY: i64 = 24 * 60;
 
 impl DisplayableHackerNewsItem {
+    pub fn get_hacker_news_link(&self) -> String {
+        format!("https://news.ycombinator.com/item?id={}", self.id)
+    }
+
     pub fn formatted_posted_since(posted_at: &DateTime<Utc>) -> String {
         let now = Utc::now();
         let minutes = (now - *posted_at).num_minutes();
@@ -93,6 +99,7 @@ impl TryFrom<HnItem> for DisplayableHackerNewsItem {
                     by_username: story.by,
                     title: story.title,
                     score: story.score,
+                    url: story.url.clone(),
                     url_hostname: story.url.map(|url| {
                         url::Url::parse(&url[..])
                             .map_err(HnCliError::UrlParsingError)
@@ -112,6 +119,7 @@ impl TryFrom<HnItem> for DisplayableHackerNewsItem {
                     by_username: job.by,
                     title: job.title,
                     score: job.score,
+                    url: job.url.clone(),
                     url_hostname: job.url.map(|url| {
                         url::Url::parse(&url[..])
                             .map_err(HnCliError::UrlParsingError)
@@ -189,6 +197,9 @@ impl UiComponent for StoriesPanel {
             .collect();
 
         self.list_state.replace_items(displayable_stories);
+        if self.list_state.get_state().selected().is_none() {
+            self.list_state.get_state().select(Some(0));
+        }
 
         self.sorting_type_for_last_update = Some(sorting_type);
 
@@ -204,6 +215,16 @@ impl UiComponent for StoriesPanel {
             }
             Key::Down | Key::Char('k') => {
                 self.list_state.next();
+                true
+            }
+            Key::Char('o') => {
+                let items = self.list_state.get_items();
+                let selected_item = &items[selected.unwrap()];
+                let item_link = selected_item
+                    .url
+                    .clone()
+                    .unwrap_or(selected_item.get_hacker_news_link());
+                open_browser_tab(item_link.as_str());
                 true
             }
             Key::Enter if selected.is_some() => {

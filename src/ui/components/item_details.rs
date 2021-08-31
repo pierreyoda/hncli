@@ -69,14 +69,13 @@ impl UiComponent for ItemDetails {
                 .border_type(BorderType::Rounded);
 
             let text = vec![
-                Spans::from(&item.title[..]),
-                Spans::from(item.url_hostname.clone().unwrap_or("".to_string())),
+                Spans::from(item.title.as_str()),
+                Spans::from(item.url_hostname.clone().unwrap_or_else(|| "".to_string())),
                 Spans::from(format!(
-                    "{} points. Posted by {}",
-                    item.score, item.by_username
+                    "{} points by {} {}",
+                    item.score, item.by_username, item.posted_since
                 )),
                 // TODO: add total comments count if possible
-                Spans::from(&item.posted_since[..]),
             ];
             let paragraph = Paragraph::new(text)
                 .block(block)
