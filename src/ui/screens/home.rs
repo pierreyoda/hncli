@@ -1,11 +1,11 @@
 use tui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
-    app::AppHandle,
+    app::AppState,
     ui::{
         components::{navigation::NAVIGATION_ID, options::OPTIONS_ID, stories::STORIES_PANEL_ID},
         handlers::Key,
-        router::AppRoute,
+        router::{AppRoute, AppRouter},
     },
 };
 
@@ -40,21 +40,29 @@ impl HomeScreen {
 }
 
 impl Screen for HomeScreen {
-    fn handle_key_event(&mut self, key: &Key, app: &mut AppHandle) -> ScreenEventResponse {
+    fn handle_key_event(
+        &self,
+        key: &Key,
+        router: &mut AppRouter,
+        _state: &mut AppState,
+    ) -> (ScreenEventResponse, Option<AppRoute>) {
         match key {
             Key::Char('h') => {
-                app.router_push_navigation_stack(AppRoute::Help);
-                ScreenEventResponse::Caught
+                router.push_navigation_stack(AppRoute::Help);
+                (
+                    ScreenEventResponse::Caught,
+                    Some(router.get_current_route().clone()),
+                )
             }
-            _ => ScreenEventResponse::PassThrough,
+            _ => (ScreenEventResponse::PassThrough, None),
         }
     }
 
     fn compute_layout(
-        &mut self,
+        &self,
         frame_size: Rect,
         components_registry: &mut ScreenComponentsRegistry,
-        _app: &AppHandle,
+        _state: &AppState,
     ) {
         // main layout chunks
         let main_layout_chunks = Layout::default()

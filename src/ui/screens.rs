@@ -2,9 +2,13 @@ use std::{collections::HashMap, fmt::Debug};
 
 use tui::layout::Rect;
 
-use crate::app::AppHandle;
+use crate::app::AppState;
 
-use super::{common::UiComponentId, handlers::Key};
+use super::{
+    common::UiComponentId,
+    handlers::Key,
+    router::{AppRoute, AppRouter},
+};
 
 pub mod help;
 pub mod home;
@@ -26,13 +30,20 @@ pub enum ScreenEventResponse {
 pub trait Screen: Debug + Send {
     /// Handle an incoming key event, at the application level. Returns true if
     /// the event is to be captured (swallowed) and not passed down to components.
-    fn handle_key_event(&mut self, key: &Key, app: &mut AppHandle) -> ScreenEventResponse;
+    ///
+    /// Returns the (event_response, new_route_if_navigated) tuple.
+    fn handle_key_event(
+        &self,
+        key: &Key,
+        router: &mut AppRouter,
+        state: &mut AppState,
+    ) -> (ScreenEventResponse, Option<AppRoute>);
 
     /// Compute the components' layout according to current terminal frame size.
     fn compute_layout(
-        &mut self,
+        &self,
         frame_size: Rect,
         components_registry: &mut ScreenComponentsRegistry,
-        app: &AppHandle,
+        state: &AppState,
     );
 }

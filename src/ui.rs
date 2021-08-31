@@ -127,7 +127,6 @@ impl UserInterface {
 
         'ui: loop {
             let app = &mut self.app;
-            let app_handle = app.get_handle();
             let components = &self.components;
             self.terminal
                 .draw(|frame| {
@@ -136,11 +135,14 @@ impl UserInterface {
 
                     // // render components
                     for (id, wrapper) in components.iter() {
-                        match app.get_component_rendering_rect(id) {
+                        let component_rendering_rect =
+                            app.get_component_rendering_rect(id).cloned();
+                        let app_handle = app.get_handle();
+                        match component_rendering_rect {
                             None => (), // no rendering
                             Some(inside_rect) => wrapper
                                 .component
-                                .render(frame, *inside_rect, &app_handle)
+                                .render(frame, inside_rect, &app_handle)
                                 .expect("no component rendering error"),
                         }
                     }

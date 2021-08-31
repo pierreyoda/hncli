@@ -1,8 +1,12 @@
 use tui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
-    app::AppHandle,
-    ui::{components::help::HELP_ID, handlers::Key},
+    app::{AppHandle, AppState},
+    ui::{
+        components::help::HELP_ID,
+        handlers::Key,
+        router::{AppRoute, AppRouter},
+    },
 };
 
 use super::{Screen, ScreenComponentsRegistry, ScreenEventResponse};
@@ -18,21 +22,29 @@ impl HelpScreen {
 }
 
 impl Screen for HelpScreen {
-    fn handle_key_event(&mut self, key: &Key, app: &mut AppHandle) -> ScreenEventResponse {
+    fn handle_key_event(
+        &self,
+        key: &Key,
+        router: &mut AppRouter,
+        _state: &mut AppState,
+    ) -> (ScreenEventResponse, Option<AppRoute>) {
         match key {
             Key::Escape | Key::Enter | Key::Char('h') => {
-                app.router_pop_navigation_stack();
-                ScreenEventResponse::Caught
+                router.pop_navigation_stack();
+                (
+                    ScreenEventResponse::Caught,
+                    Some(router.get_current_route().clone()),
+                )
             }
-            _ => ScreenEventResponse::PassThrough,
+            _ => (ScreenEventResponse::PassThrough, None),
         }
     }
 
     fn compute_layout(
-        &mut self,
+        &self,
         frame_size: Rect,
         components_registry: &mut ScreenComponentsRegistry,
-        _app: &AppHandle,
+        _state: &AppState,
     ) {
         // main layout chunks
         let main_layout_chunks = Layout::default()

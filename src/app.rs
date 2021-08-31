@@ -1,8 +1,4 @@
-use std::{
-    cell::{Ref, RefCell, RefMut},
-    collections::HashMap,
-    sync::Arc,
-};
+use std::collections::HashMap;
 
 use tui::layout::Rect;
 
@@ -17,44 +13,39 @@ use crate::{
     },
 };
 
-/// Manipulate application state from the screens and components.
+/// Interact with application state from the components.
 ///
 /// NB: Using mutable references (`&'a mut AppState`) would cause lifetime issues in the `ui` module.
-#[derive(Clone)]
-pub struct AppHandle {
-    state: Arc<RefCell<AppState>>,
-    router: Arc<RefCell<AppRouter>>,
-    screen: Arc<RefCell<Box<dyn Screen>>>,
+pub struct AppHandle<'a> {
+    state: &'a mut AppState,
+    router: &'a mut AppRouter,
+    screen: &'a mut Box<dyn Screen>,
 }
 
-impl AppHandle {
-    pub fn get_state(&self) -> Ref<AppState> {
-        self.state.borrow()
+impl<'a> AppHandle<'a> {
+    pub fn get_state(&self) -> &AppState {
+        self.state
     }
 
-    pub fn get_state_mut(&mut self) -> RefMut<AppState> {
-        self.state.try_borrow_mut().unwrap()
+    pub fn get_state_mut(&mut self) -> &mut AppState {
+        self.state
     }
 
     /// Push a new navigation route state.
     pub fn router_push_navigation_stack(&mut self, route: AppRoute) {
-        let mut screen = self.screen.try_borrow_mut().unwrap();
-        let mut router = self.router.try_borrow_mut().unwrap();
-        router.push_navigation_stack(route.clone());
-        *screen = AppRouter::build_screen_from_route(&route);
+        self.router.push_navigation_stack(route.clone());
+        *self.screen = AppRouter::build_screen_from_route(&route);
     }
 
     /// Go to the previous navigation route state.
     pub fn router_pop_navigation_stack(&mut self) -> Option<AppRoute> {
-        let mut screen = self.screen.try_borrow_mut().unwrap();
-        let mut router = self.router.try_borrow_mut().unwrap();
-        let previous = router.pop_navigation_stack();
-        *screen = AppRouter::build_screen_from_route(router.get_current_route());
+        let previous = self.router.pop_navigation_stack();
+        *self.screen = AppRouter::build_screen_from_route(self.router.get_current_route());
         previous
     }
 }
 
-unsafe impl Send for AppHandle {}
+unsafe impl<'a> Send for AppHandle<'a> {}
 
 /// Global application state.
 #[derive(Debug)]
@@ -100,11 +91,11 @@ impl AppState {
 #[derive(Debug)]
 pub struct App {
     /// Application state.
-    state: Arc<RefCell<AppState>>,
+    state: AppState,
     /// Application router.
-    router: Arc<RefCell<AppRouter>>,
+    router: AppRouter,
     /// Cached current Screen.
-    current_screen: Arc<RefCell<Box<dyn Screen>>>,
+    current_screen: Box<dyn Screen>,
     /// The current layout state.
     ///
     /// Each component with a defined target `Rect` will be displayed.
@@ -119,31 +110,31 @@ impl App {
         let initial_route = AppRoute::Home;
         let (router, current_screen) = AppRouter::new(initial_route);
         Self {
-            state: Arc::new(RefCell::new(Default::default())),
-            router: Arc::new(RefCell::new(router)),
-            current_screen: Arc::new(RefCell::new(current_screen)),
+            router,
+            current_screen,
+            state: Default::default(),
             layout_components: HashMap::new(),
         }
     }
 
-    pub fn get_handle(&mut self) -> AppHandle {
+    pub fn get_handle<'a>(&'a mut self) -> AppHandle<'a> {
         AppHandle {
-            state: self.state.clone(),
-            router: self.router.clone(),
-            screen: self.current_screen.clone(),
+            state: &mut self.state,
+            router: &mut self.router,
+            screen: &mut self.current_screen,
         }
     }
 
     /// Handle an incoming key event, at the application level. Returns true if
     /// the event is to be captured (swallowed) and not passed down to components.
     pub fn handle_key_event(&mut self, key: &Key) -> bool {
-        let mut handle = self.get_handle();
-        match self
-            .current_screen
-            .try_borrow_mut()
-            .unwrap()
-            .handle_key_event(key, &mut handle)
-        {
+        let (response, new_route) =
+            self.current_screen
+                .handle_key_event(key, &mut self.router, &mut self.state);
+        if let Some(route) = new_route {
+            self.current_screen = AppRouter::build_screen_from_route(&route);
+        }
+        match response {
             ScreenEventResponse::Caught => true,
             ScreenEventResponse::PassThrough => false,
         }
@@ -156,11 +147,8 @@ impl App {
     /// `layout_components` hash are not rendered. This is done for simplicity purposes.
     pub fn update_layout(&mut self, frame_size: Rect) {
         self.layout_components.clear();
-        let handle = self.get_handle();
         self.current_screen
-            .try_borrow_mut()
-            .unwrap()
-            .compute_layout(frame_size, &mut self.layout_components, &handle);
+            .compute_layout(frame_size, &mut self.layout_components, &self.state);
     }
 
     /// Get, if any, the rendering `Rect` target for the given component.

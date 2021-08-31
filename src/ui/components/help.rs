@@ -50,7 +50,7 @@ impl UiComponent for Help {
         Ok(())
     }
 
-    fn key_handler(&mut self, key: &Key, app: &mut AppHandle) -> Result<bool> {
+    fn key_handler(&mut self, _key: &Key, _app: &mut AppHandle) -> Result<bool> {
         Ok(false)
     }
 
