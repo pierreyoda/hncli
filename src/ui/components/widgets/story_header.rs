@@ -51,8 +51,8 @@ impl<'a> Widget for StoryHeader<'a> {
         };
 
         for x in area.left()..area.right() {
-            buf.get_mut(x, area.top()).set_symbol(&"‾");
-            buf.get_mut(x, area.bottom()).set_symbol(&"_");
+            buf.get_mut(x, area.top()).set_symbol("‾");
+            buf.get_mut(x, area.bottom()).set_symbol("_");
         }
 
         let start = area.left() + 2;

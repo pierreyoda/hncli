@@ -76,7 +76,7 @@ impl Help {
     fn render_about_block(f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
         let text = vec![
             Spans::from(format!("hncli {}", HNCLI_VERSION)),
-            Spans::from(""),
+            Spans::from("https://github.com/pierreyoda/hncli"),
             Spans::from("A Terminal User Interface-based application for browsing Hacker News, written in 🦀 Rust. "),
         ];
         let paragraph = Paragraph::new(text)
@@ -96,13 +96,15 @@ impl Help {
             Spans::from(""),
             Spans::from("Navigate between stories with the up and down arrow keys, or 'i' and 'k'."),
             Spans::from(""),
-            Spans::from("Open a tab in your browser for the selected story with 'tab'. Open the selected story page with 'enter'."),
+            Spans::from("Open a tab in your browser for the selected story with 'o'. Open the selected story page with 'enter'."),
             Spans::from(""),
             Spans::from(""),
             Spans::from(""),
             Spans::from("--- On a story page ---"),
             Spans::from(""),
-            Spans::from("Open a tab in your browser for the selected story (or its source) with 'tab'."),
+            Spans::from("Open a tab in your browser for the selected story (or its source) with 'o'."),
+            Spans::from(""),
+            Spans::from("Toggle comments with 'tab'."),
             Spans::from(""),
             Spans::from("Go back with 'escape'."),
         ];

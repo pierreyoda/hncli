@@ -23,6 +23,7 @@ use crate::{
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
         handlers::Key,
+        router::AppRoute,
         utils::{datetime_from_hn_time, ItemWithId, StatefulList},
     },
 };
@@ -207,8 +208,10 @@ impl UiComponent for StoriesPanel {
             }
             Key::Enter if selected.is_some() => {
                 let items = self.list_state.get_items();
+                let selected_item = &items[selected.unwrap()];
                 ctx.get_state_mut()
-                    .set_currently_viewed_item(Some(items[selected.unwrap()].clone()));
+                    .set_currently_viewed_item(Some(selected_item.clone()));
+                ctx.router_push_navigation_stack(AppRoute::StoryDetails(selected_item.clone()));
                 true
             }
             _ => false,

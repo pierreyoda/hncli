@@ -8,7 +8,7 @@ use tui::{
     Frame,
 };
 
-use super::{handlers::Key, router::AppRoute};
+use super::{components::stories::DisplayableHackerNewsItem, handlers::Key, router::AppRoute};
 
 /// Contextual help widget.
 enum HelpWidget {
@@ -54,9 +54,11 @@ impl ContextualHelper {
         match for_route {
             AppRoute::Home => self.render_home_page_help(f, inside),
             AppRoute::Help => self.render_help_page_help(f, inside),
+            AppRoute::StoryDetails(item) => self.render_item_page_help(f, inside, item),
         }
     }
 
+    // TODO: add centralized key bindings manager
     fn render_home_page_help(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
         let widgets = vec![
             HelpWidget::KeyReminder('💡', "toggle help".into(), Key::Char('h')),
@@ -65,12 +67,32 @@ impl ContextualHelper {
         Self::render_widgets(f, inside, widgets.as_ref());
     }
 
+    fn render_item_page_help(
+        &self,
+        f: &mut Frame<CrosstermBackend<Stdout>>,
+        inside: Rect,
+        item: &DisplayableHackerNewsItem,
+    ) {
+        let widget_toggle_comments =
+            HelpWidget::KeyReminder('💬', "toggle comments".into(), Key::Tab);
+        let widget_go_back = HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape);
+        let widgets = if let Some(ref hostname) = item.url_hostname {
+            vec![
+                HelpWidget::KeyReminder('🌐', format!("open {}", hostname), Key::Char('o')),
+                widget_toggle_comments,
+                widget_go_back,
+            ]
+        } else {
+            vec![widget_toggle_comments, widget_go_back]
+        };
+        Self::render_widgets(f, inside, widgets.as_ref());
+    }
+
     fn render_help_page_help(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
-        let widgets = vec![HelpWidget::KeyReminder(
-            '💡',
-            "toggle help".into(),
-            Key::Char('h'),
-        )];
+        let widgets = vec![
+            HelpWidget::KeyReminder('💡', "toggle help".into(), Key::Char('h')),
+            HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape),
+        ];
         Self::render_widgets(f, inside, widgets.as_ref());
     }
 

@@ -1,12 +1,20 @@
 use std::fmt;
 
-use crate::ui::screens::{help::HelpScreen, home::HomeScreen};
+use crate::{
+    app::AppState,
+    ui::screens::{help::HelpScreen, home::HomeScreen, story::StoryDetailsScreen},
+};
 
-use super::screens::Screen;
+use super::{components::stories::DisplayableHackerNewsItem, screens::Screen};
 
+/// All the possible routes in the application.
 #[derive(Clone, Debug)]
 pub enum AppRoute {
+    /// Home screen.
     Home,
+    /// Story details screen.
+    StoryDetails(DisplayableHackerNewsItem),
+    /// Help screen.
     Help,
 }
 
@@ -19,8 +27,9 @@ pub struct AppRouter {
 }
 
 impl AppRouter {
-    pub fn new(initial_route: AppRoute) -> (Self, Box<dyn Screen>) {
-        let initial_screen = Self::build_screen_from_route(initial_route.clone());
+    pub fn new(initial_route: AppRoute, state: &mut AppState) -> (Self, Box<dyn Screen>) {
+        let mut initial_screen = Self::build_screen_from_route(initial_route.clone());
+        initial_screen.before_mount(state);
         (
             Self {
                 navigation_stack: vec![initial_route],
@@ -49,6 +58,7 @@ impl AppRouter {
         match route {
             Home => Box::new(HomeScreen::new()),
             Help => Box::new(HelpScreen::new()),
+            StoryDetails(item) => Box::new(StoryDetailsScreen::new(item)),
         }
     }
 }

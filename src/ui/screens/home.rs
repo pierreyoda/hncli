@@ -41,7 +41,7 @@ impl HomeScreen {
 
 impl Screen for HomeScreen {
     fn handle_key_event(
-        &self,
+        &mut self,
         key: &Key,
         router: &mut AppRouter,
         _state: &mut AppState,

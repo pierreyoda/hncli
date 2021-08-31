@@ -38,12 +38,14 @@ impl<'a> AppContext<'a> {
     pub fn router_push_navigation_stack(&mut self, route: AppRoute) {
         self.router.push_navigation_stack(route.clone());
         *self.screen = AppRouter::build_screen_from_route(route);
+        self.screen.before_mount(&mut self.state);
     }
 
     /// Go to the previous navigation route state.
     pub fn router_pop_navigation_stack(&mut self) -> Option<AppRoute> {
         let previous = self.router.pop_navigation_stack();
         *self.screen = AppRouter::build_screen_from_route(self.router.get_current_route().clone());
+        self.screen.before_mount(&mut self.state);
         previous
     }
 }
@@ -111,11 +113,12 @@ pub struct App {
 impl App {
     pub fn new() -> Self {
         let initial_route = AppRoute::Home;
-        let (router, current_screen) = AppRouter::new(initial_route);
+        let mut state: AppState = Default::default();
+        let (router, current_screen) = AppRouter::new(initial_route, &mut state);
         Self {
+            state,
             router,
             current_screen,
-            state: Default::default(),
             layout_components: HashMap::new(),
         }
     }
@@ -138,6 +141,7 @@ impl App {
         if let Some(route) = new_route {
             // update the current screen if the route changed
             self.current_screen = AppRouter::build_screen_from_route(route);
+            self.current_screen.before_mount(&mut self.state);
         }
         match response {
             ScreenEventResponse::Caught => true,

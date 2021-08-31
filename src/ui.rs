@@ -28,7 +28,10 @@ use crate::{
     errors::{HnCliError, Result},
 };
 
-use self::helper::ContextualHelper;
+use self::{
+    components::{item_comments::ItemComments, item_details::ItemDetails},
+    helper::ContextualHelper,
+};
 
 pub mod common;
 pub mod components;
@@ -117,6 +120,8 @@ impl UserInterface {
         self.register_component(Help::default());
         self.register_component(Navigation::default());
         self.register_component(StoriesPanel::default());
+        self.register_component(ItemDetails::default());
+        self.register_component(ItemComments::default());
         self.register_component(Thread::default());
         self.register_component(Options::default());
 

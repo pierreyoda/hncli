@@ -23,7 +23,7 @@ impl HelpScreen {
 
 impl Screen for HelpScreen {
     fn handle_key_event(
-        &self,
+        &mut self,
         key: &Key,
         router: &mut AppRouter,
         _state: &mut AppState,

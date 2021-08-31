@@ -12,6 +12,7 @@ use super::{
 
 pub mod help;
 pub mod home;
+pub mod story;
 
 /// Defines layout state by associating each visible component
 /// with a defined target `Rect`.
@@ -28,12 +29,15 @@ pub enum ScreenEventResponse {
 
 /// A Screen is a self-contained state of the application with its own update and rendering logic.
 pub trait Screen: Debug + Send {
+    /// Called after instantiation and before mounting the screen.
+    fn before_mount(&mut self, _state: &mut AppState) {}
+
     /// Handle an incoming key event, at the application level. Returns true if
     /// the event is to be captured (swallowed) and not passed down to components.
     ///
     /// Returns the (event_response, new_route_if_navigated) tuple.
     fn handle_key_event(
-        &self,
+        &mut self,
         key: &Key,
         router: &mut AppRouter,
         state: &mut AppState,
