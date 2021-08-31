@@ -120,7 +120,7 @@ impl UiComponent for Options {
     }
 
     fn render(
-        &self,
+        &mut self,
         f: &mut Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
         _ctx: &AppContext,

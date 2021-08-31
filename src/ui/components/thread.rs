@@ -82,7 +82,7 @@ impl UiComponent for Thread {
     }
 
     fn render(
-        &self,
+        &mut self,
         f: &mut Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
         _ctx: &AppContext,
