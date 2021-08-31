@@ -18,6 +18,12 @@ pub enum AppRoute {
     Help,
 }
 
+impl AppRoute {
+    pub fn is_help(&self) -> bool {
+        matches!(self, AppRoute::Help)
+    }
+}
+
 /// Stack-based global application router.
 pub struct AppRouter {
     /// The current navigation stack.

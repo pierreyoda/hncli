@@ -29,7 +29,7 @@ impl Screen for HelpScreen {
         _state: &mut AppState,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
         match key {
-            Key::Escape | Key::Enter | Key::Char('h') => {
+            Key::Escape => {
                 router.pop_navigation_stack();
                 (
                     ScreenEventResponse::Caught,

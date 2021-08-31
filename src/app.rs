@@ -135,6 +135,19 @@ impl App {
     /// Handle an incoming key event, at the application level. Returns true if
     /// the event is to be captured (swallowed) and not passed down to components.
     pub fn handle_key_event(&mut self, key: &Key) -> bool {
+        // global help page toggle
+        if matches!(key, Key::Char('h')) {
+            if self.router.get_current_route().is_help() {
+                let mut context = self.get_context();
+                context.router_pop_navigation_stack();
+            } else {
+                let mut context = self.get_context();
+                context.router_push_navigation_stack(AppRoute::Help);
+            }
+            return true;
+        }
+
+        // screen event handling
         let (response, new_route) =
             self.current_screen
                 .handle_key_event(key, &mut self.router, &mut self.state);

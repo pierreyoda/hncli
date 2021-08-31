@@ -42,20 +42,11 @@ impl HomeScreen {
 impl Screen for HomeScreen {
     fn handle_key_event(
         &mut self,
-        key: &Key,
-        router: &mut AppRouter,
+        _key: &Key,
+        _router: &mut AppRouter,
         _state: &mut AppState,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
-        match key {
-            Key::Char('h') => {
-                router.push_navigation_stack(AppRoute::Help);
-                (
-                    ScreenEventResponse::Caught,
-                    Some(router.get_current_route().clone()),
-                )
-            }
-            _ => (ScreenEventResponse::PassThrough, None),
-        }
+        (ScreenEventResponse::PassThrough, None)
     }
 
     fn compute_layout(
