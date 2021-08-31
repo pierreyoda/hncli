@@ -1,9 +1,6 @@
-use std::{cell::RefMut, fmt};
+use std::fmt;
 
-use crate::{
-    app::AppContext,
-    ui::screens::{help::HelpScreen, home::HomeScreen},
-};
+use crate::ui::screens::{help::HelpScreen, home::HomeScreen};
 
 use super::screens::Screen;
 
@@ -23,7 +20,7 @@ pub struct AppRouter {
 
 impl AppRouter {
     pub fn new(initial_route: AppRoute) -> (Self, Box<dyn Screen>) {
-        let initial_screen = Self::build_screen_from_route(&initial_route);
+        let initial_screen = Self::build_screen_from_route(initial_route.clone());
         (
             Self {
                 navigation_stack: vec![initial_route],
@@ -39,16 +36,15 @@ impl AppRouter {
 
     /// Push a new navigation route state.
     pub fn push_navigation_stack(&mut self, route: AppRoute) {
-        self.navigation_stack.push(route.clone());
+        self.navigation_stack.push(route);
     }
 
     /// Go to the previous navigation route state.
     pub fn pop_navigation_stack(&mut self) -> Option<AppRoute> {
-        let removed = self.navigation_stack.pop();
-        removed
+        self.navigation_stack.pop()
     }
 
-    pub fn build_screen_from_route(route: &AppRoute) -> Box<dyn Screen> {
+    pub fn build_screen_from_route(route: AppRoute) -> Box<dyn Screen> {
         use AppRoute::*;
         match route {
             Home => Box::new(HomeScreen::new()),

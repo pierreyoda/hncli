@@ -10,17 +10,28 @@ pub trait ItemWithId<N: Copy + Num + Ord> {
 
 /// Wrapper around a tui `ListState` to provide wrap-around navigation.
 #[derive(Debug)]
-pub struct StatefulList<T> {
+pub struct StatefulList<N, T>
+where
+    N: Copy + Num + Ord + Default,
+    T: Clone + ItemWithId<N>,
+{
     state: ListState,
     items: Vec<T>,
+    // this field is only there to prevent the "N parameter not used" compilation error
+    n: N,
 }
 
-impl<T> StatefulList<T> {
+impl<N, T> StatefulList<N, T>
+where
+    N: Copy + Num + Ord + Default,
+    T: Clone + ItemWithId<N>,
+{
     /// Create a new `StatefulList<T>` with the given items.
-    pub fn with_items(items: Vec<T>) -> StatefulList<T> {
+    pub fn with_items(items: Vec<T>) -> StatefulList<N, T> {
         Self {
             state: ListState::default(),
             items,
+            n: Default::default(),
         }
     }
 
@@ -31,9 +42,9 @@ impl<T> StatefulList<T> {
 
     /// Replace the current items with the given ones.
     pub fn replace_items(&mut self, items: Vec<T>) {
+        let old_items = self.items.clone();
         self.items = items;
-        // TODO: simple reconciliation algorithm
-        self.unselect();
+        self.reconciliate_current_selection(old_items);
     }
 
     /// Select the next item, starting at 0 if none is selected or
@@ -66,8 +77,28 @@ impl<T> StatefulList<T> {
     }
 
     /// Get the current `ListState`.
-    pub fn get_state(&self) -> &ListState {
-        &self.state
+    pub fn get_state(&mut self) -> &mut ListState {
+        &mut self.state
+    }
+
+    fn reconciliate_current_selection(&mut self, old_items: Vec<T>) {
+        let mut found = false;
+        if let Some(selected_index) = self.state.selected() {
+            if let Some(old_selected_item) = old_items.get(selected_index) {
+                let old_selected_item_id = old_selected_item.get_id();
+                if let Some(new_selected_index) = self
+                    .items
+                    .iter()
+                    .position(|i| i.get_id() == old_selected_item_id)
+                {
+                    found = true;
+                    self.state.select(Some(new_selected_index));
+                }
+            }
+        }
+        if !found {
+            self.unselect();
+        }
     }
 }
 
@@ -80,11 +111,31 @@ pub fn datetime_from_hn_time(time: HnItemDateScalar) -> DateTime<Utc> {
 
 #[cfg(test)]
 mod tests {
-    use super::{datetime_from_hn_time, StatefulList};
+    use super::{datetime_from_hn_time, ItemWithId, StatefulList};
+
+    #[derive(Clone)]
+    struct StatefulListTestScalar {
+        index: u32,
+    }
+
+    impl StatefulListTestScalar {
+        pub fn new(index: u32) -> Self {
+            Self { index }
+        }
+    }
+
+    impl ItemWithId<u32> for StatefulListTestScalar {
+        fn get_id(&self) -> u32 {
+            self.index
+        }
+    }
 
     #[test]
     pub fn test_stateful_list_wrapper() {
-        let mut stateful_list = StatefulList::with_items(vec![0, 1]);
+        let mut stateful_list = StatefulList::with_items(vec![
+            StatefulListTestScalar::new(0),
+            StatefulListTestScalar::new(1),
+        ]);
         assert_eq!(stateful_list.get_state().selected(), None);
 
         stateful_list.next();

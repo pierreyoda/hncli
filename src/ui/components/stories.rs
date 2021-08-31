@@ -23,7 +23,7 @@ use crate::{
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
         handlers::Key,
-        utils::{datetime_from_hn_time, StatefulList},
+        utils::{datetime_from_hn_time, ItemWithId, StatefulList},
     },
 };
 
@@ -46,6 +46,12 @@ pub struct DisplayableHackerNewsItem {
     pub score: u32,
     /// Hostname of the URL, if any.
     pub url_hostname: Option<String>,
+}
+
+impl ItemWithId<HnItemIdScalar> for DisplayableHackerNewsItem {
+    fn get_id(&self) -> HnItemIdScalar {
+        self.id
+    }
 }
 
 const MINUTES_PER_DAY: i64 = 24 * 60;
@@ -127,7 +133,7 @@ pub struct StoriesPanel {
     ticks_since_last_update: u64,
     sorting_type_for_last_update: Option<HnStoriesSorting>,
     list_cutoff: usize,
-    list_state: StatefulList<DisplayableHackerNewsItem>,
+    list_state: StatefulList<HnItemIdScalar, DisplayableHackerNewsItem>,
 }
 
 // TODO: load from configuration
@@ -181,10 +187,6 @@ impl UiComponent for StoriesPanel {
             })
             .collect();
 
-        // TODO: temp, for testing
-        ctx.get_state_mut()
-            .set_currently_viewed_item(Some(displayable_stories[0].clone()));
-
         self.list_state.replace_items(displayable_stories);
 
         self.sorting_type_for_last_update = Some(sorting_type);
@@ -214,7 +216,7 @@ impl UiComponent for StoriesPanel {
     }
 
     fn render(
-        &self,
+        &mut self,
         f: &mut tui::Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
         _ctx: &AppContext,
@@ -250,7 +252,7 @@ impl UiComponent for StoriesPanel {
             .highlight_symbol(">> ")
             .highlight_style(Style::default().fg(Color::Yellow));
 
-        f.render_widget(list_stories, inside);
+        f.render_stateful_widget(list_stories, inside, self.list_state.get_state());
 
         Ok(())
     }

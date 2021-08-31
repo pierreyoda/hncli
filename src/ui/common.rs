@@ -31,11 +31,11 @@ pub trait UiComponent {
     ///
     /// Returns true if the event is to be captured, that is swallowed
     /// and no longer passed to other components.
-    fn key_handler<'a>(&'a mut self, key: &Key, ctx: &mut AppContext) -> Result<bool>;
+    fn key_handler(&mut self, key: &Key, ctx: &mut AppContext) -> Result<bool>;
 
     /// Renderer for the component.
-    fn render<'a>(
-        &'a self,
+    fn render(
+        &mut self,
         f: &mut Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
         ctx: &AppContext,

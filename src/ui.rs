@@ -1,11 +1,7 @@
 use std::{
-    cell::RefCell,
     collections::HashMap,
     io::Stdout,
-    sync::{
-        mpsc::{self, Receiver},
-        Arc,
-    },
+    sync::mpsc::{self, Receiver},
     thread,
     time::{Duration, Instant},
 };
@@ -14,7 +10,11 @@ use crossterm::{
     event::{self, Event},
     terminal::{disable_raw_mode, enable_raw_mode},
 };
-use tui::{backend::CrosstermBackend, Terminal};
+use tui::{
+    backend::CrosstermBackend,
+    layout::{Constraint, Direction, Layout},
+    Terminal,
+};
 
 use common::{UiComponent, UiComponentId, UiTickScalar};
 use components::{
@@ -28,10 +28,12 @@ use crate::{
     errors::{HnCliError, Result},
 };
 
+use self::helper::ContextualHelper;
+
 pub mod common;
 pub mod components;
 pub mod handlers;
-mod help;
+mod helper;
 mod panels;
 pub mod router;
 pub mod screens;
@@ -125,27 +127,41 @@ impl UserInterface {
     pub async fn run(&mut self, rx: Receiver<UserInterfaceEvent>) -> Result<()> {
         self.terminal.hide_cursor()?;
 
+        let contextual_helper = ContextualHelper::new();
         'ui: loop {
             let app = &mut self.app;
-            let components = &self.components;
+            let components = &mut self.components;
             self.terminal
                 .draw(|frame| {
+                    // global layout
+                    let global_layout_chunks = Layout::default()
+                        .direction(Direction::Vertical)
+                        .constraints(
+                            vec![Constraint::Percentage(97), Constraint::Percentage(3)].as_ref(),
+                        )
+                        .split(frame.size());
+
                     // // refresh application chunks
-                    app.update_layout(frame.size());
+                    app.update_layout(global_layout_chunks[0]);
 
                     // // render components
-                    for (id, wrapper) in components.iter() {
+                    for (id, wrapper) in components.iter_mut() {
                         let component_rendering_rect =
                             app.get_component_rendering_rect(id).cloned();
-                        let app_handle = app.get_context();
+                        let app_context = app.get_context();
                         match component_rendering_rect {
                             None => (), // no rendering
                             Some(inside_rect) => wrapper
                                 .component
-                                .render(frame, inside_rect, &app_handle)
+                                .render(frame, inside_rect, &app_context)
                                 .expect("no component rendering error"),
                         }
                     }
+
+                    // render contextual helper
+                    let app_context = app.get_context();
+                    let current_route = app_context.get_router().get_current_route();
+                    contextual_helper.render(frame, global_layout_chunks[1], current_route);
                 })
                 .map_err(HnCliError::IoError)?;
 
@@ -174,18 +190,18 @@ impl UserInterface {
 
     /// Check all active components for any necessary update.
     async fn update(&mut self) -> Result<()> {
-        let mut app_handle = self.app.get_context();
+        let mut app_context = self.app.get_context();
         for wrapper in self.components.values_mut() {
             wrapper.ticks_elapsed += 1;
             // TODO: better error handling (per-component?)
             if wrapper.active
                 && wrapper
                     .component
-                    .should_update(wrapper.ticks_elapsed, &app_handle)?
+                    .should_update(wrapper.ticks_elapsed, &app_context)?
             {
                 wrapper
                     .component
-                    .update(&mut self.client, &mut app_handle)
+                    .update(&mut self.client, &mut app_context)
                     .await?;
                 wrapper.ticks_elapsed = 0;
             }
@@ -196,12 +212,12 @@ impl UserInterface {
 
     /// Handle an incoming key event through all active components.
     fn handle_key_event(&mut self, key: &Key) -> Result<()> {
-        let mut app_handle = self.app.get_context();
+        let mut app_context = self.app.get_context();
         for wrapper in self.components.values_mut() {
             if !wrapper.active {
                 continue;
             }
-            if wrapper.component.key_handler(key, &mut app_handle)? {
+            if wrapper.component.key_handler(key, &mut app_context)? {
                 break;
             }
         }

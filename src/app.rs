@@ -17,6 +17,7 @@ use crate::{
 pub struct AppContext<'a> {
     state: &'a mut AppState,
     router: &'a mut AppRouter,
+    /// Stored to change screen on route change.
     screen: &'a mut Box<dyn Screen>,
 }
 
@@ -29,16 +30,20 @@ impl<'a> AppContext<'a> {
         self.state
     }
 
+    pub fn get_router(&self) -> &AppRouter {
+        self.router
+    }
+
     /// Push a new navigation route state.
     pub fn router_push_navigation_stack(&mut self, route: AppRoute) {
         self.router.push_navigation_stack(route.clone());
-        *self.screen = AppRouter::build_screen_from_route(&route);
+        *self.screen = AppRouter::build_screen_from_route(route);
     }
 
     /// Go to the previous navigation route state.
     pub fn router_pop_navigation_stack(&mut self) -> Option<AppRoute> {
         let previous = self.router.pop_navigation_stack();
-        *self.screen = AppRouter::build_screen_from_route(self.router.get_current_route());
+        *self.screen = AppRouter::build_screen_from_route(self.router.get_current_route().clone());
         previous
     }
 }
@@ -115,6 +120,7 @@ impl App {
         }
     }
 
+    /// Get the context handle allowing components to interact with the application.
     pub fn get_context(&mut self) -> AppContext {
         AppContext {
             state: &mut self.state,
@@ -130,7 +136,8 @@ impl App {
             self.current_screen
                 .handle_key_event(key, &mut self.router, &mut self.state);
         if let Some(route) = new_route {
-            self.current_screen = AppRouter::build_screen_from_route(&route);
+            // update the current screen if the route changed
+            self.current_screen = AppRouter::build_screen_from_route(route);
         }
         match response {
             ScreenEventResponse::Caught => true,

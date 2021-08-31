@@ -3,8 +3,7 @@ use event::{KeyCode, KeyEvent};
 
 /// Abstraction over a key event.
 ///
-/// Used to abstract awat tui's backend, and to facilitate
-/// user configuration.
+/// Used to abstract over tui's backend, and to facilitate user configuration.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Key {
     /// Escape key.
@@ -25,6 +24,26 @@ pub enum Key {
     Char(char),
     /// Unhandled.
     Other,
+}
+
+impl Key {
+    /// Returns the character(s) representing the key.
+    ///
+    /// Does not support `Other`.
+    pub fn get_representation(&self) -> String {
+        use Key::*;
+        match self {
+            Escape => "⎋ (escape)".into(),
+            Enter => "↵ (enter)".into(),
+            Tab => "⇥ (tabulation)".into(),
+            Up => "↑ (up)".into(),
+            Down => "↓ (down)".into(),
+            Left => "← (left)".into(),
+            Right => "→ (right)".into(),
+            Char(char) => format!("'{}'", char),
+            Other => unreachable!(),
+        }
+    }
 }
 
 impl From<KeyEvent> for Key {
