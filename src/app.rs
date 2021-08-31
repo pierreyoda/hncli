@@ -14,15 +14,13 @@ use crate::{
 };
 
 /// Interact with application state from the components.
-///
-/// NB: Using mutable references (`&'a mut AppState`) would cause lifetime issues in the `ui` module.
-pub struct AppHandle<'a> {
+pub struct AppContext<'a> {
     state: &'a mut AppState,
     router: &'a mut AppRouter,
     screen: &'a mut Box<dyn Screen>,
 }
 
-impl<'a> AppHandle<'a> {
+impl<'a> AppContext<'a> {
     pub fn get_state(&self) -> &AppState {
         self.state
     }
@@ -45,7 +43,7 @@ impl<'a> AppHandle<'a> {
     }
 }
 
-unsafe impl<'a> Send for AppHandle<'a> {}
+unsafe impl<'a> Send for AppContext<'a> {}
 
 /// Global application state.
 #[derive(Debug)]
@@ -117,8 +115,8 @@ impl App {
         }
     }
 
-    pub fn get_handle<'a>(&'a mut self) -> AppHandle<'a> {
-        AppHandle {
+    pub fn get_context(&mut self) -> AppContext {
+        AppContext {
             state: &mut self.state,
             router: &mut self.router,
             screen: &mut self.current_screen,

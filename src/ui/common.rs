@@ -3,7 +3,7 @@ use std::io::Stdout;
 use async_trait::async_trait;
 use tui::{backend::CrosstermBackend, layout::Rect, Frame};
 
-use crate::{api::HnClient, app::AppHandle, errors::Result};
+use crate::{api::HnClient, app::AppContext, errors::Result};
 
 use super::handlers::Key;
 
@@ -22,22 +22,22 @@ pub trait UiComponent {
     fn id(&self) -> UiComponentId;
 
     /// Must return `true` if the state should update itself.
-    fn should_update(&mut self, elapsed_ticks: UiTickScalar, app: &AppHandle) -> Result<bool>;
+    fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool>;
 
     /// Update the state from various sources.
-    async fn update(&mut self, client: &mut HnClient, app: &mut AppHandle) -> Result<()>;
+    async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()>;
 
     /// Key event handler for the component.
     ///
     /// Returns true if the event is to be captured, that is swallowed
     /// and no longer passed to other components.
-    fn key_handler<'a>(&'a mut self, key: &Key, app: &mut AppHandle) -> Result<bool>;
+    fn key_handler<'a>(&'a mut self, key: &Key, ctx: &mut AppContext) -> Result<bool>;
 
     /// Renderer for the component.
     fn render<'a>(
         &'a self,
         f: &mut Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
-        app: &AppHandle,
+        ctx: &AppContext,
     ) -> Result<()>;
 }

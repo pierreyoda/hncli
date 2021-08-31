@@ -1,7 +1,7 @@
 use tui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
-    app::{AppHandle, AppState},
+    app::AppState,
     ui::{
         components::help::HELP_ID,
         handlers::Key,

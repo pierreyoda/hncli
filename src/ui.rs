@@ -137,7 +137,7 @@ impl UserInterface {
                     for (id, wrapper) in components.iter() {
                         let component_rendering_rect =
                             app.get_component_rendering_rect(id).cloned();
-                        let app_handle = app.get_handle();
+                        let app_handle = app.get_context();
                         match component_rendering_rect {
                             None => (), // no rendering
                             Some(inside_rect) => wrapper
@@ -174,7 +174,7 @@ impl UserInterface {
 
     /// Check all active components for any necessary update.
     async fn update(&mut self) -> Result<()> {
-        let mut app_handle = self.app.get_handle();
+        let mut app_handle = self.app.get_context();
         for wrapper in self.components.values_mut() {
             wrapper.ticks_elapsed += 1;
             // TODO: better error handling (per-component?)
@@ -196,7 +196,7 @@ impl UserInterface {
 
     /// Handle an incoming key event through all active components.
     fn handle_key_event(&mut self, key: &Key) -> Result<()> {
-        let mut app_handle = self.app.get_handle();
+        let mut app_handle = self.app.get_context();
         for wrapper in self.components.values_mut() {
             if !wrapper.active {
                 continue;

@@ -1,7 +1,7 @@
 use std::{cell::RefMut, fmt};
 
 use crate::{
-    app::AppHandle,
+    app::AppContext,
     ui::screens::{help::HelpScreen, home::HomeScreen},
 };
 

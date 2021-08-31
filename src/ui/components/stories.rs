@@ -18,7 +18,7 @@ use crate::{
         types::{HnItem, HnItemIdScalar},
         HnClient, HnStoriesSorting,
     },
-    app::AppHandle,
+    app::AppContext,
     errors::{HnCliError, Result},
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
@@ -153,22 +153,22 @@ impl UiComponent for StoriesPanel {
         STORIES_PANEL_ID
     }
 
-    fn should_update(&mut self, elapsed_ticks: UiTickScalar, app: &AppHandle) -> Result<bool> {
+    fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
         self.ticks_since_last_update += elapsed_ticks;
 
         Ok(self.ticks_since_last_update >= MEAN_TICKS_BETWEEN_UPDATES
             || match &self.sorting_type_for_last_update {
                 Some(last_sorting_type) => {
-                    last_sorting_type != app.get_state().get_main_stories_sorting()
+                    last_sorting_type != ctx.get_state().get_main_stories_sorting()
                 }
                 None => true, // first fetch
             })
     }
 
-    async fn update(&mut self, client: &mut HnClient, app: &mut AppHandle) -> Result<()> {
+    async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
         self.ticks_since_last_update = 0;
 
-        let sorting_type = *app.get_state().get_main_stories_sorting();
+        let sorting_type = *ctx.get_state().get_main_stories_sorting();
 
         // Data fetching
         let stories = client.get_home_items(sorting_type).await?;
@@ -182,7 +182,7 @@ impl UiComponent for StoriesPanel {
             .collect();
 
         // TODO: temp, for testing
-        app.get_state_mut()
+        ctx.get_state_mut()
             .set_currently_viewed_item(Some(displayable_stories[0].clone()));
 
         self.list_state.replace_items(displayable_stories);
@@ -192,7 +192,7 @@ impl UiComponent for StoriesPanel {
         Ok(())
     }
 
-    fn key_handler(&mut self, key: &Key, app: &mut AppHandle) -> Result<bool> {
+    fn key_handler(&mut self, key: &Key, ctx: &mut AppContext) -> Result<bool> {
         let selected = self.list_state.get_state().selected();
         Ok(match key {
             Key::Up | Key::Char('i') => {
@@ -205,7 +205,7 @@ impl UiComponent for StoriesPanel {
             }
             Key::Enter if selected.is_some() => {
                 let items = self.list_state.get_items();
-                app.get_state_mut()
+                ctx.get_state_mut()
                     .set_currently_viewed_item(Some(items[selected.unwrap()].clone()));
                 true
             }
@@ -217,7 +217,7 @@ impl UiComponent for StoriesPanel {
         &self,
         f: &mut tui::Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
-        _app: &AppHandle,
+        _ctx: &AppContext,
     ) -> Result<()> {
         let block = Block::default()
             .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))

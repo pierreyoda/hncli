@@ -14,7 +14,7 @@ use tui::{
 
 use crate::{
     api::HnClient,
-    app::AppHandle,
+    app::AppContext,
     errors::Result,
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
@@ -65,15 +65,15 @@ impl UiComponent for Navigation {
         NAVIGATION_ID
     }
 
-    fn should_update(&mut self, _elapsed_ticks: UiTickScalar, _app: &AppHandle) -> Result<bool> {
+    fn should_update(&mut self, _elapsed_ticks: UiTickScalar, _ctx: &AppContext) -> Result<bool> {
         Ok(false)
     }
 
-    async fn update(&mut self, _client: &mut HnClient, _app: &mut AppHandle) -> Result<()> {
+    async fn update(&mut self, _client: &mut HnClient, _ctx: &mut AppContext) -> Result<()> {
         Ok(())
     }
 
-    fn key_handler(&mut self, key: &Key, _app: &mut AppHandle) -> Result<bool> {
+    fn key_handler(&mut self, key: &Key, _ctx: &mut AppContext) -> Result<bool> {
         Ok(match key {
             Key::Left => {
                 self.previous();
@@ -110,7 +110,7 @@ impl UiComponent for Navigation {
         &self,
         f: &mut Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
-        _app: &AppHandle,
+        _ctx: &AppContext,
     ) -> Result<()> {
         let tabs_titles: Vec<Spans> = self
             .titles

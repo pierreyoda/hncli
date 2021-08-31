@@ -12,7 +12,7 @@ use tui::{
 
 use crate::{
     api::{HnClient, HnStoriesSorting},
-    app::AppHandle,
+    app::AppContext,
     errors::{HnCliError, Result},
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
@@ -91,17 +91,17 @@ impl UiComponent for Options {
         OPTIONS_ID
     }
 
-    fn should_update(&mut self, elapsed_ticks: UiTickScalar, _app: &AppHandle) -> Result<bool> {
+    fn should_update(&mut self, elapsed_ticks: UiTickScalar, _ctx: &AppContext) -> Result<bool> {
         self.ticks_since_last_press += elapsed_ticks;
 
         Ok(false)
     }
 
-    async fn update(&mut self, _client: &mut HnClient, _app: &mut AppHandle) -> Result<()> {
+    async fn update(&mut self, _client: &mut HnClient, _ctx: &mut AppContext) -> Result<()> {
         Ok(())
     }
 
-    fn key_handler(&mut self, key: &Key, app: &mut AppHandle) -> Result<bool> {
+    fn key_handler(&mut self, key: &Key, ctx: &mut AppContext) -> Result<bool> {
         Ok(match key {
             Key::Char('s') if self.ticks_since_last_press >= MIN_TICKS_BETWEEN_PRESSES => {
                 self.selected_sorting_index =
@@ -109,7 +109,7 @@ impl UiComponent for Options {
                 let sorting_type = SORTING_OPTIONS_LIST[self.selected_sorting_index]
                     .clone()
                     .try_into()?;
-                app.get_state_mut().set_main_stories_sorting(sorting_type);
+                ctx.get_state_mut().set_main_stories_sorting(sorting_type);
                 true
             }
             _ => {
@@ -123,7 +123,7 @@ impl UiComponent for Options {
         &self,
         f: &mut Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
-        app: &AppHandle,
+        _ctx: &AppContext,
     ) -> Result<()> {
         let block = Block::default()
             .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))

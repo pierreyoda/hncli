@@ -12,7 +12,7 @@ use tui::{
 
 use crate::{
     api::HnClient,
-    app::AppHandle,
+    app::AppContext,
     errors::Result,
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
@@ -55,27 +55,27 @@ impl UiComponent for Thread {
         THREAD_ID
     }
 
-    fn should_update(&mut self, elapsed_ticks: UiTickScalar, app: &AppHandle) -> Result<bool> {
+    fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
         self.ticks_since_last_update += elapsed_ticks;
 
         Ok(self.ticks_since_last_update >= MEAN_TICKS_BETWEEN_UPDATES
             || match &self.item_details {
                 None => true,
-                Some(item) => match app.get_state().get_currently_viewed_item() {
+                Some(item) => match ctx.get_state().get_currently_viewed_item() {
                     Some(app_item) => item.id != app_item.id,
                     None => false,
                 },
             })
     }
 
-    async fn update(&mut self, _client: &mut HnClient, app: &mut AppHandle) -> Result<()> {
+    async fn update(&mut self, _client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
         self.ticks_since_last_update = 0;
-        self.item_details = app.get_state().get_currently_viewed_item().clone();
+        self.item_details = ctx.get_state().get_currently_viewed_item().clone();
 
         Ok(())
     }
 
-    fn key_handler(&mut self, key: &Key, _app: &mut AppHandle) -> Result<bool> {
+    fn key_handler(&mut self, key: &Key, _ctx: &mut AppContext) -> Result<bool> {
         Ok(match key {
             _ => false,
         })
@@ -85,7 +85,7 @@ impl UiComponent for Thread {
         &self,
         f: &mut Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
-        _app: &AppHandle,
+        _ctx: &AppContext,
     ) -> Result<()> {
         // Layout
         let block = Block::default()

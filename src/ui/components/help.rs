@@ -14,7 +14,7 @@ use tui::{
 use super::common::HNCLI_VERSION;
 use crate::{
     api::HnClient,
-    app::AppHandle,
+    app::AppContext,
     errors::Result,
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
@@ -42,15 +42,15 @@ impl UiComponent for Help {
         HELP_ID
     }
 
-    fn should_update(&mut self, _elapsed_ticks: UiTickScalar, _app: &AppHandle) -> Result<bool> {
+    fn should_update(&mut self, _elapsed_ticks: UiTickScalar, _ctx: &AppContext) -> Result<bool> {
         Ok(false)
     }
 
-    async fn update(&mut self, _client: &mut HnClient, _app: &mut AppHandle) -> Result<()> {
+    async fn update(&mut self, _client: &mut HnClient, _ctx: &mut AppContext) -> Result<()> {
         Ok(())
     }
 
-    fn key_handler(&mut self, _key: &Key, _app: &mut AppHandle) -> Result<bool> {
+    fn key_handler(&mut self, _key: &Key, _ctx: &mut AppContext) -> Result<bool> {
         Ok(false)
     }
 
@@ -58,7 +58,7 @@ impl UiComponent for Help {
         &self,
         f: &mut Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
-        _app: &AppHandle,
+        _ctx: &AppContext,
     ) -> Result<()> {
         let block = Block::default()
             .border_type(BorderType::Thick)
