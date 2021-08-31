@@ -60,7 +60,7 @@ impl ContextualHelper {
     fn render_home_page_help(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
         let widgets = vec![
             HelpWidget::KeyReminder('💡', "toggle help".into(), Key::Char('h')),
-            HelpWidget::KeyReminder('✖', "quit".into(), Key::Char('q')),
+            HelpWidget::KeyReminder('❌', "quit".into(), Key::Char('q')),
         ];
         Self::render_widgets(f, inside, widgets.as_ref());
     }
