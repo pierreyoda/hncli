@@ -11,10 +11,10 @@ use tui::{
     Frame,
 };
 
-use super::common::HNCLI_VERSION;
 use crate::{
     api::HnClient,
     app::AppContext,
+    config::HNCLI_VERSION,
     errors::Result,
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},

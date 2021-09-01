@@ -1,6 +1,7 @@
 use std::fmt;
 
 use crate::{
+    api::HnStoriesSections,
     app::AppState,
     ui::screens::{help::HelpScreen, home::HomeScreen, story::StoryDetailsScreen},
 };
@@ -11,7 +12,7 @@ use super::{components::stories::DisplayableHackerNewsItem, screens::Screen};
 #[derive(Clone, Debug)]
 pub enum AppRoute {
     /// Home screen.
-    Home,
+    Home(HnStoriesSections),
     /// Story details screen.
     StoryDetails(DisplayableHackerNewsItem),
     /// Help screen.
@@ -62,8 +63,8 @@ impl AppRouter {
     pub fn build_screen_from_route(route: AppRoute) -> Box<dyn Screen> {
         use AppRoute::*;
         match route {
-            Home => Box::new(HomeScreen::new()),
             Help => Box::new(HelpScreen::new()),
+            Home(section) => Box::new(HomeScreen::new(section)),
             StoryDetails(item) => Box::new(StoryDetailsScreen::new(item)),
         }
     }

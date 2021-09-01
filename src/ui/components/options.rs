@@ -23,38 +23,38 @@ use crate::{
 use super::common::COMMON_BLOCK_NORMAL_COLOR;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-enum HomeOptions {
-    SortNewest,
-    SortTop,
-    SortBest,
+enum HomeSortingOptions {
+    Newest,
+    Top,
+    Best,
 }
 
-impl HomeOptions {
+impl HomeSortingOptions {
     fn get_label(&self) -> &str {
         match self {
-            HomeOptions::SortNewest => "New",
-            HomeOptions::SortTop => "Top",
-            HomeOptions::SortBest => "Best",
+            HomeSortingOptions::Newest => "New",
+            HomeSortingOptions::Top => "Top",
+            HomeSortingOptions::Best => "Best",
         }
     }
 }
 
-impl TryInto<HnStoriesSorting> for HomeOptions {
+impl TryInto<HnStoriesSorting> for HomeSortingOptions {
     type Error = HnCliError;
 
     fn try_into(self) -> Result<HnStoriesSorting> {
         Ok(match self {
-            HomeOptions::SortNewest => HnStoriesSorting::New,
-            HomeOptions::SortTop => HnStoriesSorting::Top,
-            HomeOptions::SortBest => HnStoriesSorting::Best,
+            HomeSortingOptions::Newest => HnStoriesSorting::New,
+            HomeSortingOptions::Top => HnStoriesSorting::Top,
+            HomeSortingOptions::Best => HnStoriesSorting::Best,
         })
     }
 }
 
-const SORTING_OPTIONS_LIST: [HomeOptions; 3] = [
-    HomeOptions::SortNewest,
-    HomeOptions::SortTop,
-    HomeOptions::SortBest,
+const SORTING_OPTIONS_LIST: [HomeSortingOptions; 3] = [
+    HomeSortingOptions::Newest,
+    HomeSortingOptions::Top,
+    HomeSortingOptions::Best,
 ];
 
 /// The Options component provides context-dependent options

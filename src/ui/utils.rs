@@ -109,6 +109,11 @@ pub fn datetime_from_hn_time(time: HnItemDateScalar) -> DateTime<Utc> {
     DateTime::from_utc(naive, Utc)
 }
 
+/// Convert HTML to plain text, to be displayed in the terminal UI.
+pub fn html_to_plain_text(html: &str, width: usize) -> String {
+    html2text::from_read(html.as_bytes(), width)
+}
+
 /// Open a link in a new browser tab.
 pub fn open_browser_tab(url: &str) {
     let _ = webbrowser::open(url);

@@ -32,8 +32,9 @@ impl HnStoriesSorting {
     }
 }
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum HnStoriesSections {
+    Home,
     Ask,
     Show,
     Jobs,
@@ -47,6 +48,7 @@ impl HnStoriesSections {
         use HnStoriesSections::*;
 
         match self {
+            Home => "topstories",
             Ask => "askstories",
             Show => "showstories",
             Jobs => "jobstories",

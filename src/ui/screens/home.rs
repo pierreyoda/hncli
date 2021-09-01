@@ -1,6 +1,7 @@
 use tui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
+    api::HnStoriesSections,
     app::AppState,
     ui::{
         components::{navigation::NAVIGATION_ID, options::OPTIONS_ID, stories::STORIES_PANEL_ID},
@@ -30,16 +31,20 @@ use super::{Screen, ScreenComponentsRegistry, ScreenEventResponse};
 /// ```
 #[derive(Debug)]
 pub struct HomeScreen {
-    // TODO: add story type parameter? ("home", "ask HN", "show HN", "jobs")
+    section: HnStoriesSections,
 }
 
 impl HomeScreen {
-    pub fn new() -> Self {
-        Self {}
+    pub fn new(section: HnStoriesSections) -> Self {
+        Self { section }
     }
 }
 
 impl Screen for HomeScreen {
+    fn before_mount(&mut self, state: &mut AppState) {
+        state.set_main_stories_section(self.section);
+    }
+
     fn handle_key_event(
         &mut self,
         _key: &Key,

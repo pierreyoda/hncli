@@ -17,9 +17,7 @@ use tui::{
 };
 
 use common::{UiComponent, UiComponentId, UiTickScalar};
-use components::{
-    help::Help, navigation::Navigation, options::Options, stories::StoriesPanel, thread::Thread,
-};
+use components::{help::Help, navigation::Navigation, options::Options, stories::StoriesPanel};
 use handlers::Key;
 
 use crate::{
@@ -122,7 +120,6 @@ impl UserInterface {
         self.register_component(StoriesPanel::default());
         self.register_component(ItemDetails::default());
         self.register_component(ItemComments::default());
-        self.register_component(Thread::default());
         self.register_component(Options::default());
 
         Ok(rx)
@@ -166,7 +163,12 @@ impl UserInterface {
                     // render contextual helper
                     let app_context = app.get_context();
                     let current_route = app_context.get_router().get_current_route();
-                    contextual_helper.render(frame, global_layout_chunks[1], current_route);
+                    contextual_helper.render(
+                        frame,
+                        global_layout_chunks[1],
+                        current_route,
+                        app_context.get_state(),
+                    );
                 })
                 .map_err(HnCliError::IoError)?;
 
@@ -179,8 +181,8 @@ impl UserInterface {
                         break 'ui;
                     }
                     key => {
-                        if !self.app.handle_key_event(&key) {
-                            self.handle_key_event(&key)?;
+                        if !self.handle_key_event(&key)? {
+                            self.app.handle_key_event(&key);
                         }
                     }
                 },
@@ -216,18 +218,24 @@ impl UserInterface {
     }
 
     /// Handle an incoming key event through all active components.
-    fn handle_key_event(&mut self, key: &Key) -> Result<()> {
+    fn handle_key_event(&mut self, key: &Key) -> Result<bool> {
+        let mut swallowed = false;
+        let mut latest_interacted_with_component = None;
         let mut app_context = self.app.get_context();
         for wrapper in self.components.values_mut() {
             if !wrapper.active {
                 continue;
             }
             if wrapper.component.key_handler(key, &mut app_context)? {
+                latest_interacted_with_component = Some(wrapper.component.id().clone());
+                swallowed = true;
                 break;
             }
         }
+        self.app
+            .update_latest_interacted_with_component(latest_interacted_with_component);
 
-        Ok(())
+        Ok(swallowed)
     }
 
     fn register_component<C: UiComponent + 'static>(&mut self, component: C) {

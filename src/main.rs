@@ -7,6 +7,7 @@ use ui::UserInterface;
 
 mod api;
 mod app;
+mod config;
 mod errors;
 mod ui;
 

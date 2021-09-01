@@ -8,6 +8,8 @@ use tui::{
     Frame,
 };
 
+use crate::app::AppState;
+
 use super::{components::stories::DisplayableHackerNewsItem, handlers::Key, router::AppRoute};
 
 /// Contextual help widget.
@@ -50,16 +52,22 @@ impl ContextualHelper {
         f: &mut Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
         for_route: &AppRoute,
+        app_state: &AppState,
     ) {
         match for_route {
-            AppRoute::Home => self.render_home_page_help(f, inside),
-            AppRoute::Help => self.render_help_page_help(f, inside),
-            AppRoute::StoryDetails(item) => self.render_item_page_help(f, inside, item),
+            AppRoute::Home(_) => self.render_home_page_help(f, inside, app_state),
+            AppRoute::Help => self.render_help_page_help(f, inside, app_state),
+            AppRoute::StoryDetails(item) => self.render_item_page_help(f, inside, app_state, item),
         }
     }
 
     // TODO: add centralized key bindings manager
-    fn render_home_page_help(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
+    fn render_home_page_help(
+        &self,
+        f: &mut Frame<CrosstermBackend<Stdout>>,
+        inside: Rect,
+        _app_state: &AppState,
+    ) {
         let widgets = vec![
             HelpWidget::KeyReminder('💡', "toggle help".into(), Key::Char('h')),
             HelpWidget::KeyReminder('❌', "quit".into(), Key::Char('q')),
@@ -71,10 +79,20 @@ impl ContextualHelper {
         &self,
         f: &mut Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
+        app_state: &AppState,
         item: &DisplayableHackerNewsItem,
     ) {
-        let widget_toggle_comments =
-            HelpWidget::KeyReminder('💬', "toggle comments".into(), Key::Tab);
+        let display_comments_panel = app_state.get_item_page_should_display_comments_panel();
+        let widget_toggle_comments = HelpWidget::KeyReminder(
+            '💬',
+            (if display_comments_panel {
+                "hide comments"
+            } else {
+                "show comments"
+            })
+            .into(),
+            Key::Tab,
+        );
         let widget_go_back = HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape);
         let widgets = if let Some(ref hostname) = item.url_hostname {
             vec![
@@ -88,7 +106,12 @@ impl ContextualHelper {
         Self::render_widgets(f, inside, widgets.as_ref());
     }
 
-    fn render_help_page_help(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
+    fn render_help_page_help(
+        &self,
+        f: &mut Frame<CrosstermBackend<Stdout>>,
+        inside: Rect,
+        _app_state: &AppState,
+    ) {
         let widgets = vec![
             HelpWidget::KeyReminder('💡', "toggle help".into(), Key::Char('h')),
             HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape),

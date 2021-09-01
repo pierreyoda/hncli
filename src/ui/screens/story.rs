@@ -25,22 +25,17 @@ use super::{Screen, ScreenComponentsRegistry, ScreenEventResponse};
 /// |      <SCORE> POINTS / BY <USERNAME>     |
 /// |   <#COMMENTS COUNT>  / POSTED <X> AGO   |
 /// |_________________________________________|
-/// |                                         |
+/// |               COMMENTS                  |
 /// |_________________________________________|
 /// ```
 #[derive(Debug)]
 pub struct StoryDetailsScreen {
     item: DisplayableHackerNewsItem,
-    display_comments_panel: bool,
 }
 
 impl StoryDetailsScreen {
     pub fn new(item: DisplayableHackerNewsItem) -> Self {
-        Self {
-            item,
-            // TODO: add user-configurable option for initial value
-            display_comments_panel: false,
-        }
+        Self { item }
     }
 }
 
@@ -53,7 +48,7 @@ impl Screen for StoryDetailsScreen {
         &mut self,
         key: &Key,
         router: &mut AppRouter,
-        _state: &mut AppState,
+        state: &mut AppState,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
         match key {
             Key::Escape => {
@@ -64,7 +59,7 @@ impl Screen for StoryDetailsScreen {
                 )
             }
             Key::Tab => {
-                self.display_comments_panel = !self.display_comments_panel;
+                state.toggle_item_page_should_display_comments_panel();
                 (ScreenEventResponse::Caught, None)
             }
             Key::Char('o') => {
@@ -72,7 +67,7 @@ impl Screen for StoryDetailsScreen {
                     .item
                     .url
                     .clone()
-                    .unwrap_or(self.item.get_hacker_news_link());
+                    .unwrap_or_else(|| self.item.get_hacker_news_link());
                 open_browser_tab(item_link.as_str());
                 (ScreenEventResponse::Caught, None)
             }
@@ -84,9 +79,11 @@ impl Screen for StoryDetailsScreen {
         &self,
         frame_size: Rect,
         components_registry: &mut ScreenComponentsRegistry,
-        _state: &AppState,
+        state: &AppState,
     ) {
-        let (header_size, comments_size) = if self.display_comments_panel {
+        let display_comments_panel = state.get_item_page_should_display_comments_panel();
+
+        let (header_size, comments_size) = if display_comments_panel {
             (15, 85)
         } else {
             (100, 0)
@@ -104,7 +101,7 @@ impl Screen for StoryDetailsScreen {
             .split(frame_size);
 
         components_registry.insert(ITEM_DETAILS_ID, main_layout_chunks[0]);
-        if self.display_comments_panel {
+        if display_comments_panel {
             components_registry.insert(ITEM_COMMENTS_ID, main_layout_chunks[1]);
         }
     }

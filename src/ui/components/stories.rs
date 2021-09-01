@@ -16,7 +16,7 @@ use tui::{
 use crate::{
     api::{
         types::{HnItem, HnItemIdScalar},
-        HnClient, HnStoriesSorting,
+        HnClient, HnStoriesSections, HnStoriesSorting,
     },
     app::AppContext,
     errors::{HnCliError, Result},
@@ -43,6 +43,8 @@ pub struct DisplayableHackerNewsItem {
     pub by_username: String,
     /// Title.
     pub title: String,
+    /// Text, if any.
+    pub text: Option<String>,
     /// Score.
     pub score: u32,
     /// Item URL, if any.
@@ -98,6 +100,7 @@ impl TryFrom<HnItem> for DisplayableHackerNewsItem {
                     posted_since: Self::formatted_posted_since(&posted_at),
                     by_username: story.by,
                     title: story.title,
+                    text: story.text,
                     score: story.score,
                     url: story.url.clone(),
                     url_hostname: story.url.map(|url| {
@@ -118,6 +121,7 @@ impl TryFrom<HnItem> for DisplayableHackerNewsItem {
                     posted_since: Self::formatted_posted_since(&posted_at),
                     by_username: job.by,
                     title: job.title,
+                    text: job.text,
                     score: job.score,
                     url: job.url.clone(),
                     url_hostname: job.url.map(|url| {
@@ -223,7 +227,7 @@ impl UiComponent for StoriesPanel {
                 let item_link = selected_item
                     .url
                     .clone()
-                    .unwrap_or(selected_item.get_hacker_news_link());
+                    .unwrap_or_else(|| selected_item.get_hacker_news_link());
                 open_browser_tab(item_link.as_str());
                 true
             }
@@ -243,13 +247,19 @@ impl UiComponent for StoriesPanel {
         &mut self,
         f: &mut tui::Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
-        _ctx: &AppContext,
+        ctx: &AppContext,
     ) -> Result<()> {
+        let block_title = match ctx.get_state().get_main_stories_section() {
+            HnStoriesSections::Home => "Top stories",
+            HnStoriesSections::Ask => "Ask Hacker News",
+            HnStoriesSections::Show => "Show Hacker News",
+            HnStoriesSections::Jobs => "Jobs",
+        };
         let block = Block::default()
             .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded)
-            .title("Stories");
+            .title(block_title);
 
         // List Items
         let stories = self.list_state.get_items();

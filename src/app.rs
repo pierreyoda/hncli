@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use tui::layout::Rect;
 
 use crate::{
-    api::HnStoriesSorting,
+    api::{HnStoriesSections, HnStoriesSorting},
     ui::{
         common::UiComponentId,
         components::stories::DisplayableHackerNewsItem,
@@ -37,16 +37,38 @@ impl<'a> AppContext<'a> {
     /// Push a new navigation route state.
     pub fn router_push_navigation_stack(&mut self, route: AppRoute) {
         self.router.push_navigation_stack(route.clone());
-        *self.screen = AppRouter::build_screen_from_route(route);
-        self.screen.before_mount(&mut self.state);
+        self.update_screen();
     }
 
     /// Go to the previous navigation route state.
     pub fn router_pop_navigation_stack(&mut self) -> Option<AppRoute> {
         let previous = self.router.pop_navigation_stack();
+        self.update_screen();
+        previous
+    }
+
+    /// Replace the current route state.
+    ///
+    /// Used by the navigation component.
+    pub fn router_replace_current_in_navigation_stack(
+        &mut self,
+        route: AppRoute,
+    ) -> Option<AppRoute> {
+        if route.is_help() {
+            self.router.push_navigation_stack(route);
+            self.update_screen();
+            None
+        } else {
+            let previous = self.router.pop_navigation_stack();
+            self.router.push_navigation_stack(route);
+            self.update_screen();
+            previous
+        }
+    }
+
+    fn update_screen(&mut self) {
         *self.screen = AppRouter::build_screen_from_route(self.router.get_current_route().clone());
         self.screen.before_mount(&mut self.state);
-        previous
     }
 }
 
@@ -55,30 +77,56 @@ unsafe impl<'a> Send for AppContext<'a> {}
 /// Global application state.
 #[derive(Debug)]
 pub struct AppState {
+    /// Latest component interacted with, *i.e.* the latest component having
+    /// swallowed an UI event.
+    latest_interacted_with_component: Option<UiComponentId>,
+    /// Main screen(s): currently viewed section.
+    main_stories_section: HnStoriesSections,
     /// Main screen(s): current stories sorting.
     main_stories_sorting: HnStoriesSorting,
     /// The currently viewed item (Story or Job posting).
     currently_viewed_item: Option<DisplayableHackerNewsItem>,
+    /// Item details screen: is the comments panel visible or not.
+    item_page_display_comments_panel: bool,
 }
 
 impl Default for AppState {
     fn default() -> Self {
         Self {
+            latest_interacted_with_component: None,
             main_stories_sorting: HnStoriesSorting::Top,
+            main_stories_section: HnStoriesSections::Home,
             currently_viewed_item: None,
+            // TODO: add user-configurable option for initial value
+            item_page_display_comments_panel: false,
         }
     }
 }
 
 impl AppState {
-    /// Get the current stories sorting for the main screen (left panel).
+    /// Get the latest component interacted with.
+    pub fn get_latest_interacted_with_component(&self) -> Option<&UiComponentId> {
+        self.latest_interacted_with_component.as_ref()
+    }
+
+    /// Get the current stories sorting for the main screen.
     pub fn get_main_stories_sorting(&self) -> &HnStoriesSorting {
         &self.main_stories_sorting
     }
 
-    /// Set the current stories sorting for the main screen (left panel).
+    /// Set the current stories sorting for the main screen.
     pub fn set_main_stories_sorting(&mut self, sorting: HnStoriesSorting) {
         self.main_stories_sorting = sorting;
+    }
+
+    /// Get the current stories section for the main screen.
+    pub fn get_main_stories_section(&self) -> &HnStoriesSections {
+        &self.main_stories_section
+    }
+
+    /// Set the current stories section for the main screen.
+    pub fn set_main_stories_section(&mut self, section: HnStoriesSections) {
+        self.main_stories_section = section;
     }
 
     /// Get the currently viewed story/job item.
@@ -89,6 +137,16 @@ impl AppState {
     /// Set the currently viewed story/job item.
     pub fn set_currently_viewed_item(&mut self, viewed: Option<DisplayableHackerNewsItem>) {
         self.currently_viewed_item = viewed;
+    }
+
+    /// Get the is comments panel visible on item details screen boolean.
+    pub fn get_item_page_should_display_comments_panel(&self) -> bool {
+        self.item_page_display_comments_panel
+    }
+
+    /// Toggle the is comments panel visible on item details screen boolean.
+    pub fn toggle_item_page_should_display_comments_panel(&mut self) {
+        self.item_page_display_comments_panel = !self.item_page_display_comments_panel;
     }
 }
 
@@ -112,8 +170,8 @@ pub struct App {
 
 impl App {
     pub fn new() -> Self {
-        let initial_route = AppRoute::Home;
         let mut state: AppState = Default::default();
+        let initial_route = AppRoute::Home(HnStoriesSections::Home);
         let (router, current_screen) = AppRouter::new(initial_route, &mut state);
         Self {
             state,
@@ -170,6 +228,11 @@ impl App {
         self.layout_components.clear();
         self.current_screen
             .compute_layout(frame_size, &mut self.layout_components, &self.state);
+    }
+
+    /// Update the last component interacted with from the UI loop.
+    pub fn update_latest_interacted_with_component(&mut self, id: Option<UiComponentId>) {
+        self.state.latest_interacted_with_component = id;
     }
 
     /// Get, if any, the rendering `Rect` target for the given component.

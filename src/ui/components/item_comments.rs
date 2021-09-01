@@ -42,7 +42,7 @@ impl UiComponent for ItemComments {
         Ok(())
     }
 
-    fn key_handler(&mut self, key: &Key, ctx: &mut AppContext) -> Result<bool> {
+    fn key_handler(&mut self, _key: &Key, _ctx: &mut AppContext) -> Result<bool> {
         Ok(false)
     }
 

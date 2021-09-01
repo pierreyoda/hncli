@@ -13,16 +13,19 @@ use tui::{
 };
 
 use crate::{
-    api::HnClient,
+    api::{HnClient, HnStoriesSections},
     app::AppContext,
     errors::Result,
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
         handlers,
+        router::AppRoute,
     },
 };
 
 use super::common::COMMON_BLOCK_NORMAL_COLOR;
+
+const TABS_TITLES: [&'static str; 5] = ["Home", "Ask HN", "Show HN", "Jobs", "Help"];
 
 /// The Navigation bar provides a convenient way to switch between screens
 /// screens by either pressing the hotkey associated with the title, or by
@@ -36,8 +39,7 @@ pub struct Navigation {
 impl Default for Navigation {
     fn default() -> Self {
         Self {
-            // TODO: more flexible data representation (shortkey, index)
-            titles: vec!["Home", "Ask HN", "Show HN", "Jobs", "Help"],
+            titles: TABS_TITLES.to_vec(),
             selected_index: 0,
         }
     }
@@ -73,7 +75,7 @@ impl UiComponent for Navigation {
         Ok(())
     }
 
-    fn key_handler(&mut self, key: &Key, _ctx: &mut AppContext) -> Result<bool> {
+    fn key_handler(&mut self, key: &Key, ctx: &mut AppContext) -> Result<bool> {
         Ok(match key {
             Key::Left => {
                 self.previous();
@@ -83,25 +85,14 @@ impl UiComponent for Navigation {
                 self.next();
                 true
             }
-            Key::Char(c) => match c {
-                // 'h' => {
-                //     self.selected_index = 0;
-                //     true
-                // }
-                // 'a' => {
-                //     self.selected_index = 1;
-                //     true
-                // }
-                // 's' => {
-                //     self.selected_index = 2;
-                //     true
-                // }
-                // 'j' => {
-                //     self.selected_index = 3;
-                //     true
-                // }
-                _ => false,
-            },
+            Key::Enter => {
+                if ctx.get_state().get_latest_interacted_with_component() == Some(&NAVIGATION_ID) {
+                    self.navigate_to_current_selection(ctx);
+                    true
+                } else {
+                    false
+                }
+            }
             _ => false,
         })
     }
@@ -110,27 +101,33 @@ impl UiComponent for Navigation {
         &mut self,
         f: &mut Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
-        _ctx: &AppContext,
+        ctx: &AppContext,
     ) -> Result<()> {
+        let current_tab_index = match ctx.get_router().get_current_route() {
+            AppRoute::Home(section) => match section {
+                HnStoriesSections::Home => 0,
+                HnStoriesSections::Ask => 1,
+                HnStoriesSections::Show => 2,
+                HnStoriesSections::Jobs => 3,
+            },
+            AppRoute::Help => 4,
+            _ => usize::MAX,
+        };
+        let selected_title = TABS_TITLES[current_tab_index];
         let tabs_titles: Vec<Spans> = self
             .titles
             .iter()
             .map(|title| {
-                // underline the first character to show the shortcut
-                // TODO: do this work once, see above
-                let (first, rest) = title.split_at(1);
-
-                // TODO: cache stylings, also easier configuration later on
-                Spans::from(vec![
-                    Span::styled(
-                        first,
-                        Style::default()
-                            .fg(Color::Yellow)
-                            .add_modifier(Modifier::BOLD)
-                            .add_modifier(Modifier::UNDERLINED),
-                    ),
-                    Span::styled(rest, Style::default().fg(Color::White)),
-                ])
+                Spans::from(vec![Span::styled(
+                    *title,
+                    Style::default()
+                        .fg(Color::White)
+                        .add_modifier(if *title == selected_title {
+                            Modifier::UNDERLINED | Modifier::BOLD
+                        } else {
+                            Modifier::BOLD
+                        }),
+                )])
             })
             .collect();
 
@@ -150,6 +147,20 @@ impl UiComponent for Navigation {
         f.render_widget(tabs, inside);
 
         Ok(())
+    }
+}
+
+impl Navigation {
+    fn navigate_to_current_selection(&self, ctx: &mut AppContext) {
+        let route = match self.selected_index {
+            0 => AppRoute::Home(HnStoriesSections::Home),
+            1 => AppRoute::Home(HnStoriesSections::Ask),
+            2 => AppRoute::Home(HnStoriesSections::Show),
+            3 => AppRoute::Home(HnStoriesSections::Jobs),
+            4 => AppRoute::Help,
+            _ => unreachable!(),
+        };
+        ctx.router_replace_current_in_navigation_stack(route);
     }
 }
 
