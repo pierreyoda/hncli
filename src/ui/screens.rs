@@ -12,6 +12,7 @@ use super::{
 
 pub mod help;
 pub mod home;
+pub mod settings;
 pub mod story;
 
 /// Defines layout state by associating each visible component

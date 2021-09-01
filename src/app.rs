@@ -54,7 +54,7 @@ impl<'a> AppContext<'a> {
         &mut self,
         route: AppRoute,
     ) -> Option<AppRoute> {
-        if route.is_help() {
+        if route.is_settings() || route.is_help() {
             self.router.push_navigation_stack(route);
             self.update_screen();
             None

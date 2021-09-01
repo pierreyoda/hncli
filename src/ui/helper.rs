@@ -56,8 +56,9 @@ impl ContextualHelper {
     ) {
         match for_route {
             AppRoute::Home(_) => self.render_home_page_help(f, inside, app_state),
-            AppRoute::Help => self.render_help_page_help(f, inside, app_state),
             AppRoute::StoryDetails(item) => self.render_item_page_help(f, inside, app_state, item),
+            AppRoute::Settings => self.render_settings_page_help(f, inside, app_state),
+            AppRoute::Help => self.render_help_page_help(f, inside, app_state),
         }
     }
 
@@ -103,6 +104,19 @@ impl ContextualHelper {
         } else {
             vec![widget_toggle_comments, widget_go_back]
         };
+        Self::render_widgets(f, inside, widgets.as_ref());
+    }
+
+    fn render_settings_page_help(
+        &self,
+        f: &mut Frame<CrosstermBackend<Stdout>>,
+        inside: Rect,
+        _app_state: &AppState,
+    ) {
+        let widgets = vec![
+            HelpWidget::Text("⬆️  / i or ⬇️  / k to navigate".into()),
+            HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape),
+        ];
         Self::render_widgets(f, inside, widgets.as_ref());
     }
 

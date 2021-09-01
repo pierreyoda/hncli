@@ -25,7 +25,7 @@ use crate::{
 
 use super::common::COMMON_BLOCK_NORMAL_COLOR;
 
-const TABS_TITLES: [&'static str; 5] = ["Home", "Ask HN", "Show HN", "Jobs", "Help"];
+const TABS_TITLES: [&str; 6] = ["Home", "Ask HN", "Show HN", "Jobs", "Settings", "Help"];
 
 /// The Navigation bar provides a convenient way to switch between screens
 /// screens by either pressing the hotkey associated with the title, or by
@@ -110,7 +110,8 @@ impl UiComponent for Navigation {
                 HnStoriesSections::Show => 2,
                 HnStoriesSections::Jobs => 3,
             },
-            AppRoute::Help => 4,
+            AppRoute::Settings => 4,
+            AppRoute::Help => 5,
             _ => usize::MAX,
         };
         let selected_title = TABS_TITLES[current_tab_index];
@@ -157,7 +158,8 @@ impl Navigation {
             1 => AppRoute::Home(HnStoriesSections::Ask),
             2 => AppRoute::Home(HnStoriesSections::Show),
             3 => AppRoute::Home(HnStoriesSections::Jobs),
-            4 => AppRoute::Help,
+            4 => AppRoute::Settings,
+            5 => AppRoute::Help,
             _ => unreachable!(),
         };
         ctx.router_replace_current_in_navigation_stack(route);

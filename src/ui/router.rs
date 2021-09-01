@@ -3,7 +3,9 @@ use std::fmt;
 use crate::{
     api::HnStoriesSections,
     app::AppState,
-    ui::screens::{help::HelpScreen, home::HomeScreen, story::StoryDetailsScreen},
+    ui::screens::{
+        help::HelpScreen, home::HomeScreen, settings::SettingsScreen, story::StoryDetailsScreen,
+    },
 };
 
 use super::{components::stories::DisplayableHackerNewsItem, screens::Screen};
@@ -15,11 +17,17 @@ pub enum AppRoute {
     Home(HnStoriesSections),
     /// Story details screen.
     StoryDetails(DisplayableHackerNewsItem),
+    /// Settings screen.
+    Settings,
     /// Help screen.
     Help,
 }
 
 impl AppRoute {
+    pub fn is_settings(&self) -> bool {
+        matches!(self, AppRoute::Settings)
+    }
+
     pub fn is_help(&self) -> bool {
         matches!(self, AppRoute::Help)
     }
@@ -64,6 +72,7 @@ impl AppRouter {
         use AppRoute::*;
         match route {
             Help => Box::new(HelpScreen::new()),
+            Settings => Box::new(SettingsScreen::new()),
             Home(section) => Box::new(HomeScreen::new(section)),
             StoryDetails(item) => Box::new(StoryDetailsScreen::new(item)),
         }
