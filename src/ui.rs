@@ -181,8 +181,8 @@ impl UserInterface {
                         break 'ui;
                     }
                     key => {
-                        if !self.handle_key_event(&key)? {
-                            self.app.handle_key_event(&key);
+                        if !self.handle_key_event(&key)? && self.app.handle_key_event(&key) {
+                            self.app.update_latest_interacted_with_component(None);
                         }
                     }
                 },
@@ -227,13 +227,15 @@ impl UserInterface {
                 continue;
             }
             if wrapper.component.key_handler(key, &mut app_context)? {
-                latest_interacted_with_component = Some(wrapper.component.id().clone());
+                latest_interacted_with_component = Some(wrapper.component.id());
                 swallowed = true;
                 break;
             }
         }
-        self.app
-            .update_latest_interacted_with_component(latest_interacted_with_component);
+        if latest_interacted_with_component.is_some() {
+            self.app
+                .update_latest_interacted_with_component(latest_interacted_with_component);
+        }
 
         Ok(swallowed)
     }
