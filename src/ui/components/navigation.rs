@@ -182,11 +182,12 @@ mod tests {
         assert_eq!(navigation.selected_index, 3);
         navigation.next();
         navigation.next();
+        navigation.next();
         assert_eq!(navigation.selected_index, 0);
 
         navigation.previous();
-        assert_eq!(navigation.selected_index, 4);
+        assert_eq!(navigation.selected_index, 5);
         navigation.previous();
-        assert_eq!(navigation.selected_index, 3);
+        assert_eq!(navigation.selected_index, 4);
     }
 }
