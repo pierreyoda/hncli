@@ -15,8 +15,8 @@ pub enum HnItem {
     Story(HnStory),
     Comment(HnComment),
     Job(HnJob),
-    // TODO: Poll(HnPoll),
-    // TODO: PollOpt(HnPollOption),
+    Poll(HnPoll),
+    PollOpt(HnPollOption),
 }
 
 impl HnItem {
@@ -28,6 +28,8 @@ impl HnItem {
             Story(story) => story.id,
             Comment(comment) => comment.id,
             Job(job) => job.id,
+            Poll(poll) => poll.id,
+            PollOpt(poll_option) => poll_option.id,
         }
     }
 }
@@ -68,7 +70,7 @@ pub struct HnStory {
     /// Total number of comments on the story.
     pub descendants: u32,
     /// IDs of the comments on the story, if any, in ranked display order.
-    pub kids: Option<Vec<u32>>,
+    pub kids: Option<Vec<HnItemIdScalar>>,
 }
 
 /// A `Comment` in the HackerNews API.
@@ -136,18 +138,83 @@ pub struct HnJob {
     pub url: Option<String>,
 }
 
+/// A `Poll` in the HackerNews API.
+///
+/// # Example
+///
+/// ```json
+/// {
+///   "by" : "pg",
+///   "descendants" : 54,
+///   "id" : 126809,
+///   "kids" : [ 126822, 126823, 126993, 126824, 126934, 127411, 126888, 127681, 126818, 126816, 126854, 127095, 126861, 127313, 127299, 126859, 126852, 126882, 126832, 127072, 127217, 126889, 127535, 126917, 126875 ],
+///   "parts" : [ 126810, 126811, 126812 ],
+///   "score" : 46,
+///   "text" : "",
+///   "time" : 1204403652,
+///   "title" : "Poll: What would happen if News.YC had explicit support for polls?",
+///   "type" : "poll"
+/// }
+/// ```
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+pub struct HnPoll {
+    /// Unique ID of this Item.
+    pub id: HnItemIdScalar,
+    /// Unix timestamp for the creation time.
+    pub time: HnItemDateScalar,
+    /// Username of the poll's author.
+    pub by: String,
+    /// Score of the poll.
+    pub score: u32,
+    /// Title of the poll.
+    pub title: String,
+    /// Options of the poll.
+    pub parts: Vec<HnItemIdScalar>,
+    /// Total number of comments on the poll.
+    pub descendants: u32,
+    /// IDs of the comments on the poll, if any, in ranked display order.
+    pub kids: Option<Vec<HnItemIdScalar>>,
+}
+
+/// A Poll Option in the HackerNews API.
+///
+/// # Example
+///
+/// {
+///   "by" : "pg",
+///   "id" : 160705,
+///   "poll" : 160704,
+///   "score" : 335,
+///   "text" : "Yes, ban them; I'm tired of seeing Valleywag stories on News.YC.",
+///   "time" : 1207886576,
+///   "type" : "pollopt"
+/// }
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+pub struct HnPollOption {
+    /// Unique ID of this Item.
+    pub id: HnItemIdScalar,
+    /// Unix timestamp for the creation time.
+    pub time: HnItemDateScalar,
+    /// Username of the poll's author.
+    pub by: String,
+    /// Score of the poll option.
+    pub score: u32,
+    /// Text of the poll option.
+    pub text: String,
+}
+
 /// A `User` in the HackerNews API.
 ///
 /// # Example
 ///
 /// ```json
 /// {
-///     "about" : "This is a test",
-///     "created" : 1173923446,
-///     "delay" : 0,
-///     "id" : "jl",
-///     "karma" : 2937,
-///     "submitted" : [ 8265435, 8168423, 8090946, /** ... */ ]
+///    "about" : "This is a test",
+///    "created" : 1173923446,
+///    "delay" : 0,
+///    "id" : "jl",
+///    "karma" : 2937,
+///    "submitted" : [ 8265435, 8168423, 8090946, /** ... */ ]
 /// }
 /// ```
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
