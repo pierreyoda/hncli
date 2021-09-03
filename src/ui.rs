@@ -171,6 +171,7 @@ impl UserInterface {
                     for (id, wrapper) in components.iter_mut() {
                         let component_rendering_rect =
                             app.get_component_rendering_rect(id).cloned();
+                        wrapper.active = component_rendering_rect.is_some();
                         let app_context = app.get_context();
                         match component_rendering_rect {
                             None => (), // no rendering
