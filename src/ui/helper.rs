@@ -115,6 +115,7 @@ impl ContextualHelper {
     ) {
         let widgets = vec![
             HelpWidget::Text("⬆️  / i or ⬇️  / k to navigate".into()),
+            HelpWidget::KeyReminder('✅', "toggle the setting".into(), Key::Tab),
             HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape),
         ];
         Self::render_widgets(f, inside, widgets.as_ref());

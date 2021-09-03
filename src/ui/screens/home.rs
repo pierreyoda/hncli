@@ -3,6 +3,7 @@ use tui::layout::{Constraint, Direction, Layout, Rect};
 use crate::{
     api::HnStoriesSections,
     app::AppState,
+    config::AppConfiguration,
     ui::{
         components::{navigation::NAVIGATION_ID, options::OPTIONS_ID, stories::STORIES_PANEL_ID},
         handlers::Key,
@@ -41,7 +42,7 @@ impl HomeScreen {
 }
 
 impl Screen for HomeScreen {
-    fn before_mount(&mut self, state: &mut AppState) {
+    fn before_mount(&mut self, state: &mut AppState, _config: &AppConfiguration) {
         state.set_main_stories_section(self.section);
     }
 

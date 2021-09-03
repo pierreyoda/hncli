@@ -2,7 +2,7 @@ use std::{collections::HashMap, fmt::Debug};
 
 use tui::layout::Rect;
 
-use crate::app::AppState;
+use crate::{app::AppState, config::AppConfiguration};
 
 use super::{
     common::UiComponentId,
@@ -31,7 +31,7 @@ pub enum ScreenEventResponse {
 /// A Screen is a self-contained state of the application with its own update and rendering logic.
 pub trait Screen: Debug + Send {
     /// Called after instantiation and before mounting the screen.
-    fn before_mount(&mut self, _state: &mut AppState) {}
+    fn before_mount(&mut self, _state: &mut AppState, _config: &AppConfiguration) {}
 
     /// Handle an incoming key event, at the application level. Returns true if
     /// the event is to be captured (swallowed) and not passed down to components.

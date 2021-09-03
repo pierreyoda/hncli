@@ -23,11 +23,12 @@ use handlers::Key;
 use crate::{
     api::HnClient,
     app::App,
+    config::AppConfiguration,
     errors::{HnCliError, Result},
 };
 
 use self::{
-    components::{item_comments::ItemComments, item_details::ItemDetails},
+    components::{item_comments::ItemComments, item_details::ItemDetails, settings::Settings},
     helper::ContextualHelper,
 };
 
@@ -81,10 +82,12 @@ impl UserInterface {
         enable_raw_mode()?;
         terminal.clear()?;
         terminal.hide_cursor()?;
+
+        let config = AppConfiguration::from_file_or_defaults();
         Ok(Self {
             terminal,
             client,
-            app: App::new(),
+            app: App::new(config),
             components: HashMap::new(),
         })
     }
@@ -116,11 +119,17 @@ impl UserInterface {
 
         // components
         self.register_component(Help::default());
+        self.register_component(Settings::default());
         self.register_component(Navigation::default());
         self.register_component(StoriesPanel::default());
         self.register_component(ItemDetails::default());
         self.register_component(ItemComments::default());
         self.register_component(Options::default());
+        for component_wrapper in self.components.values_mut() {
+            component_wrapper
+                .component
+                .before_mount(&mut self.app.get_context());
+        }
 
         Ok(rx)
     }
@@ -135,11 +144,23 @@ impl UserInterface {
             let components = &mut self.components;
             self.terminal
                 .draw(|frame| {
+                    let show_contextual_help =
+                        app.get_context().get_config().get_show_contextual_help();
+
                     // global layout
+                    let (main_size, helper_size) = if show_contextual_help {
+                        (97, 3)
+                    } else {
+                        (100, 0)
+                    };
                     let global_layout_chunks = Layout::default()
                         .direction(Direction::Vertical)
                         .constraints(
-                            vec![Constraint::Percentage(97), Constraint::Percentage(3)].as_ref(),
+                            vec![
+                                Constraint::Percentage(main_size),
+                                Constraint::Percentage(helper_size),
+                            ]
+                            .as_ref(),
                         )
                         .split(frame.size());
 
@@ -161,14 +182,16 @@ impl UserInterface {
                     }
 
                     // render contextual helper
-                    let app_context = app.get_context();
-                    let current_route = app_context.get_router().get_current_route();
-                    contextual_helper.render(
-                        frame,
-                        global_layout_chunks[1],
-                        current_route,
-                        app_context.get_state(),
-                    );
+                    if show_contextual_help {
+                        let app_context = app.get_context();
+                        let current_route = app_context.get_router().get_current_route();
+                        contextual_helper.render(
+                            frame,
+                            global_layout_chunks[1],
+                            current_route,
+                            app_context.get_state(),
+                        );
+                    }
                 })
                 .map_err(HnCliError::IoError)?;
 

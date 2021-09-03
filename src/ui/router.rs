@@ -3,6 +3,7 @@ use std::fmt;
 use crate::{
     api::HnStoriesSections,
     app::AppState,
+    config::AppConfiguration,
     ui::screens::{
         help::HelpScreen, home::HomeScreen, settings::SettingsScreen, story::StoryDetailsScreen,
     },
@@ -42,9 +43,13 @@ pub struct AppRouter {
 }
 
 impl AppRouter {
-    pub fn new(initial_route: AppRoute, state: &mut AppState) -> (Self, Box<dyn Screen>) {
+    pub fn new(
+        initial_route: AppRoute,
+        state: &mut AppState,
+        config: &AppConfiguration,
+    ) -> (Self, Box<dyn Screen>) {
         let mut initial_screen = Self::build_screen_from_route(initial_route.clone());
-        initial_screen.before_mount(state);
+        initial_screen.before_mount(state, config);
         (
             Self {
                 navigation_stack: vec![initial_route],

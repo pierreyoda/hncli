@@ -16,6 +16,8 @@ pub enum HnCliError {
     ThreadingError(#[from] RecvError),
     #[error("Crossterm error")]
     CrosstermError(#[from] ErrorKind),
+    #[error("Config synchronization error: {0}")]
+    ConfigSynchronizationError(String),
     #[error("URL parsing error")]
     UrlParsingError(#[from] ParseError),
     #[error("The HN item with ID {0} was not found")]

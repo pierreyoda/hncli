@@ -2,7 +2,6 @@ use std::io::Stdout;
 
 use async_trait::async_trait;
 
-use handlers::Key;
 use tui::{
     backend::CrosstermBackend,
     layout::Rect,
@@ -22,6 +21,7 @@ use crate::{
         router::AppRoute,
     },
 };
+use handlers::Key;
 
 use super::common::COMMON_BLOCK_NORMAL_COLOR;
 

@@ -231,7 +231,11 @@ impl UiComponent for StoriesPanel {
                 open_browser_tab(item_link.as_str());
                 true
             }
-            Key::Enter if selected.is_some() => {
+            Key::Enter
+                if selected.is_some()
+                    && ctx.get_state().get_latest_interacted_with_component()
+                        == Some(&STORIES_PANEL_ID) =>
+            {
                 let items = self.list_state.get_items();
                 let selected_item = &items[selected.unwrap()];
                 ctx.get_state_mut()

@@ -2,6 +2,7 @@ use tui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
     app::AppState,
+    config::AppConfiguration,
     ui::{
         components::{
             item_comments::ITEM_COMMENTS_ID, item_details::ITEM_DETAILS_ID,
@@ -40,8 +41,11 @@ impl StoryDetailsScreen {
 }
 
 impl Screen for StoryDetailsScreen {
-    fn before_mount(&mut self, state: &mut AppState) {
+    fn before_mount(&mut self, state: &mut AppState, config: &AppConfiguration) {
         state.set_currently_viewed_item(Some(self.item.clone()));
+        state.set_item_page_should_display_comments_panel(
+            config.get_display_comments_panel_by_default(),
+        );
     }
 
     fn handle_key_event(
@@ -59,7 +63,9 @@ impl Screen for StoryDetailsScreen {
                 )
             }
             Key::Tab => {
-                state.toggle_item_page_should_display_comments_panel();
+                state.set_item_page_should_display_comments_panel(
+                    !state.get_item_page_should_display_comments_panel(),
+                );
                 (ScreenEventResponse::Caught, None)
             }
             Key::Char('o') => {

@@ -1,8 +1,9 @@
-use tui::layout::Rect;
+use tui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
     app::AppState,
     ui::{
+        components::{navigation::NAVIGATION_ID, settings::SETTINGS_ID},
         handlers::Key,
         router::{AppRoute, AppRouter},
     },
@@ -43,8 +44,17 @@ impl Screen for SettingsScreen {
         &self,
         frame_size: Rect,
         components_registry: &mut ScreenComponentsRegistry,
-        state: &AppState,
+        _state: &AppState,
     ) {
+        // main layout chunks
+        let main_layout_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .margin(2)
+            .constraints([Constraint::Percentage(6), Constraint::Percentage(94)].as_ref())
+            .split(frame_size);
+
+        components_registry.insert(NAVIGATION_ID, main_layout_chunks[0]);
+        components_registry.insert(SETTINGS_ID, main_layout_chunks[1]);
     }
 }
 

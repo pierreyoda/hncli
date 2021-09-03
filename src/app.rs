@@ -4,6 +4,7 @@ use tui::layout::Rect;
 
 use crate::{
     api::{HnStoriesSections, HnStoriesSorting},
+    config::AppConfiguration,
     ui::{
         common::UiComponentId,
         components::stories::DisplayableHackerNewsItem,
@@ -17,6 +18,7 @@ use crate::{
 pub struct AppContext<'a> {
     state: &'a mut AppState,
     router: &'a mut AppRouter,
+    config: &'a mut AppConfiguration,
     /// Stored to change screen on route change.
     screen: &'a mut Box<dyn Screen>,
 }
@@ -28,6 +30,14 @@ impl<'a> AppContext<'a> {
 
     pub fn get_state_mut(&mut self) -> &mut AppState {
         self.state
+    }
+
+    pub fn get_config(&self) -> &AppConfiguration {
+        self.config
+    }
+
+    pub fn get_config_mut(&mut self) -> &mut AppConfiguration {
+        self.config
     }
 
     pub fn get_router(&self) -> &AppRouter {
@@ -68,7 +78,7 @@ impl<'a> AppContext<'a> {
 
     fn update_screen(&mut self) {
         *self.screen = AppRouter::build_screen_from_route(self.router.get_current_route().clone());
-        self.screen.before_mount(&mut self.state);
+        self.screen.before_mount(&mut self.state, &self.config);
     }
 }
 
@@ -90,15 +100,14 @@ pub struct AppState {
     item_page_display_comments_panel: bool,
 }
 
-impl Default for AppState {
-    fn default() -> Self {
+impl AppState {
+    fn from_config(config: &AppConfiguration) -> Self {
         Self {
             latest_interacted_with_component: None,
             main_stories_sorting: HnStoriesSorting::Top,
             main_stories_section: HnStoriesSections::Home,
             currently_viewed_item: None,
-            // TODO: add user-configurable option for initial value
-            item_page_display_comments_panel: false,
+            item_page_display_comments_panel: config.get_display_comments_panel_by_default(),
         }
     }
 }
@@ -144,9 +153,9 @@ impl AppState {
         self.item_page_display_comments_panel
     }
 
-    /// Toggle the is comments panel visible on item details screen boolean.
-    pub fn toggle_item_page_should_display_comments_panel(&mut self) {
-        self.item_page_display_comments_panel = !self.item_page_display_comments_panel;
+    /// Set the is comments panel visible on item details screen boolean.
+    pub fn set_item_page_should_display_comments_panel(&mut self, value: bool) {
+        self.item_page_display_comments_panel = value;
     }
 }
 
@@ -157,6 +166,8 @@ pub struct App {
     state: AppState,
     /// Application router.
     router: AppRouter,
+    /// Application configuration.
+    config: AppConfiguration,
     /// Cached current Screen.
     current_screen: Box<dyn Screen>,
     /// The current layout state.
@@ -169,13 +180,14 @@ pub struct App {
 }
 
 impl App {
-    pub fn new() -> Self {
-        let mut state: AppState = Default::default();
+    pub fn new(config: AppConfiguration) -> Self {
+        let mut state = AppState::from_config(&config);
         let initial_route = AppRoute::Home(HnStoriesSections::Home);
-        let (router, current_screen) = AppRouter::new(initial_route, &mut state);
+        let (router, current_screen) = AppRouter::new(initial_route, &mut state, &config);
         Self {
             state,
             router,
+            config,
             current_screen,
             layout_components: HashMap::new(),
         }
@@ -186,6 +198,7 @@ impl App {
         AppContext {
             state: &mut self.state,
             router: &mut self.router,
+            config: &mut self.config,
             screen: &mut self.current_screen,
         }
     }
@@ -211,7 +224,8 @@ impl App {
         if let Some(route) = new_route {
             // update the current screen if the route changed
             self.current_screen = AppRouter::build_screen_from_route(route);
-            self.current_screen.before_mount(&mut self.state);
+            self.current_screen
+                .before_mount(&mut self.state, &self.config);
         }
         match response {
             ScreenEventResponse::Caught => true,
