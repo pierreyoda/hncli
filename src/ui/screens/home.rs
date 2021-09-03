@@ -67,9 +67,9 @@ impl Screen for HomeScreen {
             .margin(2)
             .constraints(
                 [
-                    Constraint::Length(3),
-                    Constraint::Min(2),
-                    Constraint::Length(3),
+                    Constraint::Percentage(6),
+                    Constraint::Percentage(89),
+                    Constraint::Percentage(5),
                 ]
                 .as_ref(),
             )
