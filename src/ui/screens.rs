@@ -6,7 +6,7 @@ use crate::{app::AppState, config::AppConfiguration};
 
 use super::{
     common::UiComponentId,
-    handlers::Key,
+    handlers::InputsController,
     router::{AppRoute, AppRouter},
 };
 
@@ -37,9 +37,9 @@ pub trait Screen: Debug + Send {
     /// the event is to be captured (swallowed) and not passed down to components.
     ///
     /// Returns the (event_response, new_route_if_navigated) tuple.
-    fn handle_key_event(
+    fn handle_inputs(
         &mut self,
-        key: &Key,
+        inputs: &InputsController,
         router: &mut AppRouter,
         state: &mut AppState,
     ) -> (ScreenEventResponse, Option<AppRoute>);

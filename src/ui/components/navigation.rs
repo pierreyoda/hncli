@@ -17,11 +17,10 @@ use crate::{
     errors::Result,
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
-        handlers,
+        handlers::ApplicationAction,
         router::AppRoute,
     },
 };
-use handlers::Key;
 
 use super::common::COMMON_BLOCK_NORMAL_COLOR;
 
@@ -75,25 +74,23 @@ impl UiComponent for Navigation {
         Ok(())
     }
 
-    fn key_handler(&mut self, key: &Key, ctx: &mut AppContext) -> Result<bool> {
-        Ok(match key {
-            Key::Left => {
-                self.previous();
+    fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
+        let inputs = ctx.get_inputs();
+        Ok(if inputs.is_active(&ApplicationAction::NavigateLeft) {
+            self.previous();
+            true
+        } else if inputs.is_active(&ApplicationAction::NavigateRight) {
+            self.next();
+            true
+        } else if inputs.is_active(&ApplicationAction::SelectItem) {
+            if ctx.get_state().get_latest_interacted_with_component() == Some(&NAVIGATION_ID) {
+                self.navigate_to_current_selection(ctx);
                 true
+            } else {
+                false
             }
-            Key::Right => {
-                self.next();
-                true
-            }
-            Key::Enter => {
-                if ctx.get_state().get_latest_interacted_with_component() == Some(&NAVIGATION_ID) {
-                    self.navigate_to_current_selection(ctx);
-                    true
-                } else {
-                    false
-                }
-            }
-            _ => false,
+        } else {
+            false
         })
     }
 

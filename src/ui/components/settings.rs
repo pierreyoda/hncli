@@ -16,7 +16,7 @@ use crate::{
     errors::Result,
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
-        handlers::Key,
+        handlers::ApplicationAction,
     },
 };
 
@@ -120,21 +120,19 @@ impl UiComponent for Settings {
         Ok(())
     }
 
-    fn key_handler(&mut self, key: &Key, ctx: &mut AppContext) -> Result<bool> {
-        Ok(match key {
-            Key::Up | Key::Char('i') => {
-                self.previous_control();
-                true
-            }
-            Key::Down | Key::Char('k') => {
-                self.next_control();
-                true
-            }
-            Key::Tab => {
-                self.toggle_current_control(ctx);
-                true
-            }
-            _ => false,
+    fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
+        let inputs = ctx.get_inputs();
+        Ok(if inputs.is_active(&ApplicationAction::NavigateUp) {
+            self.previous_control();
+            true
+        } else if inputs.is_active(&ApplicationAction::NavigateDown) {
+            self.next_control();
+            true
+        } else if inputs.is_active(&ApplicationAction::SettingsToggleControl) {
+            self.toggle_current_control(ctx);
+            true
+        } else {
+            false
         })
     }
 

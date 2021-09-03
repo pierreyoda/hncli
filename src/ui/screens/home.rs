@@ -6,7 +6,7 @@ use crate::{
     config::AppConfiguration,
     ui::{
         components::{navigation::NAVIGATION_ID, options::OPTIONS_ID, stories::STORIES_PANEL_ID},
-        handlers::Key,
+        handlers::InputsController,
         router::{AppRoute, AppRouter},
     },
 };
@@ -46,9 +46,9 @@ impl Screen for HomeScreen {
         state.set_main_stories_section(self.section);
     }
 
-    fn handle_key_event(
+    fn handle_inputs(
         &mut self,
-        _key: &Key,
+        _inputs: &InputsController,
         _router: &mut AppRouter,
         _state: &mut AppState,
     ) -> (ScreenEventResponse, Option<AppRoute>) {

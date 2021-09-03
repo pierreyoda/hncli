@@ -4,7 +4,7 @@ use crate::{
     app::AppState,
     ui::{
         components::help::HELP_ID,
-        handlers::Key,
+        handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
     },
 };
@@ -22,21 +22,20 @@ impl HelpScreen {
 }
 
 impl Screen for HelpScreen {
-    fn handle_key_event(
+    fn handle_inputs(
         &mut self,
-        key: &Key,
+        inputs: &InputsController,
         router: &mut AppRouter,
         _state: &mut AppState,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
-        match key {
-            Key::Escape => {
-                router.pop_navigation_stack();
-                (
-                    ScreenEventResponse::Caught,
-                    Some(router.get_current_route().clone()),
-                )
-            }
-            _ => (ScreenEventResponse::PassThrough, None),
+        if inputs.is_active(&ApplicationAction::Back) {
+            router.pop_navigation_stack();
+            (
+                ScreenEventResponse::Caught,
+                Some(router.get_current_route().clone()),
+            )
+        } else {
+            (ScreenEventResponse::PassThrough, None)
         }
     }
 

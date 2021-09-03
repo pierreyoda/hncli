@@ -22,7 +22,7 @@ use crate::{
     errors::{HnCliError, Result},
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
-        handlers::Key,
+        handlers::ApplicationAction,
         router::AppRoute,
         utils::{datetime_from_hn_time, open_browser_tab, ItemWithId, StatefulList},
     },
@@ -210,40 +210,36 @@ impl UiComponent for StoriesPanel {
         Ok(())
     }
 
-    fn key_handler(&mut self, key: &Key, ctx: &mut AppContext) -> Result<bool> {
+    fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
+        let inputs = ctx.get_inputs();
         let selected = self.list_state.get_state().selected();
-        Ok(match key {
-            Key::Up | Key::Char('i') => {
-                self.list_state.previous();
-                true
-            }
-            Key::Down | Key::Char('k') => {
-                self.list_state.next();
-                true
-            }
-            Key::Char('o') => {
-                let items = self.list_state.get_items();
-                let selected_item = &items[selected.unwrap()];
-                let item_link = selected_item
-                    .url
-                    .clone()
-                    .unwrap_or_else(|| selected_item.get_hacker_news_link());
-                open_browser_tab(item_link.as_str());
-                true
-            }
-            Key::Enter
-                if selected.is_some()
-                    && ctx.get_state().get_latest_interacted_with_component()
-                        == Some(&STORIES_PANEL_ID) =>
-            {
-                let items = self.list_state.get_items();
-                let selected_item = &items[selected.unwrap()];
-                ctx.get_state_mut()
-                    .set_currently_viewed_item(Some(selected_item.clone()));
-                ctx.router_push_navigation_stack(AppRoute::StoryDetails(selected_item.clone()));
-                true
-            }
-            _ => false,
+        Ok(if inputs.is_active(&ApplicationAction::NavigateUp) {
+            self.list_state.previous();
+            true
+        } else if inputs.is_active(&ApplicationAction::NavigateDown) {
+            self.list_state.next();
+            true
+        } else if inputs.is_active(&ApplicationAction::OpenExternalOrHackerNewsLink) {
+            let items = self.list_state.get_items();
+            let selected_item = &items[selected.unwrap()];
+            let item_link = selected_item
+                .url
+                .clone()
+                .unwrap_or_else(|| selected_item.get_hacker_news_link());
+            open_browser_tab(item_link.as_str());
+            true
+        } else if selected.is_some()
+            && inputs.is_active(&ApplicationAction::SelectItem)
+            && ctx.get_state().get_latest_interacted_with_component() == Some(&STORIES_PANEL_ID)
+        {
+            let items = self.list_state.get_items();
+            let selected_item = &items[selected.unwrap()];
+            ctx.get_state_mut()
+                .set_currently_viewed_item(Some(selected_item.clone()));
+            ctx.router_push_navigation_stack(AppRoute::StoryDetails(selected_item.clone()));
+            true
+        } else {
+            false
         })
     }
 

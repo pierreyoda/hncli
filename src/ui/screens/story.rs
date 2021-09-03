@@ -8,7 +8,7 @@ use crate::{
             item_comments::ITEM_COMMENTS_ID, item_details::ITEM_DETAILS_ID,
             stories::DisplayableHackerNewsItem,
         },
-        handlers::Key,
+        handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
         utils::open_browser_tab,
     },
@@ -48,36 +48,33 @@ impl Screen for StoryDetailsScreen {
         );
     }
 
-    fn handle_key_event(
+    fn handle_inputs(
         &mut self,
-        key: &Key,
+        inputs: &InputsController,
         router: &mut AppRouter,
         state: &mut AppState,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
-        match key {
-            Key::Escape => {
-                router.pop_navigation_stack();
-                (
-                    ScreenEventResponse::Caught,
-                    Some(router.get_current_route().clone()),
-                )
-            }
-            Key::Tab => {
-                state.set_item_page_should_display_comments_panel(
-                    !state.get_item_page_should_display_comments_panel(),
-                );
-                (ScreenEventResponse::Caught, None)
-            }
-            Key::Char('o') => {
-                let item_link = self
-                    .item
-                    .url
-                    .clone()
-                    .unwrap_or_else(|| self.item.get_hacker_news_link());
-                open_browser_tab(item_link.as_str());
-                (ScreenEventResponse::Caught, None)
-            }
-            _ => (ScreenEventResponse::PassThrough, None),
+        if inputs.is_active(&ApplicationAction::Back) {
+            router.pop_navigation_stack();
+            (
+                ScreenEventResponse::Caught,
+                Some(router.get_current_route().clone()),
+            )
+        } else if inputs.is_active(&ApplicationAction::ItemToggleComments) {
+            state.set_item_page_should_display_comments_panel(
+                !state.get_item_page_should_display_comments_panel(),
+            );
+            (ScreenEventResponse::Caught, None)
+        } else if inputs.is_active(&ApplicationAction::OpenExternalOrHackerNewsLink) {
+            let item_link = self
+                .item
+                .url
+                .clone()
+                .unwrap_or_else(|| self.item.get_hacker_news_link());
+            open_browser_tab(item_link.as_str());
+            (ScreenEventResponse::Caught, None)
+        } else {
+            (ScreenEventResponse::PassThrough, None)
         }
     }
 

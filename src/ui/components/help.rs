@@ -2,7 +2,6 @@ use std::io::Stdout;
 
 use async_trait::async_trait;
 
-use handlers::Key;
 use tui::{
     backend::CrosstermBackend,
     layout::{Alignment::Center, Constraint, Direction, Layout, Rect},
@@ -16,10 +15,7 @@ use crate::{
     app::AppContext,
     config::HNCLI_VERSION,
     errors::Result,
-    ui::{
-        common::{UiComponent, UiComponentId, UiTickScalar},
-        handlers,
-    },
+    ui::common::{UiComponent, UiComponentId, UiTickScalar},
 };
 
 /// The About component contains the version number,
@@ -50,7 +46,7 @@ impl UiComponent for Help {
         Ok(())
     }
 
-    fn key_handler(&mut self, _key: &Key, _ctx: &mut AppContext) -> Result<bool> {
+    fn handle_inputs(&mut self, _ctx: &mut AppContext) -> Result<bool> {
         Ok(false)
     }
 

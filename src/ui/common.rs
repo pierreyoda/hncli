@@ -5,8 +5,6 @@ use tui::{backend::CrosstermBackend, layout::Rect, Frame};
 
 use crate::{api::HnClient, app::AppContext, errors::Result};
 
-use super::handlers::Key;
-
 /// A `tick` is a UI update, in the order of the hundred milliseconds.
 pub type UiTickScalar = u64;
 
@@ -30,11 +28,11 @@ pub trait UiComponent {
     /// Update the state from various sources.
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()>;
 
-    /// Key event handler for the component.
+    /// Inputs handler for the component.
     ///
-    /// Returns true if the event is to be captured, that is swallowed
+    /// Returns true if the active event is to be captured, that is swallowed
     /// and no longer passed to other components.
-    fn key_handler(&mut self, key: &Key, ctx: &mut AppContext) -> Result<bool>;
+    fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool>;
 
     /// Renderer for the component.
     fn render(

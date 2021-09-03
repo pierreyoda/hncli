@@ -16,7 +16,7 @@ use crate::{
     errors::{HnCliError, Result},
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
-        handlers::Key,
+        handlers::ApplicationAction,
     },
 };
 
@@ -101,9 +101,13 @@ impl UiComponent for Options {
         Ok(())
     }
 
-    fn key_handler(&mut self, key: &Key, ctx: &mut AppContext) -> Result<bool> {
-        Ok(match key {
-            Key::Char('s') if self.ticks_since_last_press >= MIN_TICKS_BETWEEN_PRESSES => {
+    fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
+        Ok(
+            if self.ticks_since_last_press >= MIN_TICKS_BETWEEN_PRESSES
+                && ctx
+                    .get_inputs()
+                    .is_active(&ApplicationAction::HomeToggleSortingOption)
+            {
                 self.selected_sorting_index =
                     (self.selected_sorting_index + 1) % SORTING_OPTIONS_LIST.len();
                 let sorting_type = SORTING_OPTIONS_LIST[self.selected_sorting_index]
@@ -111,12 +115,11 @@ impl UiComponent for Options {
                     .try_into()?;
                 ctx.get_state_mut().set_main_stories_sorting(sorting_type);
                 true
-            }
-            _ => {
+            } else {
                 self.ticks_since_last_press = MIN_TICKS_BETWEEN_PRESSES;
                 false
-            }
-        })
+            },
+        )
     }
 
     fn render(

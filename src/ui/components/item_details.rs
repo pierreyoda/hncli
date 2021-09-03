@@ -16,7 +16,6 @@ use crate::{
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
         components::common::COMMON_BLOCK_NORMAL_COLOR,
-        handlers::Key,
         utils::html_to_plain_text,
     },
 };
@@ -66,7 +65,7 @@ impl UiComponent for ItemDetails {
         Ok(())
     }
 
-    fn key_handler(&mut self, _key: &Key, _ctx: &mut AppContext) -> Result<bool> {
+    fn handle_inputs(&mut self, _ctx: &mut AppContext) -> Result<bool> {
         Ok(false)
     }
 

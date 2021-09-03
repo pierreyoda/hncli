@@ -7,7 +7,7 @@ use std::{
 };
 
 use crossterm::{
-    event::{self, Event},
+    event::{self, Event, KeyEvent},
     terminal::{disable_raw_mode, enable_raw_mode},
 };
 use tui::{
@@ -29,6 +29,7 @@ use crate::{
 
 use self::{
     components::{item_comments::ItemComments, item_details::ItemDetails, settings::Settings},
+    handlers::{ApplicationAction, InputsController},
     helper::ContextualHelper,
 };
 
@@ -45,7 +46,7 @@ type TerminalUi = Terminal<CrosstermBackend<Stdout>>;
 
 #[derive(Clone, Debug)]
 pub enum UserInterfaceEvent {
-    KeyEvent(Key),
+    KeyEvent(KeyEvent),
     Tick,
 }
 
@@ -106,8 +107,7 @@ impl UserInterface {
 
                 if event::poll(timeout).expect("poll works") {
                     if let Event::Key(key_event) = event::read().unwrap() {
-                        let key: Key = key_event.into();
-                        tx.send(UserInterfaceEvent::KeyEvent(key)).unwrap();
+                        tx.send(UserInterfaceEvent::KeyEvent(key_event)).unwrap();
                     }
                 }
 
@@ -197,19 +197,19 @@ impl UserInterface {
                 .map_err(HnCliError::IoError)?;
 
             match rx.recv()? {
-                UserInterfaceEvent::KeyEvent(key) => match key {
-                    // TODO: properly handle CTRL+C
-                    Key::Char('q') => {
+                UserInterfaceEvent::KeyEvent(event) => {
+                    app.pump_event(event);
+                    let app_context = app.get_context();
+                    let inputs = app_context.get_inputs();
+                    if inputs.is_active(&ApplicationAction::Quit) {
                         disable_raw_mode()?;
                         self.terminal.show_cursor()?;
                         break 'ui;
                     }
-                    key => {
-                        if !self.handle_key_event(&key)? && self.app.handle_key_event(&key) {
-                            self.app.update_latest_interacted_with_component(None);
-                        }
+                    if !self.handle_inputs()? && self.app.handle_inputs() {
+                        self.app.update_latest_interacted_with_component(None);
                     }
-                },
+                }
                 UserInterfaceEvent::Tick => {
                     self.update().await?;
                 }
@@ -242,7 +242,7 @@ impl UserInterface {
     }
 
     /// Handle an incoming key event through all active components.
-    fn handle_key_event(&mut self, key: &Key) -> Result<bool> {
+    fn handle_inputs(&mut self) -> Result<bool> {
         let mut swallowed = false;
         let mut latest_interacted_with_component = None;
         let mut app_context = self.app.get_context();
@@ -250,7 +250,7 @@ impl UserInterface {
             if !wrapper.active {
                 continue;
             }
-            if wrapper.component.key_handler(key, &mut app_context)? {
+            if wrapper.component.handle_inputs(&mut app_context)? {
                 latest_interacted_with_component = Some(wrapper.component.id());
                 swallowed = true;
                 break;

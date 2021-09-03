@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crossterm::event::KeyEvent;
 use tui::layout::Rect;
 
 use crate::{
@@ -8,7 +9,7 @@ use crate::{
     ui::{
         common::UiComponentId,
         components::stories::DisplayableHackerNewsItem,
-        handlers::Key,
+        handlers::{ApplicationAction, InputsController, Key},
         router::{AppRoute, AppRouter},
         screens::{Screen, ScreenComponentsRegistry, ScreenEventResponse},
     },
@@ -19,6 +20,7 @@ pub struct AppContext<'a> {
     state: &'a mut AppState,
     router: &'a mut AppRouter,
     config: &'a mut AppConfiguration,
+    inputs: &'a InputsController,
     /// Stored to change screen on route change.
     screen: &'a mut Box<dyn Screen>,
 }
@@ -38,6 +40,10 @@ impl<'a> AppContext<'a> {
 
     pub fn get_config_mut(&mut self) -> &mut AppConfiguration {
         self.config
+    }
+
+    pub fn get_inputs(&self) -> &InputsController {
+        self.inputs
     }
 
     pub fn get_router(&self) -> &AppRouter {
@@ -168,6 +174,8 @@ pub struct App {
     router: AppRouter,
     /// Application configuration.
     config: AppConfiguration,
+    /// Application inputs controller.
+    inputs: InputsController,
     /// Cached current Screen.
     current_screen: Box<dyn Screen>,
     /// The current layout state.
@@ -189,6 +197,7 @@ impl App {
             router,
             config,
             current_screen,
+            inputs: InputsController::new(),
             layout_components: HashMap::new(),
         }
     }
@@ -196,6 +205,7 @@ impl App {
     /// Get the context handle allowing components to interact with the application.
     pub fn get_context(&mut self) -> AppContext {
         AppContext {
+            inputs: &self.inputs,
             state: &mut self.state,
             router: &mut self.router,
             config: &mut self.config,
@@ -203,11 +213,16 @@ impl App {
         }
     }
 
-    /// Handle an incoming key event, at the application level. Returns true if
-    /// the event is to be captured (swallowed) and not passed down to components.
-    pub fn handle_key_event(&mut self, key: &Key) -> bool {
+    /// Inject an event to be processed into `InputsController`.
+    pub fn pump_event(&mut self, event: KeyEvent) {
+        self.inputs.pump_event(event);
+    }
+
+    /// Handle inputs, at the application level. Returns true if
+    /// the active event is to be captured (swallowed) and not passed down to screens.
+    pub fn handle_inputs(&mut self) -> bool {
         // global help page toggle
-        if matches!(key, Key::Char('h')) {
+        if self.inputs.is_active(&ApplicationAction::ToggleHelp) {
             if self.router.get_current_route().is_help() {
                 self.get_context().router_pop_navigation_stack();
             } else {
@@ -220,7 +235,7 @@ impl App {
         // screen event handling
         let (response, new_route) =
             self.current_screen
-                .handle_key_event(key, &mut self.router, &mut self.state);
+                .handle_inputs(&self.inputs, &mut self.router, &mut self.state);
         if let Some(route) = new_route {
             // update the current screen if the route changed
             self.current_screen = AppRouter::build_screen_from_route(route);
