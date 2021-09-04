@@ -12,7 +12,7 @@ use crate::{
 use super::{components::stories::DisplayableHackerNewsItem, screens::Screen};
 
 /// All the possible routes in the application.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum AppRoute {
     /// Home screen.
     Home(HnStoriesSections),
@@ -25,6 +25,13 @@ pub enum AppRoute {
 }
 
 impl AppRoute {
+    pub fn get_home_section(&self) -> Option<&HnStoriesSections> {
+        match self {
+            Self::Home(section) => Some(section),
+            _ => None,
+        }
+    }
+
     pub fn is_settings(&self) -> bool {
         matches!(self, AppRoute::Settings)
     }

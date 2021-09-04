@@ -190,7 +190,16 @@ impl UiComponent for StoriesPanel {
         let sorting_type = *ctx.get_state().get_main_stories_sorting();
 
         // Data fetching
-        let stories = client.get_home_items(sorting_type).await?;
+        let router = ctx.get_router();
+        let stories = if let Some(current_section) = router.get_current_route().get_home_section() {
+            if current_section == &HnStoriesSections::Home {
+                client.get_home_items(&sorting_type).await?
+            } else {
+                client.get_home_section_items(current_section).await?
+            }
+        } else {
+            client.get_home_items(&sorting_type).await?
+        };
         let cut_stories_iter = stories.iter().take(self.list_cutoff);
         let displayable_stories: Vec<DisplayableHackerNewsItem> = cut_stories_iter
             .cloned()

@@ -77,7 +77,7 @@ impl HnClient {
     }
 
     /// Try to fetch the items of the home page, with the given sorting strategy.
-    pub async fn get_home_items(&self, sorting: HnStoriesSorting) -> Result<Vec<HnItem>> {
+    pub async fn get_home_items(&self, sorting: &HnStoriesSorting) -> Result<Vec<HnItem>> {
         let stories_ids = self.get_home_stories_ids_listing(sorting).await?;
         let stories_ids_cutoff: Vec<HnItemIdScalar> =
             stories_ids.iter().take(50).copied().collect();
@@ -85,16 +85,43 @@ impl HnClient {
         Ok(items)
     }
 
+    /// Try to fetch the items of the home page, with the given section option.
+    pub async fn get_home_section_items(&self, section: &HnStoriesSections) -> Result<Vec<HnItem>> {
+        let stories_ids = self.get_home_section_stories_ids_listing(section).await?;
+        let stories_ids_cutoff: Vec<HnItemIdScalar> =
+            stories_ids.iter().take(50).copied().collect();
+        let items = self.get_items(stories_ids_cutoff.as_slice()).await?;
+        Ok(items)
+    }
+
     /// Try to fetch the stories' IDs of the home page (up to 500), with the given sorting strategy.
     pub async fn get_home_stories_ids_listing(
         &self,
-        sorting: HnStoriesSorting,
+        sorting: &HnStoriesSorting,
     ) -> Result<Vec<HnItemIdScalar>> {
         self.client
             .get(&format!(
                 "{}/{}.json",
                 self.base_url,
                 sorting.get_resource()
+            ))
+            .send()
+            .await?
+            .json()
+            .await
+            .map_err(HnCliError::HttpError)
+    }
+
+    /// Try to fetch the stories' IDs of the home page for the given section option.
+    pub async fn get_home_section_stories_ids_listing(
+        &self,
+        section: &HnStoriesSections,
+    ) -> Result<Vec<HnItemIdScalar>> {
+        self.client
+            .get(&format!(
+                "{}/{}.json",
+                self.base_url,
+                section.get_resource()
             ))
             .send()
             .await?
