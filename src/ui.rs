@@ -18,7 +18,6 @@ use tui::{
 
 use common::{UiComponent, UiComponentId, UiTickScalar};
 use components::{help::Help, navigation::Navigation, options::Options, stories::StoriesPanel};
-use handlers::Key;
 
 use crate::{
     api::HnClient,
@@ -29,7 +28,7 @@ use crate::{
 
 use self::{
     components::{item_comments::ItemComments, item_details::ItemDetails, settings::Settings},
-    handlers::{ApplicationAction, InputsController},
+    handlers::ApplicationAction,
     helper::ContextualHelper,
 };
 
@@ -191,6 +190,7 @@ impl UserInterface {
                             global_layout_chunks[1],
                             current_route,
                             app_context.get_state(),
+                            app_context.get_inputs(),
                         );
                     }
                 })

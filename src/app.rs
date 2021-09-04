@@ -9,7 +9,7 @@ use crate::{
     ui::{
         common::UiComponentId,
         components::stories::DisplayableHackerNewsItem,
-        handlers::{ApplicationAction, InputsController, Key},
+        handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
         screens::{Screen, ScreenComponentsRegistry, ScreenEventResponse},
     },
@@ -84,7 +84,7 @@ impl<'a> AppContext<'a> {
 
     fn update_screen(&mut self) {
         *self.screen = AppRouter::build_screen_from_route(self.router.get_current_route().clone());
-        self.screen.before_mount(&mut self.state, &self.config);
+        self.screen.before_mount(&mut self.state, self.config);
     }
 }
 

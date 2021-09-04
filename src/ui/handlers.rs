@@ -70,6 +70,7 @@ impl From<KeyEvent> for Key {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum KeyModifier {
     None,
+    Shift,
     Control,
 }
 
@@ -100,7 +101,7 @@ impl ApplicationAction {
         match self {
             OpenExternalOrHackerNewsLink => inputs.key == Key::Char('o'),
             OpenHackerNewsLink => {
-                inputs.modifier == KeyModifier::Control && inputs.key == Key::Char('o')
+                inputs.modifier == KeyModifier::Shift && inputs.key == Key::Char('o')
             }
             SelectItem => inputs.key == Key::Enter,
             ToggleHelp => inputs.key == Key::Char('h'),
@@ -138,8 +139,10 @@ impl InputsController {
     }
 
     pub fn pump_event(&mut self, event: KeyEvent) {
+        // TODO: somehow make the Control modifier work properly
         self.modifier = match event.modifiers {
             KeyModifiers::CONTROL => KeyModifier::Control,
+            KeyModifiers::SHIFT => KeyModifier::Shift,
             _ => KeyModifier::None,
         };
         self.key = Key::from(event);
@@ -149,7 +152,7 @@ impl InputsController {
         action.matches_event(self)
     }
 
-    pub fn has_control_modifier(&self) -> bool {
-        self.modifier == KeyModifier::Control
+    pub fn has_shift_modifier(&self) -> bool {
+        self.modifier == KeyModifier::Shift
     }
 }

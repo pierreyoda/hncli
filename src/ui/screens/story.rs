@@ -65,6 +65,10 @@ impl Screen for StoryDetailsScreen {
                 !state.get_item_page_should_display_comments_panel(),
             );
             (ScreenEventResponse::Caught, None)
+        } else if inputs.is_active(&ApplicationAction::OpenHackerNewsLink) {
+            let item_hn_link = self.item.get_hacker_news_link();
+            open_browser_tab(item_hn_link.as_str());
+            (ScreenEventResponse::Caught, None)
         } else if inputs.is_active(&ApplicationAction::OpenExternalOrHackerNewsLink) {
             let item_link = self
                 .item

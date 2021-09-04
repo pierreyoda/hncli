@@ -219,6 +219,12 @@ impl UiComponent for StoriesPanel {
         } else if inputs.is_active(&ApplicationAction::NavigateDown) {
             self.list_state.next();
             true
+        } else if inputs.is_active(&ApplicationAction::OpenHackerNewsLink) {
+            let items = self.list_state.get_items();
+            let selected_item = &items[selected.unwrap()];
+            let item_hn_link = selected_item.get_hacker_news_link();
+            open_browser_tab(item_hn_link.as_str());
+            true
         } else if inputs.is_active(&ApplicationAction::OpenExternalOrHackerNewsLink) {
             let items = self.list_state.get_items();
             let selected_item = &items[selected.unwrap()];
