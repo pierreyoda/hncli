@@ -100,6 +100,8 @@ pub struct AppState {
     main_stories_section: HnStoriesSections,
     /// Main screen(s): current stories sorting.
     main_stories_sorting: HnStoriesSorting,
+    /// Main screen(s): search query if in search mode.
+    main_search_mode_query: Option<String>,
     /// The currently viewed item (Story or Job posting).
     currently_viewed_item: Option<DisplayableHackerNewsItem>,
     /// Item details screen: is the comments panel visible or not.
@@ -112,6 +114,7 @@ impl AppState {
             latest_interacted_with_component: None,
             main_stories_sorting: HnStoriesSorting::Top,
             main_stories_section: HnStoriesSections::Home,
+            main_search_mode_query: None,
             currently_viewed_item: None,
             item_page_display_comments_panel: config.get_display_comments_panel_by_default(),
         }
@@ -142,6 +145,16 @@ impl AppState {
     /// Set the current stories section for the main screen.
     pub fn set_main_stories_section(&mut self, section: HnStoriesSections) {
         self.main_stories_section = section;
+    }
+
+    /// Get the main screens search mode query, if any.
+    pub fn get_main_search_mode_query(&self) -> Option<&String> {
+        self.main_search_mode_query.as_ref()
+    }
+
+    /// Set the main screens search mode query.
+    pub fn set_main_search_mode_query(&mut self, query: Option<String>) {
+        self.main_search_mode_query = query;
     }
 
     /// Get the currently viewed story/job item.

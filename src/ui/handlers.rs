@@ -11,6 +11,8 @@ pub enum Key {
     Escape,
     /// Enter/Return and Numpad Enter.
     Enter,
+    /// Backspace key.
+    Backspace,
     /// Tabulation key.
     Tab,
     /// Up arrow.
@@ -36,6 +38,7 @@ impl Key {
         match self {
             Escape => "⎋ (escape)".into(),
             Enter => "↵ (enter)".into(),
+            Backspace => "← (backspace)".into(),
             Tab => "⇥ (tabulation)".into(),
             Up => "⬆️ (up)".into(),
             Down => "⬇️ (down)".into(),
@@ -55,6 +58,7 @@ impl From<KeyEvent> for Key {
         match event.code {
             KeyCode::Esc => Escape,
             KeyCode::Enter => Enter,
+            KeyCode::Backspace => Backspace,
             KeyCode::Tab => Tab,
             KeyCode::Up => Up,
             KeyCode::Down => Down,
@@ -87,8 +91,11 @@ pub enum ApplicationAction {
     NavigateDown,
     NavigateLeft,
     NavigateRight,
+    // input
+    InputClear,
     // home screen
     HomeToggleSortingOption,
+    HomeToggleSearchMode,
     // item screen
     ItemToggleComments,
     // settings screen
@@ -114,7 +121,9 @@ impl ApplicationAction {
             NavigateDown => inputs.key == Key::Down || inputs.key == Key::Char('k'),
             NavigateLeft => inputs.key == Key::Left || inputs.key == Key::Char('j'),
             NavigateRight => inputs.key == Key::Right || inputs.key == Key::Char('l'),
+            InputClear => inputs.modifier == KeyModifier::Control && inputs.key == Key::Char('u'),
             HomeToggleSortingOption => inputs.key == Key::Char('s'),
+            HomeToggleSearchMode => inputs.key == Key::Char('f'),
             ItemToggleComments => inputs.key == Key::Tab,
             SettingsToggleControl => inputs.key == Key::Tab,
         }
@@ -154,5 +163,15 @@ impl InputsController {
 
     pub fn has_shift_modifier(&self) -> bool {
         self.modifier == KeyModifier::Shift
+    }
+
+    pub fn get_active_input_key(&self) -> Option<(Key, char)> {
+        for c in b'A'..=b'z' {
+            let key = Key::Char(c as char);
+            if self.key == key {
+                return Some((key, c as char));
+            }
+        }
+        None
     }
 }

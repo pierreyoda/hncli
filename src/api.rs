@@ -79,8 +79,7 @@ impl HnClient {
     /// Try to fetch the items of the home page, with the given sorting strategy.
     pub async fn get_home_items(&self, sorting: &HnStoriesSorting) -> Result<Vec<HnItem>> {
         let stories_ids = self.get_home_stories_ids_listing(sorting).await?;
-        let stories_ids_cutoff: Vec<HnItemIdScalar> =
-            stories_ids.iter().take(50).copied().collect();
+        let stories_ids_cutoff: Vec<HnItemIdScalar> = stories_ids.iter().copied().collect();
         let items = self.get_items(&stories_ids_cutoff[..]).await?;
         Ok(items)
     }
@@ -88,8 +87,7 @@ impl HnClient {
     /// Try to fetch the items of the home page, with the given section option.
     pub async fn get_home_section_items(&self, section: &HnStoriesSections) -> Result<Vec<HnItem>> {
         let stories_ids = self.get_home_section_stories_ids_listing(section).await?;
-        let stories_ids_cutoff: Vec<HnItemIdScalar> =
-            stories_ids.iter().take(50).copied().collect();
+        let stories_ids_cutoff: Vec<HnItemIdScalar> = stories_ids.iter().copied().collect();
         let items = self.get_items(stories_ids_cutoff.as_slice()).await?;
         Ok(items)
     }

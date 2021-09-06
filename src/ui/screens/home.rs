@@ -5,8 +5,11 @@ use crate::{
     app::AppState,
     config::AppConfiguration,
     ui::{
-        components::{navigation::NAVIGATION_ID, options::OPTIONS_ID, stories::STORIES_PANEL_ID},
-        handlers::InputsController,
+        components::{
+            navigation::NAVIGATION_ID, options::OPTIONS_ID, search::SEARCH_ID,
+            stories::STORIES_PANEL_ID,
+        },
+        handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
     },
 };
@@ -48,18 +51,27 @@ impl Screen for HomeScreen {
 
     fn handle_inputs(
         &mut self,
-        _inputs: &InputsController,
+        inputs: &InputsController,
         _router: &mut AppRouter,
-        _state: &mut AppState,
+        state: &mut AppState,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
-        (ScreenEventResponse::PassThrough, None)
+        if inputs.is_active(&ApplicationAction::HomeToggleSearchMode) {
+            state.set_main_search_mode_query(if state.get_main_search_mode_query().is_some() {
+                None
+            } else {
+                Some("".into())
+            });
+            (ScreenEventResponse::Caught, None)
+        } else {
+            (ScreenEventResponse::PassThrough, None)
+        }
     }
 
     fn compute_layout(
         &self,
         frame_size: Rect,
         components_registry: &mut ScreenComponentsRegistry,
-        _state: &AppState,
+        state: &AppState,
     ) {
         // main layout chunks
         let main_layout_chunks = Layout::default()
@@ -75,7 +87,14 @@ impl Screen for HomeScreen {
             )
             .split(frame_size);
 
-        components_registry.insert(NAVIGATION_ID, main_layout_chunks[0]);
+        components_registry.insert(
+            if state.get_main_search_mode_query().is_some() {
+                SEARCH_ID
+            } else {
+                NAVIGATION_ID
+            },
+            main_layout_chunks[0],
+        );
         components_registry.insert(STORIES_PANEL_ID, main_layout_chunks[1]);
         components_registry.insert(OPTIONS_ID, main_layout_chunks[2]);
     }

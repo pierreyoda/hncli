@@ -6,18 +6,19 @@ edition = "2018"
 
 [dependencies]
 async-trait = "0.1.51"
+chrono = "0.4.19"
+crossterm = "0.21.0"
+directories = "3.0.2"
 futures = "0.3.16"
-tokio = { version = "1.11.0", features = ["full"] }
+fuzzy-matcher = "0.3.7"
+html2text = "0.2.1"
+num-traits = "0.2.14"
 reqwest = { version = "0.11.4", features = ["json"] }
 serde = { version = "1.0.130", features = ["derive"] }
 serde_json = "1.0.67"
 thiserror = "1.0.28"
-crossterm = "0.21.0"
-tui = { version = "0.16.0", default-features = false, features = ["crossterm"] }
-num-traits = "0.2.14"
-chrono = "0.4.19"
-directories = "3.0.2"
+tokio = { version = "1.11.0", features = ["full"] }
 toml = "0.5.8"
+tui = { version = "0.16.0", default-features = false, features = ["crossterm"] }
 url = "2.2.2"
 webbrowser = "0.5.5"
-html2text = "0.2.1"

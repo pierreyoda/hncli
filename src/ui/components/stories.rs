@@ -4,6 +4,7 @@ use std::{convert::TryFrom, io::Stdout};
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 
 use tui::{
     backend::CrosstermBackend,
@@ -145,6 +146,7 @@ impl TryFrom<HnItem> for DisplayableHackerNewsItem {
 pub struct StoriesPanel {
     ticks_since_last_update: u64,
     sorting_type_for_last_update: Option<HnStoriesSorting>,
+    search_for_last_update: Option<String>,
     list_cutoff: usize,
     list_state: StatefulList<HnItemIdScalar, DisplayableHackerNewsItem>,
 }
@@ -158,14 +160,30 @@ impl Default for StoriesPanel {
         Self {
             ticks_since_last_update: 0,
             sorting_type_for_last_update: None,
+            search_for_last_update: None,
             list_cutoff: HOME_MAX_DISPLAYED_STORIES,
             list_state: StatefulList::with_items(vec![]),
         }
     }
 }
 
+impl StoriesPanel {
+    fn filtered_items(
+        items: impl Iterator<Item = DisplayableHackerNewsItem>,
+        filter_query: String,
+    ) -> impl Iterator<Item = DisplayableHackerNewsItem> {
+        let matcher = SkimMatcherV2::default();
+        items.filter(move |i| {
+            matcher
+                .fuzzy_match(i.title.as_str(), &filter_query)
+                .is_some()
+        })
+    }
+}
+
 pub const STORIES_PANEL_ID: UiComponentId = "panel_stories";
 
+// TODO: add loading screen when fetching data
 #[async_trait]
 impl UiComponent for StoriesPanel {
     fn id(&self) -> UiComponentId {
@@ -181,13 +199,15 @@ impl UiComponent for StoriesPanel {
                     last_sorting_type != ctx.get_state().get_main_stories_sorting()
                 }
                 None => true, // first fetch
-            })
+            }
+            || self.search_for_last_update.as_ref() != ctx.get_state().get_main_search_mode_query())
     }
 
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
         self.ticks_since_last_update = 0;
 
         let sorting_type = *ctx.get_state().get_main_stories_sorting();
+        let search_query = ctx.get_state().get_main_search_mode_query();
 
         // Data fetching
         let router = ctx.get_router();
@@ -200,21 +220,26 @@ impl UiComponent for StoriesPanel {
         } else {
             client.get_home_items(&sorting_type).await?
         };
-        let cut_stories_iter = stories.iter().take(self.list_cutoff);
-        let displayable_stories: Vec<DisplayableHackerNewsItem> = cut_stories_iter
-            .cloned()
-            .map(|item| {
-                DisplayableHackerNewsItem::try_from(item)
-                    .expect("can map DisplayableHackerNewsItem")
-            })
-            .collect();
+        let cut_stories_iter = stories.iter();
+        let displayable_stories = cut_stories_iter.cloned().map(|item| {
+            DisplayableHackerNewsItem::try_from(item).expect("can map DisplayableHackerNewsItem")
+        });
 
-        self.list_state.replace_items(displayable_stories);
+        let filtered_stories = if let Some(filter_query) = search_query {
+            Self::filtered_items(displayable_stories, filter_query.clone())
+                .take(self.list_cutoff)
+                .collect()
+        } else {
+            displayable_stories.take(self.list_cutoff).collect()
+        };
+
+        self.list_state.replace_items(filtered_stories);
         if self.list_state.get_state().selected().is_none() {
             self.list_state.get_state().select(Some(0));
         }
 
         self.sorting_type_for_last_update = Some(sorting_type);
+        self.search_for_last_update = search_query.cloned();
 
         Ok(())
     }
