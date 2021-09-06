@@ -52,7 +52,12 @@ impl UiComponent for Search {
 
     fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
         let inputs = ctx.get_inputs();
-        Ok(if inputs.is_active(&ApplicationAction::InputClear) {
+        Ok(if inputs.is_active(&ApplicationAction::InputDelete) {
+            self.query.pop();
+            ctx.get_state_mut()
+                .set_main_search_mode_query(Some(self.query.clone()));
+            true
+        } else if inputs.is_active(&ApplicationAction::InputClear) {
             self.query.clear();
             ctx.get_state_mut()
                 .set_main_search_mode_query(Some(self.query.clone()));

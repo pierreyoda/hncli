@@ -93,6 +93,7 @@ pub enum ApplicationAction {
     NavigateRight,
     // input
     InputClear,
+    InputDelete,
     // home screen
     HomeToggleSortingOption,
     HomeToggleSearchMode,
@@ -122,6 +123,7 @@ impl ApplicationAction {
             NavigateLeft => inputs.key == Key::Left || inputs.key == Key::Char('j'),
             NavigateRight => inputs.key == Key::Right || inputs.key == Key::Char('l'),
             InputClear => inputs.modifier == KeyModifier::Control && inputs.key == Key::Char('u'),
+            InputDelete => inputs.key == Key::Backspace,
             HomeToggleSortingOption => inputs.key == Key::Char('s'),
             HomeToggleSearchMode => inputs.key == Key::Char('f'),
             ItemToggleComments => inputs.key == Key::Tab,
