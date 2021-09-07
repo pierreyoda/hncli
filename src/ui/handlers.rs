@@ -165,7 +165,13 @@ impl InputsController {
         self.active_input_mode = state.get_main_search_mode_query().is_some();
         self.key = if self.active_input_mode {
             match Key::from(event) {
-                Key::Char(_) => Key::None,
+                Key::Char(c) => {
+                    if self.modifier == KeyModifier::Control && (c == 'c' || c == 'C') {
+                        Key::Char(c)
+                    } else {
+                        Key::None
+                    }
+                }
                 other => other,
             }
         } else {
