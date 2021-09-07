@@ -228,7 +228,7 @@ impl App {
 
     /// Inject an event to be processed into `InputsController`.
     pub fn pump_event(&mut self, event: KeyEvent) {
-        self.inputs.pump_event(event);
+        self.inputs.pump_event(event, &self.state);
     }
 
     /// Handle inputs, at the application level. Returns true if

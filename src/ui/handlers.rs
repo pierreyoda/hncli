@@ -1,6 +1,8 @@
 use crossterm::event::{self, KeyModifiers};
 use event::{KeyCode, KeyEvent};
 
+use crate::app::AppState;
+
 /// Abstraction over a key event.
 ///
 /// Used to abstract over tui's backend, and to facilitate user configuration.
@@ -139,6 +141,8 @@ impl ApplicationAction {
 pub struct InputsController {
     key: Key,
     modifier: KeyModifier,
+    active_input_key: Key,
+    active_input_mode: bool,
 }
 
 impl InputsController {
@@ -146,17 +150,35 @@ impl InputsController {
         Self {
             key: Key::None,
             modifier: KeyModifier::None,
+            active_input_key: Key::None,
+            active_input_mode: false,
         }
     }
 
-    pub fn pump_event(&mut self, event: KeyEvent) {
+    pub fn pump_event(&mut self, event: KeyEvent, state: &AppState) {
         // TODO: somehow make the Control modifier work properly
         self.modifier = match event.modifiers {
             KeyModifiers::CONTROL => KeyModifier::Control,
             KeyModifiers::SHIFT => KeyModifier::Shift,
             _ => KeyModifier::None,
         };
-        self.key = Key::from(event);
+        self.active_input_mode = state.get_main_search_mode_query().is_some();
+        self.key = if self.active_input_mode {
+            match Key::from(event) {
+                Key::Char(_) => Key::None,
+                other => other,
+            }
+        } else {
+            Key::from(event)
+        };
+        self.active_input_key = if self.active_input_mode {
+            match Key::from(event) {
+                Key::Char(c) => Key::Char(c),
+                _ => Key::None,
+            }
+        } else {
+            Key::None
+        };
     }
 
     pub fn is_active(&self, action: &ApplicationAction) -> bool {
@@ -170,7 +192,7 @@ impl InputsController {
     pub fn get_active_input_key(&self) -> Option<(Key, char)> {
         for c in b'A'..=b'z' {
             let key = Key::Char(c as char);
-            if self.key == key {
+            if key == self.active_input_key {
                 return Some((key, c as char));
             }
         }
