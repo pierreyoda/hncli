@@ -167,17 +167,28 @@ impl Default for StoriesPanel {
     }
 }
 
+const FUZZY_MATCHING_SCORE_CUTOFF: i64 = 90;
+
 impl StoriesPanel {
     fn filtered_items(
         items: impl Iterator<Item = DisplayableHackerNewsItem>,
         filter_query: String,
-    ) -> impl Iterator<Item = DisplayableHackerNewsItem> {
+        max_count: usize,
+    ) -> Vec<DisplayableHackerNewsItem> {
+        if filter_query.trim().is_empty() {
+            return items.take(max_count).collect();
+        }
         let matcher = SkimMatcherV2::default();
-        items.filter(move |i| {
-            matcher
-                .fuzzy_match(i.title.as_str(), &filter_query)
-                .is_some()
-        })
+        items
+            .filter(move |i| {
+                if let Some(fuzzy_score) = matcher.fuzzy_match(i.title.as_str(), &filter_query) {
+                    fuzzy_score >= FUZZY_MATCHING_SCORE_CUTOFF
+                } else {
+                    false
+                }
+            })
+            .take(max_count)
+            .collect()
     }
 }
 
@@ -226,9 +237,7 @@ impl UiComponent for StoriesPanel {
         });
 
         let filtered_stories = if let Some(filter_query) = search_query {
-            Self::filtered_items(displayable_stories, filter_query.clone())
-                .take(self.list_cutoff)
-                .collect()
+            Self::filtered_items(displayable_stories, filter_query.clone(), self.list_cutoff)
         } else {
             displayable_stories.take(self.list_cutoff).collect()
         };
