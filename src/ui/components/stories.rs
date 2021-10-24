@@ -179,9 +179,12 @@ impl StoriesPanel {
             return items.take(max_count).collect();
         }
         let matcher = SkimMatcherV2::default();
+        let processed_filter_query = filter_query.to_lowercase();
         items
             .filter(move |i| {
-                if let Some(fuzzy_score) = matcher.fuzzy_match(i.title.as_str(), &filter_query) {
+                if let Some(fuzzy_score) =
+                    matcher.fuzzy_match(i.title.to_lowercase().as_str(), &processed_filter_query)
+                {
                     fuzzy_score >= FUZZY_MATCHING_SCORE_CUTOFF
                 } else {
                     false
