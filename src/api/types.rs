@@ -17,14 +17,21 @@ pub enum HnItem {
     Job(HnJob),
     Poll(HnPoll),
     PollOpt(HnPollOption),
+    #[serde(other)]
+    Null,
 }
 
 impl HnItem {
+    pub fn is_null(&self) -> bool {
+        matches!(self, HnItem::Null)
+    }
+
     /// Get the ID of the item.
     pub fn get_id(&self) -> HnItemIdScalar {
         use HnItem::*;
 
         match self {
+            Null => 0,
             Story(story) => story.id,
             Comment(comment) => comment.id,
             Job(job) => job.id,

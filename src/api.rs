@@ -146,8 +146,15 @@ impl HnClient {
             .get(&format!("{}/item/{}.json", self.base_url, id))
             .send()
             .await?
-            .json()
+            .text()
             .await
+            .map(|raw| {
+                if raw == "null" {
+                    HnItem::Null
+                } else {
+                    serde_json::from_str(&raw).expect("api.get_item: deserialization should work")
+                }
+            })
             .map_err(HnCliError::HttpError)
     }
 
@@ -157,6 +164,10 @@ impl HnClient {
         join_all(ids.iter().map(|id| self.get_item(*id)))
             .await
             .into_iter()
+            .filter(|item_result| match item_result {
+                Ok(item) => !item.is_null(),
+                Err(_) => true,
+            })
             .collect()
     }
 
