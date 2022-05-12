@@ -5,20 +5,20 @@ authors = ["pierreyoda <pierreyoda@users.noreply.github.com>"]
 edition = "2021"
 
 [dependencies]
-async-trait = "0.1.52"
+async-trait = "0.1.53"
 chrono = "0.4.19"
-crossterm = "0.23.0"
+crossterm = "0.23.2"
 directories = "4.0.1"
 futures = "0.3.21"
 fuzzy-matcher = "0.3.7"
-html2text = "0.2.1"
-num-traits = "0.2.14"
-reqwest = { version = "0.11.9", features = ["json"] }
-serde = { version = "1.0.136", features = ["derive"] }
-serde_json = "1.0.79"
-thiserror = "1.0.30"
-tokio = { version = "1.16.1", features = ["full"] }
-toml = "0.5.8"
-tui = { version = "0.17.0", default-features = false, features = ["crossterm"] }
+html2text = "0.4.2"
+num-traits = "0.2.15"
+reqwest = { version = "0.11.10", features = ["json"] }
+serde = { version = "1.0.137", features = ["derive"] }
+serde_json = "1.0.81"
+thiserror = "1.0.31"
+tokio = { version = "1.18.2", features = ["full"] }
+toml = "0.5.9"
+tui = { version = "0.18.0", default-features = false, features = ["crossterm"] }
 url = "2.2.2"
-webbrowser = "0.5.5"
+webbrowser = "0.7.1"
