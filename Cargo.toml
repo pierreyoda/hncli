@@ -5,19 +5,19 @@ authors = ["pierreyoda <pierreyoda@users.noreply.github.com>"]
 edition = "2021"
 
 [dependencies]
-async-trait = "0.1.57"
+async-trait = "0.1.58"
 chrono = "0.4.22"
 crossterm = "0.25.0"
 directories = "4.0.1"
-futures = "0.3.24"
+futures = "0.3.25"
 fuzzy-matcher = "0.3.7"
-html2text = "0.4.2"
+html2text = "0.4.3"
 num-traits = "0.2.15"
 reqwest = { version = "0.11.12", features = ["json"] }
-serde = { version = "1.0.145", features = ["derive"] }
-serde_json = "1.0.85"
-thiserror = "1.0.36"
-tokio = { version = "1.21.1", features = ["full"] }
+serde = { version = "1.0.147", features = ["derive"] }
+serde_json = "1.0.87"
+thiserror = "1.0.37"
+tokio = { version = "1.21.2", features = ["full"] }
 toml = "0.5.9"
 tui = { version = "0.19.0", default-features = false, features = ["crossterm"] }
 url = "2.3.1"
