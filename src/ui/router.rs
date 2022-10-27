@@ -9,7 +9,7 @@ use crate::{
     },
 };
 
-use super::{components::stories::DisplayableHackerNewsItem, screens::Screen};
+use super::{displayable_item::DisplayableHackerNewsItem, screens::Screen};
 
 /// All the possible routes in the application.
 #[derive(Clone, Debug, PartialEq, Eq)]

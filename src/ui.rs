@@ -36,6 +36,7 @@ use self::{
 
 pub mod common;
 pub mod components;
+pub mod displayable_item;
 pub mod handlers;
 mod helper;
 mod panels;

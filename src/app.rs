@@ -4,11 +4,11 @@ use crossterm::event::KeyEvent;
 use tui::layout::Rect;
 
 use crate::{
-    api::{HnStoriesSections, HnStoriesSorting},
+    api::{types::HnItem, HnStoriesSections, HnStoriesSorting},
     config::AppConfiguration,
     ui::{
         common::UiComponentId,
-        components::stories::DisplayableHackerNewsItem,
+        displayable_item::DisplayableHackerNewsItem,
         handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
         screens::{Screen, ScreenComponentsRegistry, ScreenEventResponse},

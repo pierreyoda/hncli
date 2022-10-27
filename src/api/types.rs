@@ -103,6 +103,8 @@ pub struct HnComment {
     pub time: HnItemDateScalar,
     /// Username of the comment's author.
     pub by: String,
+    /// Score of the comment, if defined.
+    pub score: Option<u32>,
     /// The comment's parent, either a story or another comment.
     pub parent: HnItemIdScalar,
     /// The IDs of the comment's sub-comments, in ranked display order.
@@ -293,6 +295,7 @@ mod tests {
             id : 2921983,
             time : 1314211127,
             by : "norvig".into(),
+            score: None,
             parent : 2921506,
             kids : Some(vec![2922097, 2922429, 2924562, 2922709, 2922573, 2922140, 2922141]),
             text : "Aw shucks, guys ... you make me blush with your compliments.<p>Tell you what, Ill make a deal: I'll keep writing if you keep reading. K?".into(),

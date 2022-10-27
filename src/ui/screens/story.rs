@@ -4,10 +4,8 @@ use crate::{
     app::AppState,
     config::AppConfiguration,
     ui::{
-        components::{
-            item_comments::ITEM_COMMENTS_ID, item_details::ITEM_DETAILS_ID,
-            stories::DisplayableHackerNewsItem,
-        },
+        components::{item_comments::ITEM_COMMENTS_ID, item_details::ITEM_DETAILS_ID},
+        displayable_item::DisplayableHackerNewsItem,
         handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
         utils::open_browser_tab,
