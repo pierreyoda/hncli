@@ -20,7 +20,7 @@ pub trait UiComponent {
     fn id(&self) -> UiComponentId;
 
     /// Called at instantiation, before any update or render pass.
-    fn before_mount(&mut self, ctx: &mut AppContext) {}
+    fn before_mount(&mut self, _ctx: &mut AppContext) {}
 
     /// Must return `true` if the state should update itself.
     fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool>;

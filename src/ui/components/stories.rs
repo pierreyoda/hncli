@@ -69,7 +69,11 @@ impl StoriesPanel {
         items
             .filter(move |i| {
                 if let Some(fuzzy_score) = matcher.fuzzy_match(
-                    i.title.clone().unwrap_or("".into()).to_lowercase().as_str(),
+                    i.title
+                        .clone()
+                        .unwrap_or_else(|| "".into())
+                        .to_lowercase()
+                        .as_str(),
                     &processed_filter_query,
                 ) {
                     fuzzy_score >= FUZZY_MATCHING_SCORE_CUTOFF
@@ -167,18 +171,22 @@ impl UiComponent for StoriesPanel {
                 .unwrap_or_else(|| selected_item.get_hacker_news_link());
             open_browser_tab(item_link.as_str());
             true
-        } else if selected.is_some()
-            && inputs.is_active(&ApplicationAction::SelectItem)
-            && ctx.get_state().get_latest_interacted_with_component() == Some(&STORIES_PANEL_ID)
-        {
-            let items = self.list_state.get_items();
-            let selected_item = &items[selected.unwrap()];
-            ctx.get_state_mut()
-                .set_currently_viewed_item(Some(selected_item.clone()));
-            ctx.router_push_navigation_stack(AppRoute::StoryDetails(selected_item.clone()));
-            true
         } else {
-            false
+            match selected {
+                Some(selected_index)
+                    if inputs.is_active(&ApplicationAction::SelectItem)
+                        && ctx.get_state().get_latest_interacted_with_component()
+                            == Some(&STORIES_PANEL_ID) =>
+                {
+                    let items = self.list_state.get_items();
+                    let selected_item = &items[selected_index];
+                    ctx.get_state_mut()
+                        .set_currently_viewed_item(Some(selected_item.clone()));
+                    ctx.router_push_navigation_stack(AppRoute::StoryDetails(selected_item.clone()));
+                    true
+                }
+                _ => false,
+            }
         })
     }
 
@@ -206,7 +214,7 @@ impl UiComponent for StoriesPanel {
             .iter()
             .map(|item| {
                 ListItem::new(Spans::from(vec![Span::styled(
-                    item.title.clone().unwrap_or("".into()),
+                    item.title.clone().unwrap_or_else(|| "".into()),
                     Style::default().fg(Color::White),
                 )]))
             })

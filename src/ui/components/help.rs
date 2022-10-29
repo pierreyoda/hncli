@@ -21,14 +21,8 @@ use crate::{
 /// The About component contains the version number,
 /// a short description of the project and some
 /// help text for commands and shortcuts.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Help {}
-
-impl Default for Help {
-    fn default() -> Self {
-        Self {}
-    }
-}
 
 pub const HELP_ID: UiComponentId = "about";
 

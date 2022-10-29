@@ -43,10 +43,6 @@ pub struct DisplayableHackerNewsItem {
 const MINUTES_PER_DAY: i64 = 24 * 60;
 
 impl DisplayableHackerNewsItem {
-    pub fn has_title(&self) -> bool {
-        self.title.is_some()
-    }
-
     pub fn get_hacker_news_link(&self) -> String {
         format!("https://news.ycombinator.com/item?id={}", self.id)
     }

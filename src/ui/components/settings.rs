@@ -85,19 +85,10 @@ impl SettingsControl {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Settings {
     controls: Vec<SettingsControl>,
     selected_control_index: usize,
-}
-
-impl Default for Settings {
-    fn default() -> Self {
-        Self {
-            controls: vec![],
-            selected_control_index: 0,
-        }
-    }
 }
 
 pub const SETTINGS_ID: UiComponentId = "settings";

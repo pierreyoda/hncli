@@ -97,11 +97,12 @@ impl AppConfiguration {
     }
 
     fn get_config_file_path() -> Result<PathBuf> {
-        let project_directories = ProjectDirs::from("", "pierreyoda", "hncli").ok_or(
-            HnCliError::ConfigSynchronizationError(
-                "cannot get hncli config directory from OS".into(),
-            ),
-        )?;
+        let project_directories =
+            ProjectDirs::from("", "pierreyoda", "hncli").ok_or_else(|| {
+                HnCliError::ConfigSynchronizationError(
+                    "cannot get hncli config directory from OS".into(),
+                )
+            })?;
         let config_directory = project_directories.config_dir();
         Ok(config_directory.join("hncli.toml"))
     }

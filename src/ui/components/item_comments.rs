@@ -10,7 +10,7 @@ use tui::{
 };
 
 use crate::{
-    api::{HnClient, HnItemComments},
+    api::HnClient,
     app::AppContext,
     errors::Result,
     ui::{
@@ -55,7 +55,7 @@ impl UiComponent for ItemComments {
             None => return Ok(()),
         };
 
-        let comments_raw = client.get_item_comments(&viewed_item_kids).await?;
+        let comments_raw = client.get_item_comments(viewed_item_kids).await?;
         self.comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
 
         Ok(())

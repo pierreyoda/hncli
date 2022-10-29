@@ -17,8 +17,8 @@ where
 {
     state: ListState,
     items: Vec<T>,
-    // this field is only there to prevent the "N parameter not used" compilation error
-    n: N,
+    // NB: this field is only there to prevent the "N parameter not used" compilation error
+    _n: N,
 }
 
 impl<N, T> StatefulList<N, T>
@@ -31,7 +31,7 @@ where
         Self {
             state: ListState::default(),
             items,
-            n: Default::default(),
+            _n: Default::default(),
         }
     }
 

@@ -52,7 +52,7 @@ impl<'a> AppContext<'a> {
 
     /// Push a new navigation route state.
     pub fn router_push_navigation_stack(&mut self, route: AppRoute) {
-        self.router.push_navigation_stack(route.clone());
+        self.router.push_navigation_stack(route);
         self.update_screen();
     }
 
