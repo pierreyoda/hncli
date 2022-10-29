@@ -4,7 +4,7 @@ use crossterm::event::KeyEvent;
 use tui::layout::Rect;
 
 use crate::{
-    api::{types::HnItem, HnStoriesSections, HnStoriesSorting},
+    api::{HnStoriesSections, HnStoriesSorting},
     config::AppConfiguration,
     ui::{
         common::UiComponentId,
@@ -84,7 +84,7 @@ impl<'a> AppContext<'a> {
 
     fn update_screen(&mut self) {
         *self.screen = AppRouter::build_screen_from_route(self.router.get_current_route().clone());
-        self.screen.before_mount(&mut self.state, self.config);
+        self.screen.before_mount(self.state, self.config);
     }
 }
 

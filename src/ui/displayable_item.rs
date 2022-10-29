@@ -1,11 +1,19 @@
+use std::collections::HashMap;
+
 use chrono::{DateTime, Utc};
 
 use crate::{
-    api::types::{HnItem, HnItemIdScalar},
+    api::{
+        types::{HnItem, HnItemIdScalar},
+        HnItemComments,
+    },
     errors::{HnCliError, Result},
 };
 
 use super::utils::{datetime_from_hn_time, ItemWithId};
+
+/// Flat storage structure for a displayable comments thread.
+pub type DisplayableHackerNewsItemComments = HashMap<HnItemIdScalar, DisplayableHackerNewsItem>;
 
 /// A display-ready Hacker News story, comment, job or poll posting.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -53,6 +61,19 @@ impl DisplayableHackerNewsItem {
             _ if minutes >= 60 => format!("{} ago", Self::pluralized(minutes / 60, "hour")),
             _ => format!("{} ago", Self::pluralized(minutes, "minute")),
         }
+    }
+
+    pub fn transform_comments(
+        comments_raw: HnItemComments,
+    ) -> Result<DisplayableHackerNewsItemComments> {
+        let mut comments = DisplayableHackerNewsItemComments::new();
+        for (comment_id, comment_raw) in comments_raw {
+            comments.insert(
+                comment_id,
+                Self::try_from(comment_raw).expect("can map DisplayableHackerNewsItem comment"),
+            );
+        }
+        Ok(comments)
     }
 
     fn pluralized(value: i64, word: &str) -> String {

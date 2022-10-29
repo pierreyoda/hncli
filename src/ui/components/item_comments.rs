@@ -10,12 +10,13 @@ use tui::{
 };
 
 use crate::{
-    api::{types::HnPoll, HnClient, HnItemComments},
+    api::{HnClient, HnItemComments},
     app::AppContext,
     errors::Result,
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
         components::common::COMMON_BLOCK_NORMAL_COLOR,
+        displayable_item::{DisplayableHackerNewsItem, DisplayableHackerNewsItemComments},
     },
 };
 
@@ -23,7 +24,7 @@ use crate::{
 #[derive(Debug, Default)]
 pub struct ItemComments {
     ticks_since_last_update: u64,
-    comments: HnItemComments,
+    comments: DisplayableHackerNewsItemComments,
 }
 
 const MEAN_TICKS_BETWEEN_UPDATES: UiTickScalar = 1800; // approx. every 3 minutes
@@ -36,8 +37,8 @@ impl UiComponent for ItemComments {
         ITEM_COMMENTS_ID
     }
 
-    fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
-        // TODO: should update when comments are dirty
+    fn should_update(&mut self, elapsed_ticks: UiTickScalar, _ctx: &AppContext) -> Result<bool> {
+        // TODO: should also update when comments are dirty
         self.ticks_since_last_update += elapsed_ticks;
         Ok(self.ticks_since_last_update >= MEAN_TICKS_BETWEEN_UPDATES)
     }
@@ -45,17 +46,17 @@ impl UiComponent for ItemComments {
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
         self.ticks_since_last_update = 0;
 
-        // let viewed_item_descendants_ids = match ctx.get_state().get_currently_viewed_item() {
-        //     Some(item) => match item {
-        //         HnPoll { descendants, .. } => descendants,
-        //         _ => return Ok(()),
-        //     },
-        //     _ => return Ok(()),
-        // };
+        let viewed_item = match ctx.get_state().get_currently_viewed_item() {
+            Some(item) => item,
+            None => return Ok(()),
+        };
+        let viewed_item_kids = match &viewed_item.kids {
+            Some(kids) => kids,
+            None => return Ok(()),
+        };
 
-        // self.comments = client
-        //     .get_story_comments(&viewed_item_descendants_ids)
-        //     .await?;
+        let comments_raw = client.get_item_comments(&viewed_item_kids).await?;
+        self.comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
 
         Ok(())
     }

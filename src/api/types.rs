@@ -39,6 +39,20 @@ impl HnItem {
             PollOpt(poll_option) => poll_option.id,
         }
     }
+
+    /// Get the `kids`, if any, of the item.
+    pub fn get_kids(&self) -> Option<&[HnItemIdScalar]> {
+        use HnItem::*;
+
+        match self {
+            Null => None,
+            Story(story) => story.kids.as_ref().map(|k| k.as_slice()),
+            Comment(comment) => comment.kids.as_ref().map(|k| k.as_slice()),
+            Job(_) => None,
+            Poll(poll) => poll.kids.as_ref().map(|k| k.as_slice()),
+            PollOpt(_) => None,
+        }
+    }
 }
 
 /// A `Story` in the HackerNews API.

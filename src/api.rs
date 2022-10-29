@@ -1,8 +1,9 @@
 use std::{collections::HashMap, time::Duration};
 
+use async_recursion::async_recursion;
 use futures::future::join_all;
 use reqwest::Client;
-use types::{HnComment, HnItem, HnItemIdScalar};
+use types::{HnItem, HnItemIdScalar};
 
 use crate::errors::{HnCliError, Result};
 
@@ -65,7 +66,7 @@ pub struct HnClient {
 }
 
 /// Flat storage structure for a comments thread.
-pub type HnItemComments = HashMap<HnItemIdScalar, HnComment>;
+pub type HnItemComments = HashMap<HnItemIdScalar, HnItem>;
 
 impl HnClient {
     pub fn new() -> Result<Self> {
@@ -130,14 +131,39 @@ impl HnClient {
             .map_err(HnCliError::HttpError)
     }
 
-    /// Try to fetch the comments of a story, starting from the main descendants.
-    pub async fn get_story_comments(
+    /// Try to fetch the comments of an item, starting from the main descendants.
+    #[async_recursion]
+    pub async fn get_item_comments(
         &self,
         descendants_ids: &[HnItemIdScalar],
     ) -> Result<HnItemComments> {
-        let descendants = self.get_items(descendants_ids).await?;
+        let main_descendants = self.get_items(descendants_ids).await?;
 
-        todo!()
+        let descendants = join_all(
+            main_descendants
+                .iter()
+                .map(|descendant| self.get_item_comments(descendant.get_kids().unwrap_or(&[]))),
+        )
+        .await;
+
+        // TODO: this could probably be faster
+        let mut error = None;
+        let mut item_comments = HnItemComments::new();
+        descendants
+            .into_iter()
+            .for_each(|comments_branch_result| match comments_branch_result {
+                Ok(comments_branch) => {
+                    for (comment_id, comment) in comments_branch {
+                        item_comments.insert(comment_id, comment);
+                    }
+                }
+                Err(why) => error = Some(why),
+            });
+
+        match error {
+            Some(why) => Err(why),
+            None => Ok(item_comments),
+        }
     }
 
     /// Try to fetch the `HnItem` by its given ID.
