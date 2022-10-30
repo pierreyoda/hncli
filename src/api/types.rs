@@ -17,6 +17,7 @@ pub enum HnItem {
     Job(HnJob),
     Poll(HnPoll),
     PollOpt(HnPollOption),
+    Deleted(HnDeleted),
     #[serde(other)]
     Null,
 }
@@ -37,6 +38,7 @@ impl HnItem {
             Job(job) => job.id,
             Poll(poll) => poll.id,
             PollOpt(poll_option) => poll_option.id,
+            Deleted(deleted) => deleted.id,
         }
     }
 
@@ -51,6 +53,7 @@ impl HnItem {
             Job(_) => None,
             Poll(poll) => poll.kids.as_deref(),
             PollOpt(_) => None,
+            Deleted(_) => None,
         }
     }
 }
@@ -252,6 +255,14 @@ pub struct HnUser {
     pub about: Option<String>,
     /// IDs of the user's submitted items.
     pub submitted: Vec<HnItemIdScalar>,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+pub struct HnDeleted {
+    /// Unique ID of this Item.
+    pub id: HnItemIdScalar,
+    /// Always `true`.
+    pub deleted: bool,
 }
 
 #[cfg(test)]

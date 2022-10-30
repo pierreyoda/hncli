@@ -7,6 +7,8 @@ use types::{HnItem, HnItemIdScalar};
 
 use crate::errors::{HnCliError, Result};
 
+use self::types::HnDeleted;
+
 pub mod types;
 
 const HACKER_NEWS_API_BASE_URL: &str = "https://hacker-news.firebaseio.com/v0";
@@ -175,11 +177,19 @@ impl HnClient {
             .text()
             .await
             .map(|raw| {
+                // handle null case
                 if raw == "null" {
-                    HnItem::Null
-                } else {
-                    serde_json::from_str(&raw).expect("api.get_item: deserialization should work")
+                    return HnItem::Null;
                 }
+                // handle deleted case
+                if let Ok(deleted) = serde_json::from_str::<HnDeleted>(&raw) {
+                    return HnItem::Deleted(deleted);
+                };
+                // general case
+                serde_json::from_str(&raw).expect(&format!(
+                    "api.get_item: deserialization should work for item with ID {}",
+                    id
+                ))
             })
             .map_err(HnCliError::HttpError)
     }
