@@ -151,6 +151,9 @@ impl HnClient {
         // TODO: this could probably be faster
         let mut error = None;
         let mut item_comments = HnItemComments::new();
+        for main_descendant in main_descendants {
+            item_comments.insert(main_descendant.get_id(), main_descendant);
+        }
         descendants
             .into_iter()
             .for_each(|comments_branch_result| match comments_branch_result {
