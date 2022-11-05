@@ -107,7 +107,7 @@ impl UserInterface {
                     .checked_sub(last_tick.elapsed())
                     .unwrap_or_else(|| Duration::from_secs(0));
 
-                if event::poll(timeout).expect("poll works") {
+                if event::poll(timeout).expect("event polling works") {
                     if let Event::Key(key_event) = event::read().unwrap() {
                         tx.send(UserInterfaceEvent::KeyEvent(key_event)).unwrap();
                     }

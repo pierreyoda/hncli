@@ -18,6 +18,8 @@ use super::{
 
 /// Contextual help widget.
 enum HelpWidget {
+    /// Empty widget for padding purposes.
+    Empty,
     /// Static text.
     Text(String),
     /// Key reminder. Structure: (icon, text, key).
@@ -29,6 +31,7 @@ impl HelpWidget {
         use HelpWidget::*;
 
         let widget_text = match self {
+            Empty => "".into(),
             Text(text) => text.clone(),
             KeyReminder(icon, text, key) => {
                 format!("{} - {} to {}", icon, key.get_representation(), text)
@@ -103,6 +106,11 @@ impl ContextualHelper {
     ) {
         let widget_open_hn_link =
             HelpWidget::Text("🌐 - SHIFT + 'o' to open the item Hacker News page".into());
+
+        let has_widget_toggle_comments = !app_state
+            .get_currently_viewed_item()
+            .as_ref()
+            .map_or(false, |item| item.is_job);
         let display_comments_panel = app_state.get_item_page_should_display_comments_panel();
         let widget_toggle_comments = HelpWidget::KeyReminder(
             '💬',
@@ -122,11 +130,23 @@ impl ContextualHelper {
                 } else {
                     HelpWidget::KeyReminder('🌐', format!("open {}", hostname), Key::Char('o'))
                 },
-                widget_toggle_comments,
+                if has_widget_toggle_comments {
+                    widget_toggle_comments
+                } else {
+                    HelpWidget::Empty
+                },
                 widget_go_back,
             ]
         } else {
-            vec![widget_open_hn_link, widget_toggle_comments, widget_go_back]
+            vec![
+                widget_open_hn_link,
+                if has_widget_toggle_comments {
+                    widget_toggle_comments
+                } else {
+                    HelpWidget::Empty
+                },
+                widget_go_back,
+            ]
         };
         Self::render_widgets(f, inside, widgets.as_ref());
     }

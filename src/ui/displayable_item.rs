@@ -38,6 +38,8 @@ pub struct DisplayableHackerNewsItem {
     pub url_hostname: Option<String>,
     /// IDs of the comments on the item, if any, in ranked display order.
     pub kids: Option<Vec<HnItemIdScalar>>,
+    /// Is the item a job posting?
+    pub is_job: bool,
 }
 
 const MINUTES_PER_DAY: i64 = 24 * 60;
@@ -112,6 +114,7 @@ impl TryFrom<HnItem> for DisplayableHackerNewsItem {
                             .to_owned()
                     }),
                     kids: story.kids,
+                    is_job: false,
                 })
             }
             HnItem::Comment(comment) => {
@@ -130,6 +133,7 @@ impl TryFrom<HnItem> for DisplayableHackerNewsItem {
                     )),
                     url_hostname: Some("https://hacker-news.firebaseio.com".into()),
                     kids: comment.kids,
+                    is_job: false,
                 })
             }
             HnItem::Job(job) => {
@@ -152,6 +156,7 @@ impl TryFrom<HnItem> for DisplayableHackerNewsItem {
                             .to_owned()
                     }),
                     kids: None,
+                    is_job: true,
                 })
             }
             HnItem::Poll(poll) => {
@@ -170,6 +175,7 @@ impl TryFrom<HnItem> for DisplayableHackerNewsItem {
                     )),
                     url_hostname: Some("https://hacker-news.firebaseio.com".into()),
                     kids: poll.kids,
+                    is_job: false,
                 })
             }
             _ => Err(HnCliError::HnItemProcessingError(

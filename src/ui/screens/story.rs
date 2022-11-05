@@ -41,9 +41,17 @@ impl StoryDetailsScreen {
 impl Screen for StoryDetailsScreen {
     fn before_mount(&mut self, state: &mut AppState, config: &AppConfiguration) {
         state.set_currently_viewed_item(Some(self.item.clone()));
-        state.set_item_page_should_display_comments_panel(
-            config.get_display_comments_panel_by_default(),
-        );
+        if state
+            .get_currently_viewed_item()
+            .as_ref()
+            .map_or(false, |item| item.is_job)
+        {
+            state.set_item_page_should_display_comments_panel(false);
+        } else {
+            state.set_item_page_should_display_comments_panel(
+                config.get_display_comments_panel_by_default(),
+            );
+        }
     }
 
     fn handle_inputs(
@@ -58,7 +66,12 @@ impl Screen for StoryDetailsScreen {
                 ScreenEventResponse::Caught,
                 Some(router.get_current_route().clone()),
             )
-        } else if inputs.is_active(&ApplicationAction::ItemToggleComments) {
+        } else if inputs.is_active(&ApplicationAction::ItemToggleComments)
+            && !state
+                .get_currently_viewed_item()
+                .as_ref()
+                .map_or(false, |item| item.is_job)
+        {
             state.set_item_page_should_display_comments_panel(
                 !state.get_item_page_should_display_comments_panel(),
             );
