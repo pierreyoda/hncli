@@ -18,6 +18,7 @@ pub enum HnItem {
     Poll(HnPoll),
     PollOpt(HnPollOption),
     Deleted(HnDeleted),
+    Dead(HnDead),
     #[serde(other)]
     Null,
 }
@@ -39,6 +40,7 @@ impl HnItem {
             Poll(poll) => poll.id,
             PollOpt(poll_option) => poll_option.id,
             Deleted(deleted) => deleted.id,
+            Dead(dead) => dead.id,
         }
     }
 
@@ -54,6 +56,7 @@ impl HnItem {
             Poll(poll) => poll.kids.as_deref(),
             PollOpt(_) => None,
             Deleted(_) => None,
+            Dead(_) => None,
         }
     }
 }
@@ -263,6 +266,14 @@ pub struct HnDeleted {
     pub id: HnItemIdScalar,
     /// Always `true`.
     pub deleted: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+pub struct HnDead {
+    /// Unique ID of this Item.
+    pub id: HnItemIdScalar,
+    /// Always `true`.
+    pub dead: bool,
 }
 
 #[cfg(test)]

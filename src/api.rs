@@ -7,7 +7,7 @@ use types::{HnItem, HnItemIdScalar};
 
 use crate::errors::{HnCliError, Result};
 
-use self::types::HnDeleted;
+use self::types::{HnDead, HnDeleted};
 
 pub mod types;
 
@@ -164,7 +164,6 @@ impl HnClient {
                 }
                 Err(why) => error = Some(why),
             });
-
         match error {
             Some(why) => Err(why),
             None => Ok(item_comments),
@@ -188,6 +187,10 @@ impl HnClient {
                 if let Ok(deleted) = serde_json::from_str::<HnDeleted>(&raw) {
                     return HnItem::Deleted(deleted);
                 };
+                // handle dead case
+                if let Ok(dead) = serde_json::from_str::<HnDead>(&raw) {
+                    return HnItem::Dead(dead);
+                }
                 // general case
                 serde_json::from_str(&raw).expect(&format!(
                     "api.get_item: deserialization should work for item with ID {}",
