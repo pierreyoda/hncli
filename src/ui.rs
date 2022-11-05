@@ -167,10 +167,10 @@ impl UserInterface {
                         )
                         .split(frame.size());
 
-                    // // refresh application chunks
+                    // refresh application chunks
                     app.update_layout(global_layout_chunks[0]);
 
-                    // // render components
+                    // render components
                     for (id, wrapper) in components.iter_mut() {
                         let component_rendering_rect =
                             app.get_component_rendering_rect(id).cloned();

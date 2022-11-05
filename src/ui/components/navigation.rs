@@ -27,7 +27,7 @@ use super::common::COMMON_BLOCK_NORMAL_COLOR;
 const TABS_TITLES: [&str; 6] = ["Home", "Ask HN", "Show HN", "Jobs", "Settings", "Help"];
 
 /// The Navigation bar provides a convenient way to switch between screens
-/// screens by either pressing the hotkey associated with the title, or by
+/// by either pressing the hotkey associated with the title, or by
 /// directly switching tabs with the help of the arrow keys.
 #[derive(Debug)]
 pub struct Navigation {

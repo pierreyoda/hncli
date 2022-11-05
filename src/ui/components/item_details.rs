@@ -84,7 +84,7 @@ impl UiComponent for ItemDetails {
             let item_title = item.title.clone().unwrap_or_else(|| "".into());
             let text_base = vec![
                 Spans::from(item_title.as_str()),
-                Spans::from(item.url_hostname.clone().unwrap_or_else(|| "".to_string())),
+                Spans::from(item.url_hostname.clone().unwrap_or_default()),
                 Spans::from(format!(
                     "{} points by {} {}",
                     item.score, item.by_username, item.posted_since

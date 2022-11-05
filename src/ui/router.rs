@@ -67,7 +67,9 @@ impl AppRouter {
 
     /// Get the current route state.
     pub fn get_current_route(&self) -> &AppRoute {
-        self.navigation_stack.last().unwrap()
+        self.navigation_stack
+            .last()
+            .expect("AppRouter has a current route")
     }
 
     /// Push a new navigation route state.

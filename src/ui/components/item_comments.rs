@@ -3,7 +3,7 @@ use std::io::Stdout;
 use async_trait::async_trait;
 use tui::{
     backend::CrosstermBackend,
-    layout::{Alignment, Rect},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::Style,
     text::Spans,
     widgets::{Block, BorderType, Borders, Paragraph},
@@ -17,8 +17,13 @@ use crate::{
         common::{UiComponent, UiComponentId, UiTickScalar},
         components::common::COMMON_BLOCK_NORMAL_COLOR,
         displayable_item::{DisplayableHackerNewsItem, DisplayableHackerNewsItemComments},
+        utils::html_to_plain_text,
     },
 };
+
+use self::comment::render_item_comment;
+
+mod comment;
 
 /// Item comments component.
 #[derive(Debug)]
@@ -43,6 +48,12 @@ impl Default for ItemComments {
 const MEAN_TICKS_BETWEEN_UPDATES: UiTickScalar = 1800; // approx. every 3 minutes
 
 pub const ITEM_COMMENTS_ID: UiComponentId = "item_comments";
+
+#[derive(Debug)]
+struct RenderableCommentAssembly {
+    corpus: String,
+    constraint: Constraint,
+}
 
 #[async_trait]
 impl UiComponent for ItemComments {
@@ -85,7 +96,7 @@ impl UiComponent for ItemComments {
         &mut self,
         f: &mut tui::Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
-        ctx: &AppContext,
+        _ctx: &AppContext,
     ) -> Result<()> {
         // Initial loading case
         if self.initial_loading {
@@ -118,8 +129,43 @@ impl UiComponent for ItemComments {
         }
 
         // Displayable comments case
-        // TODO: custom rendering widget
+        // TODO: this is an MVP rendering function
+        let comments_renderables: Vec<RenderableCommentAssembly> = self
+            .comments
+            .iter()
+            .map(|(_, comment)| {
+                let text = if let Some(t) = &comment.text {
+                    t
+                } else {
+                    return RenderableCommentAssembly {
+                        corpus: "".into(),
+                        constraint: Constraint::Min(1),
+                    };
+                };
+                let corpus = html_to_plain_text(text, inside.width as usize);
+                let constraint =
+                    Constraint::Min(Self::estimate_comment_min_height_from_corpus(&corpus));
+                RenderableCommentAssembly { corpus, constraint }
+            })
+            .collect();
+        let comments_constraints: Vec<Constraint> = comments_renderables
+            .iter()
+            .map(|renderable| renderable.constraint)
+            .collect();
+        let comments_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(comments_constraints)
+            .split(inside);
+        for (i, (_, comment)) in self.comments.iter().enumerate() {
+            render_item_comment(f, comments_chunks[i], comment);
+        }
 
         Ok(())
+    }
+}
+
+impl ItemComments {
+    fn estimate_comment_min_height_from_corpus(comment_corpus: &String) -> u16 {
+        comment_corpus.lines().count() as u16 / 100
     }
 }
