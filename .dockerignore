@@ -3,3 +3,6 @@
 
 # Rust
 **/target/
+
+# Logs
+hncli_log.txt

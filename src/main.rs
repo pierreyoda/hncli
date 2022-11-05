@@ -1,4 +1,9 @@
-use std::io;
+use std::{fs::File, io};
+
+extern crate log;
+extern crate simplelog;
+
+use simplelog::{Config, WriteLogger};
 
 use api::HnClient;
 use errors::HnCliError;
@@ -13,6 +18,14 @@ mod ui;
 
 #[tokio::main]
 async fn main() -> Result<(), HnCliError> {
+    // File logger setup (mainly used for development purposes)
+    WriteLogger::init(
+        log::LevelFilter::Info,
+        Config::default(),
+        File::create("hncli_log.txt")?,
+    )
+    .expect("logging to file should be properly initialized");
+
     // HackerNews client setup
     let client = HnClient::new()?;
 
