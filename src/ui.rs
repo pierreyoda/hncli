@@ -119,7 +119,7 @@ impl UserInterface {
             }
         });
 
-        // components
+        // Components registration
         self.register_component(Help::default());
         self.register_component(Settings::default());
         self.register_component(Navigation::default());
@@ -128,6 +128,7 @@ impl UserInterface {
         self.register_component(ItemDetails::default());
         self.register_component(ItemComments::default());
         self.register_component(Options::default());
+
         for component_wrapper in self.components.values_mut() {
             component_wrapper
                 .component

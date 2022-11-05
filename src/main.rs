@@ -33,9 +33,9 @@ async fn main() -> Result<(), HnCliError> {
     let stdout = io::stdout();
     let backend = CrosstermBackend::new(stdout);
     let terminal = Terminal::new(backend).map_err(HnCliError::IoError)?;
-    let mut ui = UserInterface::new(terminal, client)?;
 
     // UI setup & run
+    let mut ui = UserInterface::new(terminal, client)?;
     let events_receiver = ui.setup()?;
     ui.run(events_receiver).await
 }
