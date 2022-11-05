@@ -96,6 +96,8 @@ pub struct AppState {
     /// Latest component interacted with, *i.e.* the latest component having
     /// swallowed an UI event.
     latest_interacted_with_component: Option<UiComponentId>,
+    /// Main screen(s): loading stories?
+    main_stories_loading: bool,
     /// Main screen(s): currently viewed section.
     main_stories_section: HnStoriesSections,
     /// Main screen(s): current stories sorting.
@@ -112,8 +114,9 @@ impl AppState {
     fn from_config(config: &AppConfiguration) -> Self {
         Self {
             latest_interacted_with_component: None,
-            main_stories_sorting: HnStoriesSorting::Top,
+            main_stories_loading: true,
             main_stories_section: HnStoriesSections::Home,
+            main_stories_sorting: HnStoriesSorting::Top,
             main_search_mode_query: None,
             currently_viewed_item: None,
             item_page_display_comments_panel: config.get_display_comments_panel_by_default(),
@@ -125,6 +128,14 @@ impl AppState {
     /// Get the latest component interacted with.
     pub fn get_latest_interacted_with_component(&self) -> Option<&UiComponentId> {
         self.latest_interacted_with_component.as_ref()
+    }
+
+    pub fn get_main_stories_loading(&self) -> bool {
+        self.main_stories_loading
+    }
+
+    pub fn set_main_stories_loading(&mut self, loading: bool) {
+        self.main_stories_loading = loading;
     }
 
     /// Get the current stories sorting for the main screen.

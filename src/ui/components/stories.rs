@@ -7,10 +7,10 @@ use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 
 use tui::{
     backend::CrosstermBackend,
-    layout::Rect,
+    layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans},
-    widgets::{Block, BorderType, Borders, List, ListItem},
+    widgets::{Block, BorderType, Borders, List, ListItem, Paragraph},
 };
 
 use crate::{
@@ -111,6 +111,8 @@ impl UiComponent for StoriesPanel {
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
         self.ticks_since_last_update = 0;
 
+        ctx.get_state_mut().set_main_stories_loading(true);
+
         let sorting_type = *ctx.get_state().get_main_stories_sorting();
         let search_query = ctx.get_state().get_main_search_mode_query();
 
@@ -144,10 +146,16 @@ impl UiComponent for StoriesPanel {
         self.sorting_type_for_last_update = Some(sorting_type);
         self.search_for_last_update = search_query.cloned();
 
+        ctx.get_state_mut().set_main_stories_loading(false);
+
         Ok(())
     }
 
     fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
+        if ctx.get_state().get_main_stories_loading() {
+            return Ok(false);
+        }
+
         let inputs = ctx.get_inputs();
         let selected = self.list_state.get_state().selected();
         Ok(if inputs.is_active(&ApplicationAction::NavigateUp) {
@@ -196,6 +204,22 @@ impl UiComponent for StoriesPanel {
         inside: Rect,
         ctx: &AppContext,
     ) -> Result<()> {
+        // Loading case
+        if ctx.get_state().get_main_stories_loading() {
+            let block = Block::default()
+                .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded);
+
+            let text = vec![Spans::from(""), Spans::from("Loading...")];
+            let paragraph = Paragraph::new(text)
+                .block(block)
+                .alignment(Alignment::Center);
+            f.render_widget(paragraph, inside);
+            return Ok(());
+        }
+
+        // General case
         let block_title = match ctx.get_state().get_main_stories_section() {
             HnStoriesSections::Home => "Top stories",
             HnStoriesSections::Ask => "Ask Hacker News",

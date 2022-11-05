@@ -159,6 +159,7 @@ impl Navigation {
             5 => AppRoute::Help,
             _ => unreachable!(),
         };
+        ctx.get_state_mut().set_main_stories_loading(true);
         ctx.router_replace_current_in_navigation_stack(route);
     }
 }
