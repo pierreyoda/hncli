@@ -54,7 +54,7 @@ impl AppConfiguration {
     fn save_to_file(&self) -> Result<()> {
         let config_filepath = Self::get_config_file_path()?;
         let config_directory = config_filepath.parent().unwrap();
-        create_dir_all(&config_directory).map_err(|err| {
+        create_dir_all(config_directory).map_err(|err| {
             HnCliError::ConfigSynchronizationError(format!(
                 "cannot create config directory ({:?}): {}",
                 config_directory, err
