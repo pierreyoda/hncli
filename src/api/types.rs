@@ -28,6 +28,10 @@ impl HnItem {
         matches!(self, HnItem::Null)
     }
 
+    pub fn is_dead(&self) -> bool {
+        matches!(self, HnItem::Dead(_))
+    }
+
     /// Get the ID of the item.
     pub fn get_id(&self) -> HnItemIdScalar {
         use HnItem::*;

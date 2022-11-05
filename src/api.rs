@@ -186,7 +186,7 @@ impl HnClient {
                 // handle deleted case
                 if let Ok(deleted) = serde_json::from_str::<HnDeleted>(&raw) {
                     return HnItem::Deleted(deleted);
-                };
+                }
                 // handle dead case
                 if let Ok(dead) = serde_json::from_str::<HnDead>(&raw) {
                     return HnItem::Dead(dead);
@@ -207,7 +207,7 @@ impl HnClient {
             .await
             .into_iter()
             .filter(|item_result| match item_result {
-                Ok(item) => !item.is_null(),
+                Ok(item) => !item.is_null() && !item.is_dead(),
                 Err(_) => true,
             })
             .collect()
