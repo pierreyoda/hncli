@@ -28,6 +28,10 @@ impl HnItem {
         matches!(self, HnItem::Null)
     }
 
+    pub fn is_deleted(&self) -> bool {
+        matches!(self, HnItem::Deleted(_))
+    }
+
     pub fn is_dead(&self) -> bool {
         matches!(self, HnItem::Dead(_))
     }

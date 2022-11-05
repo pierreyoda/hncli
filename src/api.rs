@@ -207,8 +207,8 @@ impl HnClient {
             .await
             .into_iter()
             .filter(|item_result| match item_result {
-                Ok(item) => !item.is_null() && !item.is_dead(),
-                Err(_) => true,
+                Ok(item) => !item.is_null() && !item.is_deleted() && !item.is_dead(),
+                Err(_) => false,
             })
             .collect()
     }
