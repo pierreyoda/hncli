@@ -64,9 +64,10 @@ impl ContextualHelper {
     ) {
         match for_route {
             AppRoute::Home(_) => self.render_home_page_help(f, inside, app_state, app_inputs),
-            AppRoute::StoryDetails(item) => {
+            AppRoute::ItemDetails(item) => {
                 self.render_item_page_help(f, inside, app_state, app_inputs, item)
             }
+            AppRoute::ItemSubComments(_parent_comment) => (), // TODO:
             AppRoute::Settings => self.render_settings_page_help(f, inside, app_state, app_inputs),
             AppRoute::Help => self.render_help_page_help(f, inside, app_state, app_inputs),
         }

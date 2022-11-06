@@ -56,6 +56,10 @@ impl ItemCommentsWidgetState {
         }
     }
 
+    pub fn get_focused_comment_id(&self) -> Option<HnItemIdScalar> {
+        self.focused_comment_id
+    }
+
     /// Reconciliate the currently focused main-level comment when replacing
     /// the comments of an already viewed HackerNews item.
     fn reconciliate_focused_comment(

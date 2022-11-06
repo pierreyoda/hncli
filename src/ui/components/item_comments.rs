@@ -18,6 +18,7 @@ use crate::{
         components::common::COMMON_BLOCK_NORMAL_COLOR,
         displayable_item::DisplayableHackerNewsItem,
         handlers::ApplicationAction,
+        router::AppRoute,
     },
 };
 
@@ -130,6 +131,28 @@ impl UiComponent for ItemComments {
             true
         } else if inputs.is_active(&ApplicationAction::NavigateDown) {
             self.widget_state.next_main_comment(&self.viewed_item_kids);
+            true
+        } else if inputs.is_active(&ApplicationAction::ItemExpandFocusedComment) {
+            let focused_comment_id =
+                if let Some(comment_id) = self.widget_state.get_focused_comment_id() {
+                    comment_id
+                } else {
+                    return Ok(false);
+                };
+            let focused_comment = ctx
+                .get_state()
+                .get_currently_viewed_item_comments()
+                .expect("comments should be cached in the global state")
+                .get(&focused_comment_id)
+                .expect("comment should be present in the global state");
+            if focused_comment
+                .kids
+                .as_ref()
+                .map_or(true, |kids| kids.is_empty())
+            {
+                return Ok(false);
+            }
+            ctx.router_push_navigation_stack(AppRoute::ItemSubComments(focused_comment.clone()));
             true
         } else {
             false

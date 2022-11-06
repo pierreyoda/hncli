@@ -6,6 +6,7 @@ use crate::{
     config::AppConfiguration,
     ui::screens::{
         help::HelpScreen, home::HomeScreen, settings::SettingsScreen, story::StoryDetailsScreen,
+        sub_comments::SubCommentsScreen,
     },
 };
 
@@ -16,8 +17,10 @@ use super::{displayable_item::DisplayableHackerNewsItem, screens::Screen};
 pub enum AppRoute {
     /// Home screen.
     Home(HnStoriesSections),
-    /// Story details screen.
-    StoryDetails(DisplayableHackerNewsItem),
+    /// Item details screen.
+    ItemDetails(DisplayableHackerNewsItem),
+    /// Item sub-comments screen.
+    ItemSubComments(DisplayableHackerNewsItem),
     /// Settings screen.
     Settings,
     /// Help screen.
@@ -88,7 +91,8 @@ impl AppRouter {
             Help => Box::new(HelpScreen::new()),
             Settings => Box::new(SettingsScreen::new()),
             Home(section) => Box::new(HomeScreen::new(section)),
-            StoryDetails(item) => Box::new(StoryDetailsScreen::new(item)),
+            ItemDetails(item) => Box::new(StoryDetailsScreen::new(item)),
+            ItemSubComments(parent_comment) => Box::new(SubCommentsScreen::new(parent_comment)),
         }
     }
 }

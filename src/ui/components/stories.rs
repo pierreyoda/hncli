@@ -190,7 +190,7 @@ impl UiComponent for StoriesPanel {
                     let selected_item = &items[selected_index];
                     ctx.get_state_mut()
                         .set_currently_viewed_item(Some(selected_item.clone()));
-                    ctx.router_push_navigation_stack(AppRoute::StoryDetails(selected_item.clone()));
+                    ctx.router_push_navigation_stack(AppRoute::ItemDetails(selected_item.clone()));
                     true
                 }
                 _ => false,

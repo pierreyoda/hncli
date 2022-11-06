@@ -101,6 +101,7 @@ pub enum ApplicationAction {
     HomeToggleSearchMode,
     // item screen
     ItemToggleComments,
+    ItemExpandFocusedComment,
     // settings screen
     SettingsToggleControl,
 }
@@ -129,6 +130,7 @@ impl ApplicationAction {
             HomeToggleSortingOption => inputs.key == Key::Char('s'),
             HomeToggleSearchMode => inputs.key == Key::Char('f'),
             ItemToggleComments => inputs.key == Key::Tab,
+            ItemExpandFocusedComment => inputs.key == Key::Enter,
             SettingsToggleControl => inputs.key == Key::Tab,
         }
     }
