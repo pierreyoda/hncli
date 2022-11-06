@@ -195,6 +195,7 @@ impl UiComponent for ItemComments {
                 return Ok(());
             };
         let widget = ItemCommentsWidget::with_comments(
+            self.viewed_item_id,
             &self.viewed_item_kids,
             viewed_item_comments,
             &self.widget_state,
