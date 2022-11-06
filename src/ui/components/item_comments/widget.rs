@@ -198,10 +198,11 @@ impl<'a> Widget for ItemCommentsWidget<'a> {
         );
         let footer_text = if self.sub_comments_count > 0 {
             format!(
-                "Comment {} / {} | {} sub-comments",
+                "Comment {} / {} | {} sub-comment{}",
                 focused_comment_index + 1,
                 self.main_comments_count,
-                self.sub_comments_count
+                self.sub_comments_count,
+                if self.sub_comments_count > 1 { "s" } else { "" },
             )
         } else {
             format!(
