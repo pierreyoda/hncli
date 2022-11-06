@@ -19,7 +19,7 @@ impl<'a> CommentWidget<'a> {
     }
 }
 
-pub const PADDING: u16 = 2;
+pub const PADDING: u16 = 3;
 pub const HEADER_HEIGHT: u16 = 5;
 
 impl<'a> Widget for CommentWidget<'a> {
@@ -32,13 +32,6 @@ impl<'a> Widget for CommentWidget<'a> {
             header_area.y,
             self.comment.by_username.as_str(),
             Style::default().fg(Color::LightGreen),
-        );
-        // -> score
-        buf.set_string(
-            (header_area.right() - header_area.left()) / 2,
-            header_area.y,
-            format!("Score: {}", self.comment.score),
-            Style::default().fg(Color::LightYellow),
         );
         // -> posted since
         buf.set_string(
@@ -60,12 +53,12 @@ impl<'a> Widget for CommentWidget<'a> {
         let corpus_area = Rect::new(
             area.left(),
             header_area.bottom() + HEADER_HEIGHT,
-            area.width,
+            area.width - PADDING * 2,
             80,
         );
         for (i, corpus_line) in corpus_lines.enumerate() {
             buf.set_string(
-                0,
+                PADDING * 2,
                 corpus_area.top() + i as u16,
                 corpus_line,
                 Style::default().fg(Color::White),
