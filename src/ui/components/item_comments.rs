@@ -17,10 +17,11 @@ use crate::{
         common::{UiComponent, UiComponentId, UiTickScalar},
         components::common::COMMON_BLOCK_NORMAL_COLOR,
         displayable_item::{DisplayableHackerNewsItem, DisplayableHackerNewsItemComments},
+        handlers::ApplicationAction,
     },
 };
 
-use self::widget::ItemCommentsWidget;
+use self::widget::{ItemCommentsWidget, ItemCommentsWidgetState};
 
 mod comment_widget;
 mod widget;
@@ -30,21 +31,25 @@ mod widget;
 pub struct ItemComments {
     ticks_since_last_update: u64,
     initial_loading: bool,
+    loading: bool,
     viewable_comments: bool,
     viewed_item_id: HnItemIdScalar,
     previous_viewed_item_id: HnItemIdScalar,
     comments: DisplayableHackerNewsItemComments,
+    widget_state: ItemCommentsWidgetState,
 }
 
 impl Default for ItemComments {
     fn default() -> Self {
         Self {
-            initial_loading: true,
             ticks_since_last_update: 0,
+            initial_loading: true,
+            loading: true,
             viewable_comments: false,
             viewed_item_id: 0,
             previous_viewed_item_id: 0,
             comments: DisplayableHackerNewsItemComments::new(),
+            widget_state: ItemCommentsWidgetState::default(),
         }
     }
 }
@@ -66,6 +71,7 @@ impl UiComponent for ItemComments {
     }
 
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
+        self.loading = true;
         self.ticks_since_last_update = 0;
         self.viewable_comments = false;
         self.previous_viewed_item_id = self.viewed_item_id;
@@ -84,12 +90,33 @@ impl UiComponent for ItemComments {
         self.comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
         self.viewable_comments = true;
         self.initial_loading = false;
+        self.loading = false;
+
+        // Widget state
+        self.widget_state.update(
+            &self.comments,
+            self.viewed_item_id,
+            self.previous_viewed_item_id,
+        );
 
         Ok(())
     }
 
-    fn handle_inputs(&mut self, _ctx: &mut AppContext) -> Result<bool> {
-        Ok(false)
+    fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
+        if self.initial_loading || self.loading {
+            return Ok(false);
+        }
+
+        let inputs = ctx.get_inputs();
+        Ok(if inputs.is_active(&ApplicationAction::NavigateUp) {
+            self.widget_state.previous_main_comment();
+            true
+        } else if inputs.is_active(&ApplicationAction::NavigateDown) {
+            self.widget_state.next_main_comment();
+            true
+        } else {
+            false
+        })
     }
 
     fn render(
@@ -98,33 +125,36 @@ impl UiComponent for ItemComments {
         inside: Rect,
         ctx: &AppContext,
     ) -> Result<()> {
-        // Initial loading case
-        if self.initial_loading {
+        // (Initial) loading case
+        if self.initial_loading || self.loading {
             return Self::render_text_message(f, inside, "Loading...");
         }
 
-        // No comments case
+        // No comments available case
         if !self.viewable_comments {
             return Self::render_text_message(f, inside, "No comments available.");
         }
 
         // Invalid viewed item case
-        let parent_item_id = if let Some(id) = ctx
-            .get_state()
-            .get_currently_viewed_item()
-            .as_ref()
-            .map(|item| item.id)
-        {
-            id
+        let viewed_item = if let Some(item) = ctx.get_state().get_currently_viewed_item() {
+            item
         } else {
             return Self::render_text_message(f, inside, "Cannot display comments for this item.");
+        };
+
+        // No comments case
+        let viewed_item_kids = if let Some(kids) = &viewed_item.kids {
+            kids.as_slice()
+        } else {
+            return Self::render_text_message(f, inside, "No comments yet.");
         };
 
         // General case
         let widget = ItemCommentsWidget::with_comments(
             self.viewed_item_id,
-            self.previous_viewed_item_id,
+            viewed_item_kids,
             &self.comments,
+            &self.widget_state,
         );
         f.render_widget(widget, inside);
 

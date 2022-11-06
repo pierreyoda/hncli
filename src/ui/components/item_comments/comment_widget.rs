@@ -2,7 +2,7 @@ use tui::{
     buffer::Buffer,
     layout::Rect,
     style::{Color, Style},
-    text::{Span, Spans},
+    text::Span,
     widgets::Widget,
 };
 
@@ -42,6 +42,13 @@ impl<'a> Widget for CommentWidget<'a> {
             ),
             header_area.width / 2,
         );
+        // -> score
+        buf.set_string(
+            header_area.right() - 20,
+            header_area.y,
+            format!("Score: {}", self.comment.score),
+            Style::default().fg(Color::LightYellow),
+        );
         // -> posted since
         buf.set_span(
             (header_area.right() - header_area.left()) / 2,
@@ -61,30 +68,20 @@ impl<'a> Widget for CommentWidget<'a> {
         };
         let corpus = html_to_plain_text(corpus_str, area.width as usize);
         let corpus_lines = corpus.lines();
-        let corpus_spans: Vec<Span> = corpus_lines
-            .map(|corpus_line| {
-                let line = format!("{}\n", corpus_line);
-                Span::styled(line, Style::default().fg(Color::White))
-            })
-            .collect();
 
         let corpus_area = Rect::new(
             area.left(),
             header_area.bottom() + HEADER_HEIGHT,
             area.width,
-            Self::compute_corpus_height(corpus_spans.len()),
+            80,
         );
-        buf.set_spans(
-            corpus_area.left(),
-            corpus_area.top(),
-            &Spans(corpus_spans),
-            corpus_area.width,
-        );
-    }
-}
-
-impl<'a> CommentWidget<'a> {
-    fn compute_corpus_height(corpus_lines_count: usize) -> u16 {
-        corpus_lines_count as u16 / 10
+        for (i, corpus_line) in corpus_lines.enumerate() {
+            buf.set_string(
+                0,
+                corpus_area.top() + i as u16,
+                corpus_line,
+                Style::default().fg(Color::White),
+            );
+        }
     }
 }
