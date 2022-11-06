@@ -79,6 +79,8 @@ impl UiComponent for ItemComments {
         self.ticks_since_last_update = 0;
         self.previous_viewed_item_id = self.viewed_item_id;
 
+        ctx.get_state_mut().set_currently_viewed_item_comments(None);
+
         // Viewed item handling
         let viewed_item = match ctx.get_state().get_currently_viewed_item() {
             Some(item) => item,
@@ -100,10 +102,14 @@ impl UiComponent for ItemComments {
         self.loading = false;
 
         // Widget state
+        let viewed_item_comments =
+            if let Some(cached_comments) = ctx.get_state().get_currently_viewed_item_comments() {
+                cached_comments
+            } else {
+                return Ok(());
+            };
         self.widget_state.update(
-            ctx.get_state()
-                .get_currently_viewed_item_comments()
-                .expect("comments should be saved in the global state"),
+            viewed_item_comments,
             self.viewed_item_id,
             self.previous_viewed_item_id,
             &self.viewed_item_kids,
@@ -159,11 +165,15 @@ impl UiComponent for ItemComments {
         }
 
         // General case
+        let viewed_item_comments =
+            if let Some(cached_comments) = ctx.get_state().get_currently_viewed_item_comments() {
+                cached_comments
+            } else {
+                return Ok(());
+            };
         let widget = ItemCommentsWidget::with_comments(
             &self.viewed_item_kids,
-            ctx.get_state()
-                .get_currently_viewed_item_comments()
-                .expect("comments should be saved in the global context"),
+            viewed_item_comments,
             &self.widget_state,
         );
         f.render_widget(widget, inside);
