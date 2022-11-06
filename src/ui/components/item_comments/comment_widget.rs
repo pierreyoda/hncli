@@ -2,7 +2,6 @@ use tui::{
     buffer::Buffer,
     layout::Rect,
     style::{Color, Style},
-    text::Span,
     widgets::Widget,
 };
 
@@ -20,44 +19,33 @@ impl<'a> CommentWidget<'a> {
     }
 }
 
-pub const PADDING_TOP: u16 = 1;
+pub const PADDING: u16 = 2;
 pub const HEADER_HEIGHT: u16 = 5;
 
 impl<'a> Widget for CommentWidget<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         // Header
-        let header_area = Rect::new(
-            area.left(),
-            area.top() + PADDING_TOP,
-            area.width,
-            HEADER_HEIGHT,
-        );
+        let header_area = Rect::new(area.left(), area.top() + PADDING, area.width, HEADER_HEIGHT);
         // -> username
-        buf.set_span(
-            header_area.x,
+        buf.set_string(
+            header_area.x + PADDING,
             header_area.y,
-            &Span::styled(
-                self.comment.by_username.clone(),
-                Style::default().fg(Color::LightGreen),
-            ),
-            header_area.width / 2,
+            self.comment.by_username.as_str(),
+            Style::default().fg(Color::LightGreen),
         );
         // -> score
         buf.set_string(
-            header_area.right() - 20,
+            (header_area.right() - header_area.left()) / 2,
             header_area.y,
             format!("Score: {}", self.comment.score),
             Style::default().fg(Color::LightYellow),
         );
         // -> posted since
-        buf.set_span(
-            (header_area.right() - header_area.left()) / 2,
+        buf.set_string(
+            header_area.right() - self.comment.posted_since.len() as u16 - PADDING,
             header_area.y,
-            &Span::styled(
-                self.comment.posted_since.clone(),
-                Style::default().fg(Color::Gray),
-            ),
-            header_area.width / 2,
+            self.comment.posted_since.as_str(),
+            Style::default().fg(Color::Gray),
         );
 
         // Corpus

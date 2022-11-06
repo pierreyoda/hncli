@@ -34,6 +34,7 @@ pub struct ItemComments {
     loading: bool,
     viewable_comments: bool,
     viewed_item_id: HnItemIdScalar,
+    viewed_item_kids: Vec<HnItemIdScalar>,
     previous_viewed_item_id: HnItemIdScalar,
     comments: DisplayableHackerNewsItemComments,
     widget_state: ItemCommentsWidgetState,
@@ -47,6 +48,7 @@ impl Default for ItemComments {
             loading: true,
             viewable_comments: false,
             viewed_item_id: 0,
+            viewed_item_kids: vec![],
             previous_viewed_item_id: 0,
             comments: DisplayableHackerNewsItemComments::new(),
             widget_state: ItemCommentsWidgetState::default(),
@@ -85,6 +87,7 @@ impl UiComponent for ItemComments {
             Some(kids) => kids,
             None => return Ok(()),
         };
+        self.viewed_item_kids = viewed_item_kids.clone();
 
         let comments_raw = client.get_item_comments(viewed_item_kids).await?;
         self.comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
@@ -97,6 +100,7 @@ impl UiComponent for ItemComments {
             &self.comments,
             self.viewed_item_id,
             self.previous_viewed_item_id,
+            &self.viewed_item_kids,
         );
 
         Ok(())
@@ -109,10 +113,11 @@ impl UiComponent for ItemComments {
 
         let inputs = ctx.get_inputs();
         Ok(if inputs.is_active(&ApplicationAction::NavigateUp) {
-            self.widget_state.previous_main_comment();
+            self.widget_state
+                .previous_main_comment(&self.viewed_item_kids);
             true
         } else if inputs.is_active(&ApplicationAction::NavigateDown) {
-            self.widget_state.next_main_comment();
+            self.widget_state.next_main_comment(&self.viewed_item_kids);
             true
         } else {
             false
@@ -151,8 +156,7 @@ impl UiComponent for ItemComments {
 
         // General case
         let widget = ItemCommentsWidget::with_comments(
-            self.viewed_item_id,
-            viewed_item_kids,
+            &self.viewed_item_kids,
             &self.comments,
             &self.widget_state,
         );
