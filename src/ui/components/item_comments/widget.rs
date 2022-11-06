@@ -69,6 +69,18 @@ impl ItemCommentsWidgetState {
         self.focused_comment_id
     }
 
+    pub fn restore_focused_comment_id(
+        &mut self,
+        comment_id: HnItemIdScalar,
+        parent_item_kids: &[HnItemIdScalar],
+    ) {
+        let comment_index = parent_item_kids.iter().position(|id| id == &comment_id);
+        if let Some(index) = comment_index {
+            self.focused_comment_id = Some(comment_id);
+            self.focused_comment_index = Some(index);
+        }
+    }
+
     /// Reconciliate the currently focused main-level comment when replacing
     /// the comments of an already viewed HackerNews item.
     fn reconciliate_focused_comment(

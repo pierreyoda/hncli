@@ -36,6 +36,7 @@ pub struct ItemComments {
     viewed_item_id: HnItemIdScalar,
     viewed_item_kids: Vec<HnItemIdScalar>,
     previous_viewed_item_id: HnItemIdScalar,
+    latest_focused_comment_id: Option<HnItemIdScalar>,
     widget_state: ItemCommentsWidgetState,
 }
 
@@ -48,6 +49,7 @@ impl Default for ItemComments {
             viewed_item_id: 0,
             viewed_item_kids: vec![],
             previous_viewed_item_id: 0,
+            latest_focused_comment_id: None,
             widget_state: ItemCommentsWidgetState::default(),
         }
     }
@@ -116,6 +118,12 @@ impl UiComponent for ItemComments {
             &self.viewed_item_kids,
         );
 
+        // Latest focused comment, if applicable
+        if let Some(comment_id) = self.latest_focused_comment_id {
+            self.widget_state
+                .restore_focused_comment_id(comment_id, &self.viewed_item_kids);
+        }
+
         Ok(())
     }
 
@@ -152,6 +160,7 @@ impl UiComponent for ItemComments {
             {
                 return Ok(false);
             }
+            self.latest_focused_comment_id = self.widget_state.get_focused_comment_id();
             ctx.router_push_navigation_stack(AppRoute::ItemSubComments(focused_comment.clone()));
             true
         } else {
