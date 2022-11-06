@@ -87,6 +87,10 @@ impl UiComponent for ItemDetails {
             .border_type(BorderType::Rounded);
 
         let item_title = viewed_item.title.clone().unwrap_or_else(|| "".into());
+        let comments_count = ctx
+            .get_state()
+            .get_currently_viewed_item_comments()
+            .map(|comments| comments.len());
         let text_base = vec![
             Spans::from(item_title),
             Spans::from(viewed_item.url_hostname.clone().unwrap_or_default()),
@@ -94,7 +98,11 @@ impl UiComponent for ItemDetails {
                 "{} points by {} {}",
                 viewed_item.score, viewed_item.by_username, viewed_item.posted_since
             )),
-            // TODO: add total comments count if possible
+            Spans::from(if let Some(count) = comments_count {
+                format!("{} comments", count)
+            } else {
+                "".into()
+            }),
         ];
         let text_corpus = Self::build_item_text_spans(self, inside, ctx);
 
