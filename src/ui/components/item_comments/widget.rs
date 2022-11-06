@@ -160,11 +160,21 @@ impl<'a> Widget for ItemCommentsWidget<'a> {
             return;
         };
 
-        // Comment widget
-        let focused_comment = self
-            .comments
-            .get(focused_comment_id)
-            .expect("ItemCommentsWidget can get the expected comment");
+        // Retrieve comment
+        let focused_comment = if let Some(comment) = self.comments.get(focused_comment_id) {
+            comment
+        } else {
+            let prompt = "Error while displaying the comment.";
+            buf.set_string(
+                (area.right() - area.left()) / 2 - prompt.len() as u16 / 2,
+                (area.bottom() - area.top()) / 2,
+                prompt,
+                Style::default().fg(Color::LightRed),
+            );
+            return;
+        };
+
+        // Comment rendering
         let focused_comment_widget = CommentWidget::with_comment(focused_comment);
         focused_comment_widget.render(
             area.inner(&Margin {
