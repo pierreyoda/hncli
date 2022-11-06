@@ -4,6 +4,8 @@ use tui::widgets::ListState;
 
 use crate::api::types::HnItemDateScalar;
 
+pub mod debouncer;
+
 pub trait ItemWithId<N: Copy + Num + Ord> {
     fn get_id(&self) -> N;
 }

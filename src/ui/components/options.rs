@@ -17,6 +17,7 @@ use crate::{
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
         handlers::ApplicationAction,
+        utils::debouncer::Debouncer,
     },
 };
 
@@ -61,22 +62,17 @@ const SORTING_OPTIONS_LIST: [HomeSortingOptions; 3] = [
 /// for the current active component.
 #[derive(Debug)]
 pub struct Options {
-    /// Used to implement basic keyboard 'debouncing'
-    /// between key presses.
-    ///
     /// Reset when pressing another key.
-    ticks_since_last_press: UiTickScalar,
+    keyboard_debouncer: Debouncer,
     /// Index of the currently selected sorting option for
     /// items sorting.
     selected_sorting_index: usize,
 }
 
-const MIN_TICKS_BETWEEN_PRESSES: UiTickScalar = 5; // approx. 500ms
-
 impl Default for Options {
     fn default() -> Self {
         Self {
-            ticks_since_last_press: MIN_TICKS_BETWEEN_PRESSES,
+            keyboard_debouncer: Debouncer::new(10), // approx. 1000ms
             // TODO: load from configuration
             selected_sorting_index: 1,
         }
@@ -92,7 +88,7 @@ impl UiComponent for Options {
     }
 
     fn should_update(&mut self, elapsed_ticks: UiTickScalar, _ctx: &AppContext) -> Result<bool> {
-        self.ticks_since_last_press += elapsed_ticks;
+        self.keyboard_debouncer.tick(elapsed_ticks);
 
         Ok(false)
     }
@@ -102,24 +98,24 @@ impl UiComponent for Options {
     }
 
     fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
-        Ok(
-            if self.ticks_since_last_press >= MIN_TICKS_BETWEEN_PRESSES
-                && ctx
-                    .get_inputs()
-                    .is_active(&ApplicationAction::HomeToggleSortingOption)
-            {
-                self.selected_sorting_index =
-                    (self.selected_sorting_index + 1) % SORTING_OPTIONS_LIST.len();
-                let sorting_type = SORTING_OPTIONS_LIST[self.selected_sorting_index]
-                    .clone()
-                    .try_into()?;
-                ctx.get_state_mut().set_main_stories_sorting(sorting_type);
-                true
-            } else {
-                self.ticks_since_last_press = MIN_TICKS_BETWEEN_PRESSES;
-                false
-            },
-        )
+        if ctx
+            .get_inputs()
+            .is_active(&ApplicationAction::HomeToggleSortingOption)
+        {
+            if !self.keyboard_debouncer.is_action_allowed() {
+                return Ok(false);
+            }
+            self.selected_sorting_index =
+                (self.selected_sorting_index + 1) % SORTING_OPTIONS_LIST.len();
+            let sorting_type = SORTING_OPTIONS_LIST[self.selected_sorting_index]
+                .clone()
+                .try_into()?;
+            ctx.get_state_mut().set_main_stories_sorting(sorting_type);
+            Ok(true)
+        } else {
+            self.keyboard_debouncer.reset();
+            Ok(false)
+        }
     }
 
     fn render(
