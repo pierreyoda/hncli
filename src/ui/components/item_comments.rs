@@ -203,10 +203,20 @@ impl UiComponent for ItemComments {
             } else {
                 return Ok(());
             };
+
+        let viewed_comment = if let Some(comment_id) = self.widget_state.get_focused_comment_id() {
+            viewed_item_comments.get(&comment_id)
+        } else {
+            None
+        };
+        let viewed_comment_kids_count = viewed_comment.map_or(0, |comment| {
+            comment.kids.as_ref().map_or(0, |kids| kids.len())
+        });
         let widget = ItemCommentsWidget::with_comments(
             self.viewed_item_id,
             &self.viewed_item_kids,
             viewed_item_comments,
+            viewed_comment_kids_count,
             &self.widget_state,
         );
         f.render_widget(widget, inside);

@@ -118,6 +118,8 @@ pub struct ItemCommentsWidget<'a> {
     comments: &'a DisplayableHackerNewsItemComments,
     /// Number of main-level comments.
     main_comments_count: usize,
+    /// Number of sub-level comments.
+    sub_comments_count: usize,
 }
 
 impl<'a> ItemCommentsWidget<'a> {
@@ -125,12 +127,14 @@ impl<'a> ItemCommentsWidget<'a> {
         parent_id: HnItemIdScalar,
         parent_kids: &'a [HnItemIdScalar],
         comments: &'a DisplayableHackerNewsItemComments,
+        sub_comments_count: usize,
         state: &'a ItemCommentsWidgetState,
     ) -> Self {
         Self {
             state,
             comments,
             parent_kids,
+            sub_comments_count,
             main_comments_count: comments
                 .values()
                 .filter(|comment| comment.parent == Some(parent_id))
@@ -182,14 +186,24 @@ impl<'a> Widget for ItemCommentsWidget<'a> {
             area.width,
             FOOTER_HEIGHT,
         );
-        buf.set_string(
-            (footer_area.right() - footer_area.left()) / 2,
-            footer_area.y,
+        let footer_text = if self.sub_comments_count > 0 {
+            format!(
+                "Comment {} / {} | {} sub-comments",
+                focused_comment_index + 1,
+                self.main_comments_count,
+                self.sub_comments_count
+            )
+        } else {
             format!(
                 "Comment {} / {}",
                 focused_comment_index + 1,
                 self.main_comments_count
-            ),
+            )
+        };
+        buf.set_string(
+            (footer_area.right() - footer_area.left()) / 2 - footer_text.len() as u16 / 2,
+            footer_area.y,
+            footer_text,
             Style::default().fg(Color::LightBlue),
         )
     }
