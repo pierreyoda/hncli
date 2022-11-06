@@ -28,7 +28,8 @@ use crate::{
 
 use self::{
     components::{
-        item_comments::ItemComments, item_details::ItemDetails, search::Search, settings::Settings,
+        item_comments::ItemComments, item_details::ItemDetails, item_summary::ItemSummary,
+        search::Search, settings::Settings,
     },
     handlers::ApplicationAction,
     helper::ContextualHelper,
@@ -126,6 +127,7 @@ impl UserInterface {
         self.register_component(Search::default());
         self.register_component(StoriesPanel::default());
         self.register_component(ItemDetails::default());
+        self.register_component(ItemSummary::default());
         self.register_component(ItemComments::default());
         self.register_component(Options::default());
 

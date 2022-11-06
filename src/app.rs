@@ -8,7 +8,7 @@ use crate::{
     config::AppConfiguration,
     ui::{
         common::UiComponentId,
-        displayable_item::DisplayableHackerNewsItem,
+        displayable_item::{DisplayableHackerNewsItem, DisplayableHackerNewsItemComments},
         handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
         screens::{Screen, ScreenComponentsRegistry, ScreenEventResponse},
@@ -104,8 +104,10 @@ pub struct AppState {
     main_stories_sorting: HnStoriesSorting,
     /// Main screen(s): search query if in search mode.
     main_search_mode_query: Option<String>,
-    /// The currently viewed item (Story or Job posting).
+    /// The currently viewed item.
     currently_viewed_item: Option<DisplayableHackerNewsItem>,
+    /// The comments of the currently viewed item, if applicable.
+    currently_viewed_item_comments: Option<DisplayableHackerNewsItemComments>,
     /// Item details screen: is the comments panel visible or not.
     item_page_display_comments_panel: bool,
 }
@@ -119,6 +121,7 @@ impl AppState {
             main_stories_sorting: HnStoriesSorting::Top,
             main_search_mode_query: None,
             currently_viewed_item: None,
+            currently_viewed_item_comments: None,
             item_page_display_comments_panel: config.get_display_comments_panel_by_default(),
         }
     }
@@ -130,10 +133,12 @@ impl AppState {
         self.latest_interacted_with_component.as_ref()
     }
 
+    /// Get the are the main stories loading boolean.
     pub fn get_main_stories_loading(&self) -> bool {
         self.main_stories_loading
     }
 
+    /// Set the are the main stories loading boolean.
     pub fn set_main_stories_loading(&mut self, loading: bool) {
         self.main_stories_loading = loading;
     }
@@ -168,14 +173,27 @@ impl AppState {
         self.main_search_mode_query = query;
     }
 
-    /// Get the currently viewed story/job item.
-    pub fn get_currently_viewed_item(&self) -> &Option<DisplayableHackerNewsItem> {
-        &self.currently_viewed_item
+    /// Get the currently viewed item.
+    pub fn get_currently_viewed_item(&self) -> Option<&DisplayableHackerNewsItem> {
+        self.currently_viewed_item.as_ref()
     }
 
-    /// Set the currently viewed story/job item.
+    /// Set the currently viewed item.
     pub fn set_currently_viewed_item(&mut self, viewed: Option<DisplayableHackerNewsItem>) {
         self.currently_viewed_item = viewed;
+    }
+
+    /// Get the comments of the currently viewed item.
+    pub fn get_currently_viewed_item_comments(&self) -> Option<&DisplayableHackerNewsItemComments> {
+        self.currently_viewed_item_comments.as_ref()
+    }
+
+    /// Set the comments of the currently viewed item.
+    pub fn set_currently_viewed_item_comments(
+        &mut self,
+        comments: Option<DisplayableHackerNewsItemComments>,
+    ) {
+        self.currently_viewed_item_comments = comments;
     }
 
     /// Get the is comments panel visible on item details screen boolean.

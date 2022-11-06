@@ -16,7 +16,7 @@ use crate::{
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
         components::common::COMMON_BLOCK_NORMAL_COLOR,
-        displayable_item::{DisplayableHackerNewsItem, DisplayableHackerNewsItemComments},
+        displayable_item::DisplayableHackerNewsItem,
         handlers::ApplicationAction,
     },
 };
@@ -32,11 +32,9 @@ pub struct ItemComments {
     ticks_since_last_update: u64,
     initial_loading: bool,
     loading: bool,
-    viewable_comments: bool,
     viewed_item_id: HnItemIdScalar,
     viewed_item_kids: Vec<HnItemIdScalar>,
     previous_viewed_item_id: HnItemIdScalar,
-    comments: DisplayableHackerNewsItemComments,
     widget_state: ItemCommentsWidgetState,
 }
 
@@ -46,11 +44,9 @@ impl Default for ItemComments {
             ticks_since_last_update: 0,
             initial_loading: true,
             loading: true,
-            viewable_comments: false,
             viewed_item_id: 0,
             viewed_item_kids: vec![],
             previous_viewed_item_id: 0,
-            comments: DisplayableHackerNewsItemComments::new(),
             widget_state: ItemCommentsWidgetState::default(),
         }
     }
@@ -66,38 +62,48 @@ impl UiComponent for ItemComments {
         ITEM_COMMENTS_ID
     }
 
-    fn should_update(&mut self, elapsed_ticks: UiTickScalar, _ctx: &AppContext) -> Result<bool> {
+    fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
         // TODO: should also update when comments are dirty
         self.ticks_since_last_update += elapsed_ticks;
-        Ok(self.initial_loading || self.ticks_since_last_update >= MEAN_TICKS_BETWEEN_UPDATES)
+        Ok(self.initial_loading
+            || self.ticks_since_last_update >= MEAN_TICKS_BETWEEN_UPDATES
+            || ctx
+                .get_state()
+                .get_currently_viewed_item()
+                .map(|item| item.id)
+                != Some(self.viewed_item_id))
     }
 
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
         self.loading = true;
         self.ticks_since_last_update = 0;
-        self.viewable_comments = false;
         self.previous_viewed_item_id = self.viewed_item_id;
 
+        // Viewed item handling
         let viewed_item = match ctx.get_state().get_currently_viewed_item() {
             Some(item) => item,
             None => return Ok(()),
         };
         self.viewed_item_id = viewed_item.id;
-        let viewed_item_kids = match &viewed_item.kids {
-            Some(kids) => kids,
+        self.viewed_item_kids = match &viewed_item.kids {
+            Some(kids) => kids.clone(),
             None => return Ok(()),
         };
-        self.viewed_item_kids = viewed_item_kids.clone();
 
-        let comments_raw = client.get_item_comments(viewed_item_kids).await?;
-        self.comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
-        self.viewable_comments = true;
+        // Comments fetching
+        let comments_raw = client.get_item_comments(&self.viewed_item_kids).await?;
+        let comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
+        ctx.get_state_mut()
+            .set_currently_viewed_item_comments(Some(comments));
+
         self.initial_loading = false;
         self.loading = false;
 
         // Widget state
         self.widget_state.update(
-            &self.comments,
+            ctx.get_state()
+                .get_currently_viewed_item_comments()
+                .expect("comments should be saved in the global state"),
             self.viewed_item_id,
             self.previous_viewed_item_id,
             &self.viewed_item_kids,
@@ -135,29 +141,29 @@ impl UiComponent for ItemComments {
             return Self::render_text_message(f, inside, "Loading...");
         }
 
-        // No comments available case
-        if !self.viewable_comments {
-            return Self::render_text_message(f, inside, "No comments available.");
-        }
-
         // Invalid viewed item case
-        let viewed_item = if let Some(item) = ctx.get_state().get_currently_viewed_item() {
-            item
-        } else {
-            return Self::render_text_message(f, inside, "Cannot display comments for this item.");
+        match ctx.get_state().get_currently_viewed_item() {
+            Some(viewed_item) if viewed_item.can_have_comments() => (),
+            _ => {
+                return Self::render_text_message(
+                    f,
+                    inside,
+                    "Cannot display comments for this item.",
+                )
+            }
         };
 
         // No comments case
-        let viewed_item_kids = if let Some(kids) = &viewed_item.kids {
-            kids.as_slice()
-        } else {
+        if self.viewed_item_kids.is_empty() {
             return Self::render_text_message(f, inside, "No comments yet.");
-        };
+        }
 
         // General case
         let widget = ItemCommentsWidget::with_comments(
             &self.viewed_item_kids,
-            &self.comments,
+            ctx.get_state()
+                .get_currently_viewed_item_comments()
+                .expect("comments should be saved in the global context"),
             &self.widget_state,
         );
         f.render_widget(widget, inside);

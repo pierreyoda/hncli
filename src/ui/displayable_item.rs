@@ -49,6 +49,10 @@ pub struct DisplayableHackerNewsItem {
 const MINUTES_PER_DAY: i64 = 24 * 60;
 
 impl DisplayableHackerNewsItem {
+    pub fn can_have_comments(&self) -> bool {
+        self.kids.is_some()
+    }
+
     pub fn get_hacker_news_link(&self) -> String {
         format!("https://news.ycombinator.com/item?id={}", self.id)
     }

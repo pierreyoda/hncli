@@ -2,6 +2,7 @@ pub mod common;
 pub mod help;
 pub mod item_comments;
 pub mod item_details;
+pub mod item_summary;
 pub mod navigation;
 pub mod options;
 pub mod search;

@@ -1,4 +1,4 @@
-use std::{io::Stdout, vec};
+use std::io::Stdout;
 
 use async_trait::async_trait;
 use tui::{
@@ -10,17 +10,15 @@ use tui::{
 };
 
 use crate::{
-    api::HnClient,
+    api::{types::HnItemIdScalar, HnClient},
     app::AppContext,
     errors::Result,
-    ui::{
-        common::{UiComponent, UiComponentId, UiTickScalar},
-        components::common::COMMON_BLOCK_NORMAL_COLOR,
-        utils::html_to_plain_text,
-    },
+    ui::common::{UiComponent, UiComponentId, UiTickScalar},
 };
 
-/// Item details component.
+use super::common::COMMON_BLOCK_NORMAL_COLOR;
+
+/// Item summary component, intended for when navigating sub-comments.
 ///
 /// Does not do any fetching, everything is pre-cached.
 ///
@@ -28,28 +26,26 @@ use crate::{
 /// ___________________________________________
 /// |                                         |
 /// |                <TITLE>                  |
-/// |            <URL HOSTNAME?>              |
 /// |      <SCORE> POINTS / BY <USERNAME>     |
-/// |   <#COMMENTS COUNT>  / POSTED <X> AGO   |
 /// |_________________________________________|
 /// ```
 #[derive(Debug, Default)]
-pub struct ItemDetails {
-    text: Option<String>,
+pub struct ItemSummary {
+    id: Option<HnItemIdScalar>,
 }
 
-pub const ITEM_DETAILS_ID: UiComponentId = "item_details";
+pub const ITEM_SUMMARY_ID: UiComponentId = "item_summary";
 
 #[async_trait]
-impl UiComponent for ItemDetails {
+impl UiComponent for ItemSummary {
     fn id(&self) -> UiComponentId {
-        ITEM_DETAILS_ID
+        ITEM_SUMMARY_ID
     }
 
     fn should_update(&mut self, _elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
         Ok(
             if let Some(item) = ctx.get_state().get_currently_viewed_item() {
-                item.text != self.text
+                Some(item.id) != self.id
             } else {
                 false
             },
@@ -57,11 +53,10 @@ impl UiComponent for ItemDetails {
     }
 
     async fn update(&mut self, _client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
-        self.text = if let Some(item) = ctx.get_state().get_currently_viewed_item() {
-            item.text.clone()
-        } else {
-            None
-        };
+        self.id = ctx
+            .get_state()
+            .get_currently_viewed_item()
+            .map(|item| item.id);
         Ok(())
     }
 
@@ -88,43 +83,18 @@ impl UiComponent for ItemDetails {
 
         let item_title = viewed_item.title.clone().unwrap_or_else(|| "".into());
         let text_base = vec![
-            Spans::from(item_title),
-            Spans::from(viewed_item.url_hostname.clone().unwrap_or_default()),
+            Spans::from(item_title.as_str()),
             Spans::from(format!(
                 "{} points by {} {}",
                 viewed_item.score, viewed_item.by_username, viewed_item.posted_since
             )),
-            // TODO: add total comments count if possible
         ];
-        let text_corpus = Self::build_item_text_spans(self, inside, ctx);
 
-        let paragraph = Paragraph::new([text_base, text_corpus].concat())
+        let paragraph = Paragraph::new(text_base)
             .block(block)
             .alignment(Alignment::Center);
         f.render_widget(paragraph, inside);
 
         Ok(())
-    }
-}
-
-impl ItemDetails {
-    fn build_item_text_spans(&self, inside: Rect, ctx: &AppContext) -> Vec<Spans> {
-        if let Some(ref corpus) = self.text {
-            if ctx
-                .get_state()
-                .get_item_page_should_display_comments_panel()
-            {
-                vec![]
-            } else {
-                let rendered = html_to_plain_text(corpus.as_str(), inside.width as usize);
-                let spans = rendered
-                    .split('\n')
-                    .map(|line| Spans::from(line.to_string()))
-                    .collect();
-                [vec![Spans::from(""), Spans::from("")], spans].concat()
-            }
-        } else {
-            vec![]
-        }
     }
 }
