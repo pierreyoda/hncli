@@ -85,7 +85,8 @@ impl UiComponent for ItemSummary {
             Spans::from(format!("Parent comment by: {}", viewed_item.by_username)),
             Spans::from(format!(
                 "Sub-comment level: {}",
-                ctx.get_state().get_currently_viewed_sub_comment_depth()
+                ctx.get_state()
+                    .get_currently_viewed_item_comments_chain_count()
             )),
         ];
 

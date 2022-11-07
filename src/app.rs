@@ -4,7 +4,7 @@ use crossterm::event::KeyEvent;
 use tui::layout::Rect;
 
 use crate::{
-    api::{HnStoriesSections, HnStoriesSorting},
+    api::{types::HnItemIdScalar, HnStoriesSections, HnStoriesSorting},
     config::AppConfiguration,
     ui::{
         common::UiComponentId,
@@ -108,8 +108,8 @@ pub struct AppState {
     currently_viewed_item: Option<DisplayableHackerNewsItem>,
     /// The comments of the currently viewed item, if applicable.
     currently_viewed_item_comments: Option<DisplayableHackerNewsItemComments>,
-    /// The depth of the currently viewed sub-comment. Starts at 0.
-    currently_viewed_sub_comment_depth: usize,
+    /// The successive IDs of the viewed comment, starting at the root parent comment.
+    currently_viewed_item_comments_chain: Vec<HnItemIdScalar>,
     /// Item details screen: is the comments panel visible or not.
     item_page_display_comments_panel: bool,
 }
@@ -124,7 +124,7 @@ impl AppState {
             main_search_mode_query: None,
             currently_viewed_item: None,
             currently_viewed_item_comments: None,
-            currently_viewed_sub_comment_depth: 0,
+            currently_viewed_item_comments_chain: vec![],
             item_page_display_comments_panel: config.get_display_comments_panel_by_default(),
         }
     }
@@ -199,20 +199,37 @@ impl AppState {
         self.currently_viewed_item_comments = comments;
     }
 
-    /// Get the depth of the currently viewed sub-comment.
-    pub fn get_currently_viewed_sub_comment_depth(&self) -> usize {
-        self.currently_viewed_sub_comment_depth
+    /// Reset the successively viewed comments for the currently viewed item.
+    pub fn reset_currently_viewed_item_comments_chain(&mut self) {
+        self.currently_viewed_item_comments_chain.clear();
     }
 
-    /// Increase the depth of the currently viewed sub-comment.
-    pub fn increase_currently_viewed_sub_comment_depth(&mut self) {
-        self.currently_viewed_sub_comment_depth += 1;
+    /// Get the amount of successively viewed comments for the currently viewed item.
+    // TODO: fix incorrect count in some cases
+    pub fn get_currently_viewed_item_comments_chain_count(&self) -> usize {
+        self.currently_viewed_item_comments_chain.len()
     }
 
-    /// Decrease the depth of the currently viewed sub-comment.
-    pub fn decrease_currently_viewed_sub_comment_depth(&mut self) {
-        if self.currently_viewed_sub_comment_depth > 0 {
-            self.currently_viewed_sub_comment_depth -= 1;
+    /// Push a new comment ID to the successively viewed comments for the currently viewed item.
+    pub fn push_currently_viewed_item_comments_chain(&mut self, comment_id: HnItemIdScalar) {
+        match self.currently_viewed_item_comments_chain.last() {
+            Some(latest_comment_id) if latest_comment_id != &comment_id => {
+                self.currently_viewed_item_comments_chain.push(comment_id)
+            }
+            None if self.currently_viewed_item_comments_chain.is_empty() => {
+                self.currently_viewed_item_comments_chain.push(comment_id)
+            }
+            _ => (),
+        };
+    }
+
+    /// Pop the latest comment ID from the successively viewed comments for the currently viewed item.
+    pub fn pop_currently_viewed_item_comments_chain(&mut self, comment_id: HnItemIdScalar) {
+        match self.currently_viewed_item_comments_chain.last() {
+            Some(latest_comment_id) if latest_comment_id == &comment_id => {
+                self.currently_viewed_item_comments_chain.pop();
+            }
+            _ => (),
         }
     }
 

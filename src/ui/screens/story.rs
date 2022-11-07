@@ -42,6 +42,7 @@ impl Screen for StoryDetailsScreen {
     fn before_mount(&mut self, state: &mut AppState, config: &AppConfiguration) {
         state.set_currently_viewed_item(Some(self.item.clone()));
         state.set_currently_viewed_item_comments(None);
+        state.reset_currently_viewed_item_comments_chain();
         if state
             .get_currently_viewed_item()
             .as_ref()

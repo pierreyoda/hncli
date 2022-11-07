@@ -1,7 +1,6 @@
 use std::io::Stdout;
 
 use async_trait::async_trait;
-use log::info;
 use tui::{
     backend::CrosstermBackend,
     layout::{Alignment, Rect},
@@ -81,7 +80,6 @@ impl UiComponent for ItemComments {
                 != Some(self.viewed_item_id))
     }
 
-    // TODO: fix bug when the currently focused comment resets without any user input
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
         self.loading = true;
         self.ticks_since_last_update = 0;
@@ -124,6 +122,12 @@ impl UiComponent for ItemComments {
                 .restore_focused_comment_id(comment_id, &self.viewed_item_kids);
         }
 
+        // Comments chain update
+        if let Some(focused_comment_id) = self.widget_state.get_focused_comment_id() {
+            ctx.get_state_mut()
+                .push_currently_viewed_item_comments_chain(focused_comment_id);
+        }
+
         Ok(())
     }
 
@@ -152,7 +156,8 @@ impl UiComponent for ItemComments {
                 .get_currently_viewed_item_comments()
                 .expect("comments should be cached in the global state")
                 .get(&focused_comment_id)
-                .expect("comment should be present in the global state");
+                .expect("comment should be present in the global state")
+                .clone();
             if focused_comment
                 .kids
                 .as_ref()
@@ -161,7 +166,9 @@ impl UiComponent for ItemComments {
                 return Ok(false);
             }
             self.latest_focused_comment_id = self.widget_state.get_focused_comment_id();
-            ctx.router_push_navigation_stack(AppRoute::ItemSubComments(focused_comment.clone()));
+            ctx.get_state_mut()
+                .pop_currently_viewed_item_comments_chain(focused_comment.id);
+            ctx.router_push_navigation_stack(AppRoute::ItemSubComments(focused_comment));
             true
         } else {
             false
