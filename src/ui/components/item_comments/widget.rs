@@ -22,15 +22,9 @@ impl ItemCommentsWidgetState {
     pub fn update(
         &mut self,
         comments: &DisplayableHackerNewsItemComments,
-        parent_item_id: HnItemIdScalar,
-        previous_parent_item_id: HnItemIdScalar,
         parent_item_kids: &[HnItemIdScalar],
     ) {
-        if parent_item_id == previous_parent_item_id {
-            self.reconciliate_focused_comment(comments, parent_item_kids);
-        } else {
-            self.reset_focused_comment(parent_item_kids);
-        }
+        self.reconciliate_focused_comment(comments, parent_item_kids);
     }
 
     pub fn previous_main_comment(&mut self, parent_item_kids: &[HnItemIdScalar]) {
@@ -82,7 +76,7 @@ impl ItemCommentsWidgetState {
     }
 
     /// Reconciliate the currently focused main-level comment when replacing
-    /// the comments of an already viewed HackerNews item.
+    /// the comments of a currently viewed HackerNews item.
     fn reconciliate_focused_comment(
         &mut self,
         comments: &DisplayableHackerNewsItemComments,

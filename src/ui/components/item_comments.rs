@@ -1,6 +1,7 @@
 use std::io::Stdout;
 
 use async_trait::async_trait;
+use log::info;
 use tui::{
     backend::CrosstermBackend,
     layout::{Alignment, Rect},
@@ -37,7 +38,6 @@ pub struct ItemComments {
     loading: bool,
     viewed_item_id: HnItemIdScalar,
     viewed_item_kids: Vec<HnItemIdScalar>,
-    previous_viewed_item_id: HnItemIdScalar,
     latest_focused_comment_id: Option<HnItemIdScalar>,
     widget_state: ItemCommentsWidgetState,
 }
@@ -51,7 +51,6 @@ impl Default for ItemComments {
             loading: true,
             viewed_item_id: 0,
             viewed_item_kids: vec![],
-            previous_viewed_item_id: 0,
             latest_focused_comment_id: None,
             widget_state: ItemCommentsWidgetState::default(),
         }
@@ -86,7 +85,6 @@ impl UiComponent for ItemComments {
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
         self.loading = true;
         self.ticks_since_last_update = 0;
-        self.previous_viewed_item_id = self.viewed_item_id;
 
         ctx.get_state_mut().set_currently_viewed_item_comments(None);
 
@@ -117,12 +115,8 @@ impl UiComponent for ItemComments {
             } else {
                 return Ok(());
             };
-        self.widget_state.update(
-            viewed_item_comments,
-            self.viewed_item_id,
-            self.previous_viewed_item_id,
-            &self.viewed_item_kids,
-        );
+        self.widget_state
+            .update(viewed_item_comments, &self.viewed_item_kids);
 
         // Latest focused comment, if applicable
         if let Some(comment_id) = self.latest_focused_comment_id {
