@@ -19,6 +19,7 @@ use crate::{
         displayable_item::DisplayableHackerNewsItem,
         handlers::ApplicationAction,
         router::AppRoute,
+        utils::debouncer::Debouncer,
     },
 };
 
@@ -31,6 +32,7 @@ mod widget;
 #[derive(Debug)]
 pub struct ItemComments {
     ticks_since_last_update: u64,
+    inputs_debouncer: Debouncer,
     initial_loading: bool,
     loading: bool,
     viewed_item_id: HnItemIdScalar,
@@ -44,6 +46,7 @@ impl Default for ItemComments {
     fn default() -> Self {
         Self {
             ticks_since_last_update: 0,
+            inputs_debouncer: Debouncer::new(5), // approx. 500ms
             initial_loading: true,
             loading: true,
             viewed_item_id: 0,
@@ -66,8 +69,10 @@ impl UiComponent for ItemComments {
     }
 
     fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
-        // TODO: should also update when comments are dirty
         self.ticks_since_last_update += elapsed_ticks;
+        self.inputs_debouncer.tick(elapsed_ticks);
+
+        // TODO: should also update when comments are dirty?
         Ok(self.initial_loading
             || self.ticks_since_last_update >= MEAN_TICKS_BETWEEN_UPDATES
             || ctx
@@ -77,6 +82,7 @@ impl UiComponent for ItemComments {
                 != Some(self.viewed_item_id))
     }
 
+    // TODO: fix bug when the currently focused comment resets without any user input
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
         self.loading = true;
         self.ticks_since_last_update = 0;
@@ -128,7 +134,7 @@ impl UiComponent for ItemComments {
     }
 
     fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
-        if self.initial_loading || self.loading {
+        if self.initial_loading || self.loading || !self.inputs_debouncer.is_action_allowed() {
             return Ok(false);
         }
 

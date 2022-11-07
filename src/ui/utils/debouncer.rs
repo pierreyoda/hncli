@@ -26,7 +26,11 @@ impl Debouncer {
         self.elapsed_ticks += elapsed_ticks;
     }
 
-    pub fn is_action_allowed(&self) -> bool {
-        self.elapsed_ticks >= self.throttling_min_time
+    pub fn is_action_allowed(&mut self) -> bool {
+        let allowed = self.elapsed_ticks >= self.throttling_min_time;
+        if allowed {
+            self.reset();
+        }
+        allowed
     }
 }
