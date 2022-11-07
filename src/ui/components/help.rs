@@ -95,6 +95,8 @@ impl Help {
             Spans::from(""),
             Spans::from("Toggle comments with 'tab'."),
             Spans::from(""),
+            Spans::from("Navigate comments with the up and down arrow keys, and focus a comment with the 'enter' key."),
+            Spans::from(""),
             Spans::from("Go back with 'escape'."),
             Spans::from(""),
             Spans::from(""),
