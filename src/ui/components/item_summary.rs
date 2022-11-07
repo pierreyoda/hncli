@@ -25,8 +25,8 @@ use super::common::COMMON_BLOCK_NORMAL_COLOR;
 /// ```md
 /// ___________________________________________
 /// |                                         |
-/// |                <TITLE>                  |
-/// |      <SCORE> POINTS / BY <USERNAME>     |
+/// |         <PARENT COMMENT USERNAME>       |
+/// |           <SUB-COMMENTS LEVEL>          |
 /// |_________________________________________|
 /// ```
 #[derive(Debug, Default)]
@@ -81,12 +81,11 @@ impl UiComponent for ItemSummary {
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded);
 
-        let item_title = viewed_item.title.clone().unwrap_or_else(|| "".into());
         let text_base = vec![
-            Spans::from(item_title.as_str()),
+            Spans::from(format!("Parent comment by: {}", viewed_item.by_username)),
             Spans::from(format!(
-                "{} points by {} {}",
-                viewed_item.score, viewed_item.by_username, viewed_item.posted_since
+                "Sub-comment level: {}",
+                ctx.get_state().get_currently_viewed_sub_comment_depth()
             )),
         ];
 

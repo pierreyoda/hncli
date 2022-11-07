@@ -28,6 +28,7 @@ impl SubCommentsScreen {
 
 impl Screen for SubCommentsScreen {
     fn before_mount(&mut self, state: &mut AppState, _config: &AppConfiguration) {
+        state.increase_currently_viewed_sub_comment_depth();
         state.set_currently_viewed_item(Some(self.parent_comment.clone()));
     }
 
@@ -35,9 +36,11 @@ impl Screen for SubCommentsScreen {
         &mut self,
         inputs: &InputsController,
         router: &mut AppRouter,
-        _state: &mut AppState,
+        state: &mut AppState,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
         if inputs.is_active(&ApplicationAction::Back) {
+            // TODO: fix bug when count is not decreasing properly
+            state.decrease_currently_viewed_sub_comment_depth();
             router.pop_navigation_stack();
             (
                 ScreenEventResponse::Caught,

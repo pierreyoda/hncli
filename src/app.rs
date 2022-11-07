@@ -108,6 +108,8 @@ pub struct AppState {
     currently_viewed_item: Option<DisplayableHackerNewsItem>,
     /// The comments of the currently viewed item, if applicable.
     currently_viewed_item_comments: Option<DisplayableHackerNewsItemComments>,
+    /// The depth of the currently viewed sub-comment. Starts at 0.
+    currently_viewed_sub_comment_depth: usize,
     /// Item details screen: is the comments panel visible or not.
     item_page_display_comments_panel: bool,
 }
@@ -122,6 +124,7 @@ impl AppState {
             main_search_mode_query: None,
             currently_viewed_item: None,
             currently_viewed_item_comments: None,
+            currently_viewed_sub_comment_depth: 0,
             item_page_display_comments_panel: config.get_display_comments_panel_by_default(),
         }
     }
@@ -194,6 +197,23 @@ impl AppState {
         comments: Option<DisplayableHackerNewsItemComments>,
     ) {
         self.currently_viewed_item_comments = comments;
+    }
+
+    /// Get the depth of the currently viewed sub-comment.
+    pub fn get_currently_viewed_sub_comment_depth(&self) -> usize {
+        self.currently_viewed_sub_comment_depth
+    }
+
+    /// Increase the depth of the currently viewed sub-comment.
+    pub fn increase_currently_viewed_sub_comment_depth(&mut self) {
+        self.currently_viewed_sub_comment_depth += 1;
+    }
+
+    /// Decrease the depth of the currently viewed sub-comment.
+    pub fn decrease_currently_viewed_sub_comment_depth(&mut self) {
+        if self.currently_viewed_sub_comment_depth > 0 {
+            self.currently_viewed_sub_comment_depth -= 1;
+        }
     }
 
     /// Get the is comments panel visible on item details screen boolean.
