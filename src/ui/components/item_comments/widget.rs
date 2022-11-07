@@ -144,7 +144,7 @@ impl<'a> ItemCommentsWidget<'a> {
 }
 
 pub const PADDING: u16 = 2;
-pub const FOOTER_HEIGHT: u16 = 5;
+pub const FOOTER_HEIGHT: u16 = 1;
 
 impl<'a> Widget for ItemCommentsWidget<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {

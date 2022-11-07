@@ -11,6 +11,7 @@ use tui::{
 use crate::app::AppState;
 
 use super::{
+    components::help::Help,
     displayable_item::DisplayableHackerNewsItem,
     handlers::{InputsController, Key},
     router::AppRoute,
@@ -63,13 +64,13 @@ impl ContextualHelper {
         app_inputs: &InputsController,
     ) {
         match for_route {
-            AppRoute::Home(_) => self.render_home_page_help(f, inside, app_state, app_inputs),
+            AppRoute::Home(_) => self.render_home_page_help(f, inside, app_inputs),
             AppRoute::ItemDetails(item) => {
                 self.render_item_page_help(f, inside, app_state, app_inputs, item)
             }
-            AppRoute::ItemSubComments(_parent_comment) => (), // TODO:
-            AppRoute::Settings => self.render_settings_page_help(f, inside, app_state, app_inputs),
-            AppRoute::Help => self.render_help_page_help(f, inside, app_state, app_inputs),
+            AppRoute::ItemSubComments(_) => self.render_comments_page_help(f, inside),
+            AppRoute::Settings => self.render_settings_page_help(f, inside),
+            AppRoute::Help => self.render_help_page_help(f, inside),
         }
     }
 
@@ -78,7 +79,6 @@ impl ContextualHelper {
         &self,
         f: &mut Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
-        _app_state: &AppState,
         app_inputs: &InputsController,
     ) {
         let widgets = vec![
@@ -113,52 +113,59 @@ impl ContextualHelper {
             .as_ref()
             .map_or(false, |item| item.is_job);
         let display_comments_panel = app_state.get_item_page_should_display_comments_panel();
-        let widget_toggle_comments = HelpWidget::KeyReminder(
-            '💬',
-            (if display_comments_panel {
-                "hide comments"
+
+        let mut widgets = vec![];
+
+        // open link widget
+        if let Some(ref hostname) = item.url_hostname {
+            widgets.push(if app_inputs.has_shift_modifier() {
+                widget_open_hn_link
             } else {
-                "show comments"
-            })
-            .into(),
-            Key::Tab,
-        );
-        let widget_go_back = HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape);
-        let widgets = if let Some(ref hostname) = item.url_hostname {
-            vec![
-                if app_inputs.has_shift_modifier() {
-                    widget_open_hn_link
-                } else {
-                    HelpWidget::KeyReminder('🌐', format!("open {}", hostname), Key::Char('o'))
-                },
-                if has_widget_toggle_comments {
-                    widget_toggle_comments
-                } else {
-                    HelpWidget::Empty
-                },
-                widget_go_back,
-            ]
+                HelpWidget::KeyReminder('🌐', format!("open {}", hostname), Key::Char('o'))
+            });
         } else {
-            vec![
-                widget_open_hn_link,
-                if has_widget_toggle_comments {
-                    widget_toggle_comments
+            widgets.push(widget_open_hn_link);
+        }
+
+        // toggle comments widget
+        if has_widget_toggle_comments {
+            widgets.push(HelpWidget::KeyReminder(
+                '💬',
+                (if display_comments_panel {
+                    "hide comments"
                 } else {
-                    HelpWidget::Empty
-                },
-                widget_go_back,
-            ]
-        };
+                    "show comments"
+                })
+                .into(),
+                Key::Tab,
+            ));
+        }
+
+        // focus comment widget, if applicable
+        if display_comments_panel {
+            widgets.push(HelpWidget::KeyReminder(
+                '🎯',
+                "focus comment".into(),
+                Key::Enter,
+            ));
+        }
+
+        // go back widget
+        widgets.push(HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape));
+
         Self::render_widgets(f, inside, widgets.as_ref());
     }
 
-    fn render_settings_page_help(
-        &self,
-        f: &mut Frame<CrosstermBackend<Stdout>>,
-        inside: Rect,
-        _app_state: &AppState,
-        _app_inputs: &InputsController,
-    ) {
+    fn render_comments_page_help(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
+        let widget_focus_sub_comments =
+            HelpWidget::KeyReminder('💬', "view sub-comment(s)".into(), Key::Enter);
+        let widget_go_back = HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape);
+
+        let widgets = vec![widget_focus_sub_comments, widget_go_back];
+        Self::render_widgets(f, inside, &widgets);
+    }
+
+    fn render_settings_page_help(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
         let widgets = vec![
             HelpWidget::Text("⬆️  / i or ⬇️  / k to navigate".into()),
             HelpWidget::KeyReminder('✅', "toggle the setting".into(), Key::Tab),
@@ -167,13 +174,7 @@ impl ContextualHelper {
         Self::render_widgets(f, inside, widgets.as_ref());
     }
 
-    fn render_help_page_help(
-        &self,
-        f: &mut Frame<CrosstermBackend<Stdout>>,
-        inside: Rect,
-        _app_state: &AppState,
-        _app_inputs: &InputsController,
-    ) {
+    fn render_help_page_help(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
         let widgets = vec![
             HelpWidget::KeyReminder('💡', "toggle help".into(), Key::Char('h')),
             HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape),
