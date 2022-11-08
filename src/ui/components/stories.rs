@@ -186,6 +186,7 @@ impl UiComponent for StoriesPanel {
                         && ctx.get_state().get_latest_interacted_with_component()
                             == Some(&STORIES_PANEL_ID) =>
                 {
+                    // TODO: fix bug where first entry on initial screen cannot be selected
                     let items = self.list_state.get_items();
                     let selected_item = &items[selected_index];
                     ctx.get_state_mut()

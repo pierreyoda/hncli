@@ -205,7 +205,6 @@ impl AppState {
     }
 
     /// Get the amount of successively viewed comments for the currently viewed item.
-    // TODO: fix incorrect count in some cases
     pub fn get_currently_viewed_item_comments_chain_count(&self) -> usize {
         self.currently_viewed_item_comments_chain.len()
     }
@@ -224,13 +223,8 @@ impl AppState {
     }
 
     /// Pop the latest comment ID from the successively viewed comments for the currently viewed item.
-    pub fn pop_currently_viewed_item_comments_chain(&mut self, comment_id: HnItemIdScalar) {
-        match self.currently_viewed_item_comments_chain.last() {
-            Some(latest_comment_id) if latest_comment_id == &comment_id => {
-                self.currently_viewed_item_comments_chain.pop();
-            }
-            _ => (),
-        }
+    pub fn pop_currently_viewed_item_comments_chain(&mut self) {
+        self.currently_viewed_item_comments_chain.pop();
     }
 
     /// Get the is comments panel visible on item details screen boolean.

@@ -166,8 +166,6 @@ impl UiComponent for ItemComments {
                 return Ok(false);
             }
             self.latest_focused_comment_id = self.widget_state.get_focused_comment_id();
-            ctx.get_state_mut()
-                .pop_currently_viewed_item_comments_chain(focused_comment.id);
             ctx.router_push_navigation_stack(AppRoute::ItemSubComments(focused_comment));
             true
         } else {

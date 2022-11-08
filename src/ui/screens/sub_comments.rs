@@ -16,19 +16,19 @@ use super::{Screen, ScreenComponentsRegistry, ScreenEventResponse};
 /// Screen displaying the sub-comments of an HackerNews comment.
 #[derive(Debug)]
 pub struct SubCommentsScreen {
-    parent_comment: DisplayableHackerNewsItem,
+    comment: DisplayableHackerNewsItem,
 }
 
 impl SubCommentsScreen {
-    pub fn new(parent_comment: DisplayableHackerNewsItem) -> Self {
-        assert!(parent_comment.is_comment);
-        Self { parent_comment }
+    pub fn new(comment: DisplayableHackerNewsItem) -> Self {
+        assert!(comment.is_comment);
+        Self { comment }
     }
 }
 
 impl Screen for SubCommentsScreen {
     fn before_mount(&mut self, state: &mut AppState, _config: &AppConfiguration) {
-        state.set_currently_viewed_item(Some(self.parent_comment.clone()));
+        state.set_currently_viewed_item(Some(self.comment.clone()));
     }
 
     fn handle_inputs(
@@ -38,6 +38,7 @@ impl Screen for SubCommentsScreen {
         state: &mut AppState,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
         if inputs.is_active(&ApplicationAction::Back) {
+            state.pop_currently_viewed_item_comments_chain();
             router.pop_navigation_stack();
             (
                 ScreenEventResponse::Caught,

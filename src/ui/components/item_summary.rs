@@ -87,6 +87,7 @@ impl UiComponent for ItemSummary {
                 "Sub-comment level: {}",
                 ctx.get_state()
                     .get_currently_viewed_item_comments_chain_count()
+                    - 1
             )),
         ];
 
