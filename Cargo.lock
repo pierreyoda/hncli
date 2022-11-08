@@ -408,9 +408,9 @@ dependencies = [
 
 [[package]]
 name = "html2text"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db2a75f4fdb748c0980b4d04f8edafc749bf4b5bfa738bf6c1565c7e6118d6ca"
+checksum = "63009e2578b64b51d15a23fc5e440e3952eafba3d1e20ec76dd3f63221d95ed1"
 dependencies = [
  "html5ever",
  "markup5ever",
@@ -1619,9 +1619,9 @@ dependencies = [
 
 [[package]]
 name = "webbrowser"
-version = "0.8.1"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f7aa8c655ad0b020787afb0b8f0656b2cfbef3452d619ea930e6b1aa1c5c1e9"
+checksum = "2a0cc7962b5aaa0dfcebaeef0161eec6edf5f4606c12e6777fd7d392f52033a5"
 dependencies = [
  "jni",
  "ndk-context",
