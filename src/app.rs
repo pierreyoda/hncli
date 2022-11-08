@@ -8,6 +8,7 @@ use crate::{
     config::AppConfiguration,
     ui::{
         common::UiComponentId,
+        components::stories::STORIES_PANEL_ID,
         displayable_item::{DisplayableHackerNewsItem, DisplayableHackerNewsItemComments},
         handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
@@ -117,7 +118,7 @@ pub struct AppState {
 impl AppState {
     fn from_config(config: &AppConfiguration) -> Self {
         Self {
-            latest_interacted_with_component: None,
+            latest_interacted_with_component: Some(STORIES_PANEL_ID),
             main_stories_loading: true,
             main_stories_section: HnStoriesSections::Home,
             main_stories_sorting: HnStoriesSorting::Top,

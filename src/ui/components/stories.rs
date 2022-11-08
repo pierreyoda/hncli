@@ -179,23 +179,21 @@ impl UiComponent for StoriesPanel {
                 .unwrap_or_else(|| selected_item.get_hacker_news_link());
             open_browser_tab(item_link.as_str());
             true
-        } else {
-            match selected {
-                Some(selected_index)
-                    if inputs.is_active(&ApplicationAction::SelectItem)
-                        && ctx.get_state().get_latest_interacted_with_component()
-                            == Some(&STORIES_PANEL_ID) =>
-                {
-                    // TODO: fix bug where first entry on initial screen cannot be selected
-                    let items = self.list_state.get_items();
-                    let selected_item = &items[selected_index];
-                    ctx.get_state_mut()
-                        .set_currently_viewed_item(Some(selected_item.clone()));
-                    ctx.router_push_navigation_stack(AppRoute::ItemDetails(selected_item.clone()));
-                    true
-                }
-                _ => false,
+        } else if let Some(selected_index) = selected {
+            if inputs.is_active(&ApplicationAction::SelectItem)
+                && ctx.get_state().get_latest_interacted_with_component() == Some(&STORIES_PANEL_ID)
+            {
+                let items = self.list_state.get_items();
+                let selected_item = &items[selected_index];
+                ctx.get_state_mut()
+                    .set_currently_viewed_item(Some(selected_item.clone()));
+                ctx.router_push_navigation_stack(AppRoute::ItemDetails(selected_item.clone()));
+                true
+            } else {
+                false
             }
+        } else {
+            false
         })
     }
 

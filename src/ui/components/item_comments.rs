@@ -80,6 +80,7 @@ impl UiComponent for ItemComments {
                 != Some(self.viewed_item_id))
     }
 
+    // TODO: fix instability in currently focused sub-comment
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
         self.loading = true;
         self.ticks_since_last_update = 0;
