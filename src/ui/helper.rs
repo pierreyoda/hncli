@@ -11,7 +11,6 @@ use tui::{
 use crate::app::AppState;
 
 use super::{
-    components::help::Help,
     displayable_item::DisplayableHackerNewsItem,
     handlers::{InputsController, Key},
     router::AppRoute,

@@ -92,7 +92,7 @@ impl AppRouter {
             Settings => Box::new(SettingsScreen::new()),
             Home(section) => Box::new(HomeScreen::new(section)),
             ItemDetails(item) => Box::new(StoryDetailsScreen::new(item)),
-            ItemSubComments(comment) => Box::new(SubCommentsScreen::new(comment)),
+            ItemSubComments(parent_comment) => Box::new(SubCommentsScreen::new(parent_comment)),
         }
     }
 }

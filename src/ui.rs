@@ -213,7 +213,7 @@ impl UserInterface {
                         self.terminal.show_cursor()?;
                         break 'ui;
                     }
-                    if !self.handle_inputs()? && self.app.handle_inputs() {
+                    if self.app.handle_inputs() && !self.handle_inputs()? {
                         self.app.update_latest_interacted_with_component(None);
                     }
                 }

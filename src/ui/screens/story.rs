@@ -1,5 +1,7 @@
 use tui::layout::{Constraint, Direction, Layout, Rect};
 
+use log::info;
+
 use crate::{
     app::AppState,
     config::AppConfiguration,
@@ -41,8 +43,14 @@ impl StoryDetailsScreen {
 impl Screen for StoryDetailsScreen {
     fn before_mount(&mut self, state: &mut AppState, config: &AppConfiguration) {
         state.set_currently_viewed_item(Some(self.item.clone()));
-        state.set_currently_viewed_item_comments(None);
+
         state.reset_currently_viewed_item_comments_chain();
+        if let Some(item_kids) = self.item.kids.as_ref() {
+            if let Some(first_comment_id) = item_kids.first() {
+                state.push_currently_viewed_item_comments_chain(*first_comment_id);
+            }
+        }
+
         if state
             .get_currently_viewed_item()
             .as_ref()
@@ -62,6 +70,7 @@ impl Screen for StoryDetailsScreen {
         router: &mut AppRouter,
         state: &mut AppState,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
+        info!("story_SCREEN.handle_inputs");
         if inputs.is_active(&ApplicationAction::Back) {
             router.pop_navigation_stack();
             (

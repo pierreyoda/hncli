@@ -105,12 +105,14 @@ pub struct AppState {
     main_stories_sorting: HnStoriesSorting,
     /// Main screen(s): search query if in search mode.
     main_search_mode_query: Option<String>,
-    /// The currently viewed item.
+    /// The currently viewed item (not a comment).
     currently_viewed_item: Option<DisplayableHackerNewsItem>,
     /// The comments of the currently viewed item, if applicable.
     currently_viewed_item_comments: Option<DisplayableHackerNewsItemComments>,
     /// The successive IDs of the viewed comment, starting at the root parent comment.
     currently_viewed_item_comments_chain: Vec<HnItemIdScalar>,
+    /// The ID of the comment to restore when coming back from a sub-comment.
+    previously_viewed_comment_id: Option<HnItemIdScalar>,
     /// Item details screen: is the comments panel visible or not.
     item_page_display_comments_panel: bool,
 }
@@ -126,6 +128,7 @@ impl AppState {
             currently_viewed_item: None,
             currently_viewed_item_comments: None,
             currently_viewed_item_comments_chain: vec![],
+            previously_viewed_comment_id: None,
             item_page_display_comments_panel: config.get_display_comments_panel_by_default(),
         }
     }
@@ -205,9 +208,9 @@ impl AppState {
         self.currently_viewed_item_comments_chain.clear();
     }
 
-    /// Get the amount of successively viewed comments for the currently viewed item.
-    pub fn get_currently_viewed_item_comments_chain_count(&self) -> usize {
-        self.currently_viewed_item_comments_chain.len()
+    /// Get the successively viewed comments for the currently viewed item.
+    pub fn get_currently_viewed_item_comments_chain(&self) -> &[HnItemIdScalar] {
+        &self.currently_viewed_item_comments_chain
     }
 
     /// Push a new comment ID to the successively viewed comments for the currently viewed item.
@@ -223,9 +226,33 @@ impl AppState {
         };
     }
 
+    /// Replace the latest comment ID in the successively viewed comments for the currently viewed item.
+    pub fn replace_latest_in_currently_viewed_item_comments_chain(
+        &mut self,
+        comment_id_option: Option<HnItemIdScalar>,
+    ) {
+        if let Some(comment_id) = comment_id_option {
+            self.currently_viewed_item_comments_chain.pop();
+            self.currently_viewed_item_comments_chain.push(comment_id);
+        }
+    }
+
     /// Pop the latest comment ID from the successively viewed comments for the currently viewed item.
-    pub fn pop_currently_viewed_item_comments_chain(&mut self) {
+    ///
+    /// Also returns the newly last comment, *i.e.* the now currently viewed comment, if any.
+    pub fn pop_currently_viewed_item_comments_chain(&mut self) -> Option<HnItemIdScalar> {
         self.currently_viewed_item_comments_chain.pop();
+        self.currently_viewed_item_comments_chain.last().cloned()
+    }
+
+    /// Get the ID of the comment to restore when coming back from a sub-comment.
+    pub fn get_previously_viewed_comment_id(&self) -> Option<HnItemIdScalar> {
+        self.previously_viewed_comment_id
+    }
+
+    /// Set the ID of the comment to restore when coming back from a sub-comment.
+    pub fn set_previously_viewed_comment_id(&mut self, comment_id: Option<HnItemIdScalar>) {
+        self.previously_viewed_comment_id = comment_id;
     }
 
     /// Get the is comments panel visible on item details screen boolean.
@@ -317,8 +344,8 @@ impl App {
                 .before_mount(&mut self.state, &self.config);
         }
         match response {
-            ScreenEventResponse::Caught => true,
-            ScreenEventResponse::PassThrough => false,
+            ScreenEventResponse::Caught => false,
+            ScreenEventResponse::PassThrough => true,
         }
     }
 

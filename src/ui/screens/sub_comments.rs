@@ -1,6 +1,8 @@
+use log::info;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
+    api::types::HnItemIdScalar,
     app::AppState,
     config::AppConfiguration,
     ui::{
@@ -16,19 +18,32 @@ use super::{Screen, ScreenComponentsRegistry, ScreenEventResponse};
 /// Screen displaying the sub-comments of an HackerNews comment.
 #[derive(Debug)]
 pub struct SubCommentsScreen {
-    comment: DisplayableHackerNewsItem,
+    parent_comment: DisplayableHackerNewsItem,
 }
 
 impl SubCommentsScreen {
-    pub fn new(comment: DisplayableHackerNewsItem) -> Self {
-        assert!(comment.is_comment);
-        Self { comment }
+    pub fn new(parent_comment: DisplayableHackerNewsItem) -> Self {
+        assert!(parent_comment.is_comment);
+        assert!(!Self::get_parent_comment_kids(&parent_comment).is_empty());
+        Self { parent_comment }
+    }
+
+    fn get_parent_comment_kids(parent_comment: &DisplayableHackerNewsItem) -> &[HnItemIdScalar] {
+        parent_comment
+            .kids
+            .as_ref()
+            .map_or(&[], |kids| kids.as_ref())
     }
 }
 
 impl Screen for SubCommentsScreen {
     fn before_mount(&mut self, state: &mut AppState, _config: &AppConfiguration) {
-        state.set_currently_viewed_item(Some(self.comment.clone()));
+        state.push_currently_viewed_item_comments_chain(self.parent_comment.id);
+        state.push_currently_viewed_item_comments_chain(
+            *Self::get_parent_comment_kids(&self.parent_comment)
+                .first()
+                .expect("sub_comments Screen: at least 1 sub-comment should be present"),
+        );
     }
 
     fn handle_inputs(
@@ -37,8 +52,11 @@ impl Screen for SubCommentsScreen {
         router: &mut AppRouter,
         state: &mut AppState,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
+        info!("sub_comments_SCREENS.handle_inputs");
         if inputs.is_active(&ApplicationAction::Back) {
-            state.pop_currently_viewed_item_comments_chain();
+            info!("sub_comments_SCREEN.back");
+            let restored_comment_id = state.pop_currently_viewed_item_comments_chain();
+            state.set_previously_viewed_comment_id(restored_comment_id);
             router.pop_navigation_stack();
             (
                 ScreenEventResponse::Caught,

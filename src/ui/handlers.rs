@@ -158,7 +158,7 @@ impl InputsController {
     }
 
     pub fn pump_event(&mut self, event: KeyEvent, state: &AppState) {
-        // TODO: somehow make the Control modifier work properly
+        // TODO: somehow make the modifiers work properly
         self.modifier = match event.modifiers {
             KeyModifiers::CONTROL => KeyModifier::Control,
             KeyModifiers::SHIFT => KeyModifier::Shift,

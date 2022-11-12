@@ -11,7 +11,7 @@ use tui::{
 
 use crate::{
     api::{types::HnItemIdScalar, HnClient},
-    app::AppContext,
+    app::{AppContext, AppState},
     errors::Result,
     ui::common::{UiComponent, UiComponentId, UiTickScalar},
 };
@@ -31,7 +31,7 @@ use super::common::COMMON_BLOCK_NORMAL_COLOR;
 /// ```
 #[derive(Debug, Default)]
 pub struct ItemSummary {
-    id: Option<HnItemIdScalar>,
+    parent_comment_id: Option<HnItemIdScalar>,
 }
 
 pub const ITEM_SUMMARY_ID: UiComponentId = "item_summary";
@@ -43,20 +43,11 @@ impl UiComponent for ItemSummary {
     }
 
     fn should_update(&mut self, _elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
-        Ok(
-            if let Some(item) = ctx.get_state().get_currently_viewed_item() {
-                Some(item.id) != self.id
-            } else {
-                false
-            },
-        )
+        Ok(self.get_parent_comment_id(ctx.get_state()) != self.parent_comment_id)
     }
 
     async fn update(&mut self, _client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
-        self.id = ctx
-            .get_state()
-            .get_currently_viewed_item()
-            .map(|item| item.id);
+        self.parent_comment_id = self.get_parent_comment_id(ctx.get_state());
         Ok(())
     }
 
@@ -70,8 +61,16 @@ impl UiComponent for ItemSummary {
         inside: Rect,
         ctx: &AppContext,
     ) -> Result<()> {
-        let viewed_item = if let Some(item) = ctx.get_state().get_currently_viewed_item() {
-            item
+        let comments = ctx
+            .get_state()
+            .get_currently_viewed_item_comments()
+            .expect("item_summary expects comments to be cached");
+        let parent_comment = if let Some(comment_id) = self.parent_comment_id {
+            if let Some(comment) = comments.get(&comment_id) {
+                comment
+            } else {
+                return Ok(());
+            }
         } else {
             return Ok(());
         };
@@ -82,12 +81,12 @@ impl UiComponent for ItemSummary {
             .border_type(BorderType::Rounded);
 
         let text_base = vec![
-            Spans::from(format!("Parent comment by: {}", viewed_item.by_username)),
+            Spans::from(format!("Parent comment by: {}", parent_comment.by_username)),
             Spans::from(format!(
                 "Sub-comment level: {}",
                 ctx.get_state()
-                    .get_currently_viewed_item_comments_chain_count()
-                    - 1
+                    .get_currently_viewed_item_comments_chain()
+                    .len()
             )),
         ];
 
@@ -97,5 +96,15 @@ impl UiComponent for ItemSummary {
         f.render_widget(paragraph, inside);
 
         Ok(())
+    }
+}
+
+impl ItemSummary {
+    fn get_parent_comment_id(&self, state: &AppState) -> Option<HnItemIdScalar> {
+        let comments_chain = state.get_currently_viewed_item_comments_chain();
+        comments_chain
+            .len()
+            .checked_sub(1)
+            .map(|parent_comment_index| comments_chain[parent_comment_index])
     }
 }

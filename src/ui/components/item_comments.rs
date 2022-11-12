@@ -1,6 +1,7 @@
 use std::io::Stdout;
 
 use async_trait::async_trait;
+use log::info;
 use tui::{
     backend::CrosstermBackend,
     layout::{Alignment, Rect},
@@ -11,7 +12,7 @@ use tui::{
 
 use crate::{
     api::{types::HnItemIdScalar, HnClient},
-    app::AppContext,
+    app::{AppContext, AppState},
     errors::Result,
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},
@@ -33,11 +34,7 @@ mod widget;
 pub struct ItemComments {
     ticks_since_last_update: u64,
     inputs_debouncer: Debouncer,
-    initial_loading: bool,
     loading: bool,
-    viewed_item_id: HnItemIdScalar,
-    viewed_item_kids: Vec<HnItemIdScalar>,
-    latest_focused_comment_id: Option<HnItemIdScalar>,
     widget_state: ItemCommentsWidgetState,
 }
 
@@ -46,11 +43,7 @@ impl Default for ItemComments {
         Self {
             ticks_since_last_update: 0,
             inputs_debouncer: Debouncer::new(5), // approx. 500ms
-            initial_loading: true,
             loading: true,
-            viewed_item_id: 0,
-            viewed_item_kids: vec![],
-            latest_focused_comment_id: None,
             widget_state: ItemCommentsWidgetState::default(),
         }
     }
@@ -70,80 +63,106 @@ impl UiComponent for ItemComments {
         self.ticks_since_last_update += elapsed_ticks;
         self.inputs_debouncer.tick(elapsed_ticks);
 
-        // TODO: should also update when comments are dirty?
-        Ok(self.initial_loading
-            || self.ticks_since_last_update >= MEAN_TICKS_BETWEEN_UPDATES
+        let currently_viewed_item_or_comment = Self::get_viewed_item_or_comment(ctx.get_state());
+
+        let should_update = self.ticks_since_last_update >= MEAN_TICKS_BETWEEN_UPDATES
             || ctx
                 .get_state()
-                .get_currently_viewed_item()
-                .map(|item| item.id)
-                != Some(self.viewed_item_id))
+                .get_currently_viewed_item_comments()
+                .is_none()
+            || currently_viewed_item_or_comment.map_or(false, |item| {
+                !item.is_comment
+                    && item.kids.as_ref().map_or(0, |kids| kids.len())
+                        != self.widget_state.get_focused_same_level_comments_count()
+            })
+            || currently_viewed_item_or_comment.map_or(false, |comment| {
+                comment.is_comment && Some(comment.id) != self.widget_state.get_focused_comment_id()
+            });
+
+        if should_update {
+            self.loading = true;
+        }
+
+        Ok(should_update)
     }
 
-    // TODO: fix instability in currently focused sub-comment
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
         self.loading = true;
         self.ticks_since_last_update = 0;
 
-        ctx.get_state_mut().set_currently_viewed_item_comments(None);
-
         // Viewed item handling
-        let viewed_item = match ctx.get_state().get_currently_viewed_item() {
-            Some(item) => item,
-            None => return Ok(()),
+        let viewed_item = if let Some(item_or_comment) =
+            Self::get_viewed_item_or_parent_comment(ctx.get_state())
+        {
+            item_or_comment.clone()
+        } else {
+            self.loading = false;
+            return Ok(());
         };
-        self.viewed_item_id = viewed_item.id;
-        self.viewed_item_kids = match &viewed_item.kids {
-            Some(kids) => kids.clone(),
-            None => return Ok(()),
-        };
+        let viewed_item_kids: &[HnItemIdScalar] = viewed_item
+            .kids
+            .as_ref()
+            .map_or(&[], |kids| kids.as_slice());
 
         // Comments fetching
-        let comments_raw = client.get_item_comments(&self.viewed_item_kids).await?;
+        let comments_raw = client.get_item_comments(viewed_item_kids).await?;
         let comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
         ctx.get_state_mut()
             .set_currently_viewed_item_comments(Some(comments));
-
-        self.initial_loading = false;
-        self.loading = false;
 
         // Widget state
         let viewed_item_comments =
             if let Some(cached_comments) = ctx.get_state().get_currently_viewed_item_comments() {
                 cached_comments
             } else {
+                self.loading = false;
                 return Ok(());
             };
         self.widget_state
-            .update(viewed_item_comments, &self.viewed_item_kids);
+            .update(viewed_item_comments, viewed_item_kids);
 
         // Latest focused comment, if applicable
-        if let Some(comment_id) = self.latest_focused_comment_id {
+        if let Some(restored_comment_id) = ctx.get_state().get_previously_viewed_comment_id() {
             self.widget_state
-                .restore_focused_comment_id(comment_id, &self.viewed_item_kids);
+                .restore_focused_comment_id(restored_comment_id, viewed_item_kids);
+            ctx.get_state_mut().set_previously_viewed_comment_id(None);
         }
 
-        // Comments chain update
-        if let Some(focused_comment_id) = self.widget_state.get_focused_comment_id() {
-            ctx.get_state_mut()
-                .push_currently_viewed_item_comments_chain(focused_comment_id);
-        }
+        self.loading = false;
 
         Ok(())
     }
 
     fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
-        if self.initial_loading || self.loading || !self.inputs_debouncer.is_action_allowed() {
+        if self.loading || !self.inputs_debouncer.is_action_allowed() {
             return Ok(false);
         }
 
+        let viewed_item_kids = if let Some(item_or_comment) =
+            Self::get_viewed_item_or_parent_comment(ctx.get_state())
+        {
+            match item_or_comment.kids.as_ref() {
+                Some(kids) => kids.as_slice(),
+                None => &[],
+            }
+        } else {
+            return Ok(false);
+        };
+
+        info!(
+            "handle_inputs, chain={:?}",
+            ctx.get_state().get_currently_viewed_item_comments_chain()
+        );
         let inputs = ctx.get_inputs();
         Ok(if inputs.is_active(&ApplicationAction::NavigateUp) {
-            self.widget_state
-                .previous_main_comment(&self.viewed_item_kids);
+            let new_focused_id = self.widget_state.previous_main_comment(viewed_item_kids);
+            ctx.get_state_mut()
+                .replace_latest_in_currently_viewed_item_comments_chain(new_focused_id);
             true
         } else if inputs.is_active(&ApplicationAction::NavigateDown) {
-            self.widget_state.next_main_comment(&self.viewed_item_kids);
+            let new_focused_id = self.widget_state.next_main_comment(viewed_item_kids);
+            ctx.get_state_mut()
+                .replace_latest_in_currently_viewed_item_comments_chain(new_focused_id);
             true
         } else if inputs.is_active(&ApplicationAction::ItemExpandFocusedComment) {
             let focused_comment_id =
@@ -166,7 +185,6 @@ impl UiComponent for ItemComments {
             {
                 return Ok(false);
             }
-            self.latest_focused_comment_id = self.widget_state.get_focused_comment_id();
             ctx.router_push_navigation_stack(AppRoute::ItemSubComments(focused_comment));
             true
         } else {
@@ -180,51 +198,58 @@ impl UiComponent for ItemComments {
         inside: Rect,
         ctx: &AppContext,
     ) -> Result<()> {
+        info!(
+            "chain={:?}",
+            ctx.get_state().get_currently_viewed_item_comments_chain()
+        );
+
         // (Initial) loading case
-        if self.initial_loading || self.loading {
+        if self.loading {
             return Self::render_text_message(f, inside, "Loading...");
         }
-
-        // Invalid viewed item case
-        match ctx.get_state().get_currently_viewed_item() {
-            Some(viewed_item) if viewed_item.can_have_comments() => (),
-            _ => {
-                return Self::render_text_message(
-                    f,
-                    inside,
-                    "Cannot display comments for this item.",
-                )
-            }
-        };
-
-        // No comments case
-        if self.viewed_item_kids.is_empty() {
-            return Self::render_text_message(f, inside, "No comments yet.");
-        }
-
-        // General case
         let viewed_item_comments =
             if let Some(cached_comments) = ctx.get_state().get_currently_viewed_item_comments() {
                 cached_comments
             } else {
-                return Ok(());
+                return Self::render_text_message(
+                    f,
+                    inside,
+                    "Comments fetching issue. Please retry later.",
+                );
             };
 
-        let viewed_comment = if let Some(comment_id) = self.widget_state.get_focused_comment_id() {
-            viewed_item_comments.get(&comment_id)
+        // Invalid viewed item case
+        let _viewed_item = if ctx
+            .get_state()
+            .get_currently_viewed_item_comments_chain()
+            .len()
+            > 1
+        {
+            if let Some(item_or_comment) = Self::get_viewed_item_or_comment(ctx.get_state()) {
+                // No comments case
+                if item_or_comment
+                    .kids
+                    .as_ref()
+                    .map_or(true, |item_or_comment_kids| item_or_comment_kids.is_empty())
+                {
+                    return Self::render_text_message(f, inside, "No comments yet.");
+                }
+                // Main-level comment case
+                item_or_comment
+            } else {
+                return Self::render_text_message(f, inside, "Cannot display this item.");
+            }
+        } else if let Some(parent_item_or_comment) =
+            Self::get_viewed_item_or_parent_comment(ctx.get_state())
+        {
+            // Sub-comment case
+            parent_item_or_comment
         } else {
-            None
+            return Self::render_text_message(f, inside, "Cannot render this item.");
         };
-        let viewed_comment_kids_count = viewed_comment.map_or(0, |comment| {
-            comment.kids.as_ref().map_or(0, |kids| kids.len())
-        });
-        let widget = ItemCommentsWidget::with_comments(
-            self.viewed_item_id,
-            &self.viewed_item_kids,
-            viewed_item_comments,
-            viewed_comment_kids_count,
-            &self.widget_state,
-        );
+
+        // General case
+        let widget = ItemCommentsWidget::with_comments(&self.widget_state, viewed_item_comments);
         f.render_widget(widget, inside);
 
         Ok(())
@@ -232,6 +257,36 @@ impl UiComponent for ItemComments {
 }
 
 impl ItemComments {
+    /// Get the currently viewed main HackerNews item, which can be the current comment in this case.
+    fn get_viewed_item_or_comment(state: &AppState) -> Option<&DisplayableHackerNewsItem> {
+        let comments_chain = state.get_currently_viewed_item_comments_chain();
+        if let Some(latest_comment_id) = comments_chain.last() {
+            match state.get_currently_viewed_item_comments() {
+                Some(cached_comments) => cached_comments.get(latest_comment_id),
+                None => None,
+            }
+        } else {
+            state.get_currently_viewed_item()
+        }
+    }
+
+    /// Get the currently viewed main HackerNews item, which can be the parent comment in this case.
+    fn get_viewed_item_or_parent_comment(state: &AppState) -> Option<&DisplayableHackerNewsItem> {
+        let comments_chain = state.get_currently_viewed_item_comments_chain();
+        if let Some(parent_comment_id) = comments_chain
+            .len()
+            .checked_sub(2)
+            .map(|parent_comment_index| comments_chain[parent_comment_index])
+        {
+            match state.get_currently_viewed_item_comments() {
+                Some(cached_comments) => cached_comments.get(&parent_comment_id),
+                None => None,
+            }
+        } else {
+            state.get_currently_viewed_item()
+        }
+    }
+
     fn render_text_message(
         f: &mut tui::Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
