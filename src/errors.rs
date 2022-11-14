@@ -4,10 +4,12 @@ use crossterm::ErrorKind;
 use thiserror::Error;
 use url::ParseError;
 
-use crate::api::types::HnItemIdScalar;
+use crate::api::types::{HnItemDateScalar, HnItemIdScalar};
 
 #[derive(Debug, Error)]
 pub enum HnCliError {
+    #[error("Chrono datetime error from timestamp: {0}")]
+    ChronoError(HnItemDateScalar),
     #[error("IO error")]
     IoError(#[source] io::Error),
     #[error("HTTP client error")]

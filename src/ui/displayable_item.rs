@@ -99,7 +99,7 @@ impl TryFrom<HnItem> for DisplayableHackerNewsItem {
     fn try_from(value: HnItem) -> Result<Self> {
         match value {
             HnItem::Story(story) => {
-                let posted_at = datetime_from_hn_time(story.time);
+                let posted_at = datetime_from_hn_time(story.time)?;
                 Ok(Self {
                     id: story.id,
                     posted_at,
@@ -124,7 +124,7 @@ impl TryFrom<HnItem> for DisplayableHackerNewsItem {
                 })
             }
             HnItem::Comment(comment) => {
-                let posted_at = datetime_from_hn_time(comment.time);
+                let posted_at = datetime_from_hn_time(comment.time)?;
                 Ok(Self {
                     id: comment.id,
                     posted_at,
@@ -145,7 +145,7 @@ impl TryFrom<HnItem> for DisplayableHackerNewsItem {
                 })
             }
             HnItem::Job(job) => {
-                let posted_at = datetime_from_hn_time(job.time);
+                let posted_at = datetime_from_hn_time(job.time)?;
                 Ok(Self {
                     id: job.id,
                     posted_at,
@@ -170,7 +170,7 @@ impl TryFrom<HnItem> for DisplayableHackerNewsItem {
                 })
             }
             HnItem::Poll(poll) => {
-                let posted_at = datetime_from_hn_time(poll.time);
+                let posted_at = datetime_from_hn_time(poll.time)?;
                 Ok(Self {
                     id: poll.id,
                     posted_at,
