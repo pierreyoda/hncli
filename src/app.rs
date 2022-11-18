@@ -107,6 +107,8 @@ pub struct AppState {
     main_search_mode_query: Option<String>,
     /// The currently viewed item (not a comment).
     currently_viewed_item: Option<DisplayableHackerNewsItem>,
+    /// Has the currently viewed item (not a comment) changed recently? For internal usage.
+    currently_viewed_item_switched: bool,
     /// The comments of the currently viewed item, if applicable.
     currently_viewed_item_comments: Option<DisplayableHackerNewsItemComments>,
     /// The successive IDs of the viewed comment, starting at the root parent comment.
@@ -126,6 +128,7 @@ impl AppState {
             main_stories_sorting: HnStoriesSorting::Top,
             main_search_mode_query: None,
             currently_viewed_item: None,
+            currently_viewed_item_switched: false,
             currently_viewed_item_comments: None,
             currently_viewed_item_comments_chain: vec![],
             previously_viewed_comment_id: None,
@@ -188,6 +191,7 @@ impl AppState {
     /// Set the currently viewed item.
     pub fn set_currently_viewed_item(&mut self, viewed: Option<DisplayableHackerNewsItem>) {
         self.currently_viewed_item = viewed;
+        self.currently_viewed_item_switched = true;
     }
 
     /// Get the comments of the currently viewed item.
@@ -200,7 +204,24 @@ impl AppState {
         &mut self,
         comments: Option<DisplayableHackerNewsItemComments>,
     ) {
-        self.currently_viewed_item_comments = comments;
+        // Different item: replace the comments
+        if self.currently_viewed_item_switched {
+            self.currently_viewed_item_comments = comments;
+            self.currently_viewed_item_switched = false;
+            return;
+        }
+        // Same item: merge the comments (since some children comments may be new)
+        if let Some(current_comments_cache) = &mut self.currently_viewed_item_comments {
+            if let Some(incoming_comments_cache) = comments {
+                for (incoming_comment_id, incoming_comment) in incoming_comments_cache {
+                    // we prefer the freshly updated comments over potentially outdated ones
+                    current_comments_cache.insert(incoming_comment_id, incoming_comment);
+                }
+            }
+            // else: when no further children comments are found, we preserve our current comments cache for this item
+        } else {
+            self.currently_viewed_item_comments = comments;
+        }
     }
 
     /// Reset the successively viewed comments for the currently viewed item.
