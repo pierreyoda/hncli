@@ -88,6 +88,7 @@ pub enum ApplicationAction {
     ToggleHelp,
     Back,
     Quit,
+    QuitShortcut,
     // navigation
     NavigateUp,
     NavigateDown,
@@ -117,10 +118,8 @@ impl ApplicationAction {
             SelectItem => inputs.key == Key::Enter,
             ToggleHelp => inputs.key == Key::Char('h'),
             Back => inputs.key == Key::Escape,
-            Quit => {
-                inputs.key == Key::Char('q')
-                    || (inputs.modifier == KeyModifier::Control && inputs.key == Key::Char('c'))
-            }
+            Quit => inputs.modifier == KeyModifier::Control && inputs.key == Key::Char('c'),
+            QuitShortcut => inputs.key == Key::Char('q'),
             NavigateUp => inputs.key == Key::Up || inputs.key == Key::Char('i'),
             NavigateDown => inputs.key == Key::Down || inputs.key == Key::Char('k'),
             NavigateLeft => inputs.key == Key::Left || inputs.key == Key::Char('j'),
@@ -158,7 +157,7 @@ impl InputsController {
     }
 
     pub fn pump_event(&mut self, event: KeyEvent, state: &AppState) {
-        // TODO: somehow make the modifiers work properly
+        // TODO: somehow make the modifiers work properly in all circumstances
         self.modifier = match event.modifiers {
             KeyModifiers::CONTROL => KeyModifier::Control,
             KeyModifiers::SHIFT => KeyModifier::Shift,

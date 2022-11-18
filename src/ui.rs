@@ -203,23 +203,28 @@ impl UserInterface {
                 })
                 .map_err(HnCliError::IoError)?;
 
-            match rx.recv()? {
-                UserInterfaceEvent::KeyEvent(event) => {
-                    app.pump_event(event);
-                    let app_context = app.get_context();
-                    let inputs = app_context.get_inputs();
-                    if inputs.is_active(&ApplicationAction::Quit) {
-                        disable_raw_mode()?;
-                        self.terminal.show_cursor()?;
-                        break 'ui;
-                    }
-                    if self.app.handle_inputs() && !self.handle_inputs()? {
-                        self.app.update_latest_interacted_with_component(None);
-                    }
+            if let UserInterfaceEvent::KeyEvent(event) = rx.recv()? {
+                app.pump_event(event);
+                let app_context = app.get_context();
+                let inputs = app_context.get_inputs();
+                // TODO: errors on quit should be logged but not panic
+                if inputs.is_active(&ApplicationAction::Quit) {
+                    disable_raw_mode()?;
+                    self.terminal.show_cursor()?;
+                    break 'ui;
                 }
-                UserInterfaceEvent::Tick => {
-                    self.update().await?;
+                if inputs.is_active(&ApplicationAction::QuitShortcut)
+                    && self.can_quit_via_shortcut()
+                {
+                    disable_raw_mode()?;
+                    self.terminal.show_cursor()?;
+                    break 'ui;
                 }
+                if self.app.handle_inputs() && !self.handle_inputs()? {
+                    self.app.update_latest_interacted_with_component(None);
+                }
+            } else {
+                self.update().await?;
             }
         }
 
@@ -269,6 +274,19 @@ impl UserInterface {
         }
 
         Ok(swallowed)
+    }
+
+    fn can_quit_via_shortcut(&mut self) -> bool {
+        let app_context = self.app.get_context();
+        // Check configuration first
+        if app_context
+            .get_config()
+            .get_enable_global_sub_screen_quit_shortcut()
+        {
+            return true;
+        }
+        // If the shortcut is disabled, check if we are on the home-screen
+        app_context.get_router().is_on_root_screen()
     }
 
     fn register_component<C: UiComponent + 'static>(&mut self, component: C) {

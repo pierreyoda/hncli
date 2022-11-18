@@ -35,6 +35,10 @@ impl AppRoute {
         }
     }
 
+    pub fn is_home(&self) -> bool {
+        matches!(self, AppRoute::Home(_))
+    }
+
     pub fn is_settings(&self) -> bool {
         matches!(self, AppRoute::Settings)
     }
@@ -66,6 +70,16 @@ impl AppRouter {
             },
             initial_screen,
         )
+    }
+
+    /// Are we on the root screen, *i.e.* the initial screen showed on application launch?
+    ///
+    /// NB: section tabs like "Ask HN" or similar **do** count as being on the initial screen.
+    pub fn is_on_root_screen(&self) -> bool {
+        self.navigation_stack
+            .last()
+            .expect("router: there must be at least 1 screen present in the navigation stack")
+            .is_home()
     }
 
     /// Get the current route state.

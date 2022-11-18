@@ -20,12 +20,15 @@ use crate::{
     },
 };
 
+// TODO: add toggle for global 'q' immediate application quitting in addition to CTRL+C
 #[derive(Debug)]
 enum SettingsOption {
     /// On the item details page, should we display the comments panel by default or not?
     DisplayCommentsPanelByDefault(bool),
     /// Show the global contextual help?
     ShowContextualHelp(bool),
+    /// Enable the global 'q' shortcut (in sub-screens) to immediately quit the application?
+    EnableGlobalSubScreenQuitShortcut(bool),
 }
 
 impl SettingsOption {
@@ -33,6 +36,9 @@ impl SettingsOption {
         match self {
             Self::DisplayCommentsPanelByDefault(value) => Self::get_boolean_representation(*value),
             Self::ShowContextualHelp(value) => Self::get_boolean_representation(*value),
+            Self::EnableGlobalSubScreenQuitShortcut(value) => {
+                Self::get_boolean_representation(*value)
+            }
         }
     }
 
@@ -182,6 +188,9 @@ impl Settings {
                 .get_config_mut()
                 .toggle_display_comments_panel_by_default(),
             1 => ctx.get_config_mut().toggle_show_contextual_help(),
+            2 => ctx
+                .get_config_mut()
+                .toggle_enable_global_sub_screen_quit_shortcut(),
             _ => (),
         }
         self.refresh_controls(ctx);
@@ -196,9 +205,16 @@ impl Settings {
                 ),
             },
             SettingsControl {
-                label: "Show the global contextual help".into(),
+                label: "Show the global contextual help:".into(),
                 option: SettingsOption::ShowContextualHelp(
                     ctx.get_config().get_show_contextual_help(),
+                ),
+            },
+            SettingsControl {
+                label: "Enable the global 'q' quit shortcut in sub-screens, besides CTRL+C:".into(),
+                option: SettingsOption::EnableGlobalSubScreenQuitShortcut(
+                    ctx.get_config()
+                        .get_enable_global_sub_screen_quit_shortcut(),
                 ),
             },
         ];
