@@ -4,7 +4,7 @@ use std::{
 };
 
 use directories::ProjectDirs;
-use toml::Value;
+use serde::{Deserialize, Serialize};
 
 use crate::errors::{HnCliError, Result};
 
@@ -15,7 +15,7 @@ pub const DISPLAY_COMMENTS_PANEL_BY_DEFAULT_DEFAULT: bool = false;
 pub const SHOW_CONTEXTUAL_HELP_DEFAULT: bool = false;
 
 /// Persisted, global application configuration.
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct AppConfiguration {
     /// Enable the 'q' quit shortcut in sub-screens (*i.e* everything but the initial, main screen).
     enable_global_sub_screen_quit_shortcut: bool,
@@ -23,6 +23,17 @@ pub struct AppConfiguration {
     display_comments_panel_by_default: bool,
     /// Show the global contextual help?
     show_contextual_help: bool,
+}
+
+/// Intermediate structure used solely for deserialization.
+///
+/// This is needed due to potentially missing values in the TOML configuration,
+/// for instance when adding a new configuration option.
+#[derive(Debug, Deserialize)]
+struct DeserializableAppConfiguration {
+    enable_global_sub_screen_quit_shortcut: Option<bool>,
+    display_comments_panel_by_default: Option<bool>,
+    show_contextual_help: Option<bool>,
 }
 
 impl Default for AppConfiguration {
@@ -35,7 +46,7 @@ impl Default for AppConfiguration {
     }
 }
 
-// TODO: better error handling when the configuration cannot be saved (should not panic but be logged)
+// TODO: better error handling when the configuration cannot be saved/restored (should not panic but be logged)
 impl AppConfiguration {
     pub fn from_file_or_defaults() -> Self {
         Self::from_file_or_environment().unwrap_or_default()
@@ -78,13 +89,10 @@ impl AppConfiguration {
             ))
         })?;
 
-        // TODO: do not use manual deserialization if possible
-        let config_raw = format!(
-            "enable_global_sub_screen_quit_shortcut={}\n,display_comments_panel={}\nshow_contextual_help={}\n",
-            self.enable_global_sub_screen_quit_shortcut,
-            self.display_comments_panel_by_default,
-            self.show_contextual_help
-        );
+        let config_raw = toml::to_string(self).map_err(|err| {
+            HnCliError::ConfigSynchronizationError(format!("cannot serialize config: {}", err))
+        })?;
+
         write(&config_filepath, config_raw).map_err(|err| {
             HnCliError::ConfigSynchronizationError(format!(
                 "cannot save config file ({:?}): {}",
@@ -95,36 +103,31 @@ impl AppConfiguration {
 
     fn from_file_or_environment() -> Result<Self> {
         let config_filepath = Self::get_config_file_path()?;
+        // TODO: use Default when not found
         let config_raw = read_to_string(&config_filepath).map_err(|err| {
             HnCliError::ConfigSynchronizationError(format!(
                 "cannot open config file ({:?}): {}",
                 config_filepath, err
             ))
         })?;
-        let toml = config_raw.parse::<Value>().map_err(|err| {
-            HnCliError::ConfigSynchronizationError(format!(
-                "cannot parse config file ({:?}): {}",
-                config_filepath, err
-            ))
-        })?;
+
+        let deserializable_config: DeserializableAppConfiguration = toml::from_str(&config_raw)
+            .map_err(|err| {
+                HnCliError::ConfigSynchronizationError(format!(
+                    "cannot deserialize config: {}",
+                    err
+                ))
+            })?;
 
         Ok(Self {
-            enable_global_sub_screen_quit_shortcut: toml
-                .get("enable_global_sub_screen_quit_shortcut")
-                .unwrap_or(&Value::Boolean(
-                    ENABLE_GLOBAL_SUB_SCREEN_QUIT_SHORTCUT_DEFAULT,
-                ))
-                .as_bool()
+            enable_global_sub_screen_quit_shortcut: deserializable_config
+                .enable_global_sub_screen_quit_shortcut
                 .unwrap_or(ENABLE_GLOBAL_SUB_SCREEN_QUIT_SHORTCUT_DEFAULT),
-            display_comments_panel_by_default: toml
-                .get("display_comments_panel")
-                .unwrap_or(&Value::Boolean(DISPLAY_COMMENTS_PANEL_BY_DEFAULT_DEFAULT))
-                .as_bool()
+            display_comments_panel_by_default: deserializable_config
+                .display_comments_panel_by_default
                 .unwrap_or(DISPLAY_COMMENTS_PANEL_BY_DEFAULT_DEFAULT),
-            show_contextual_help: toml
-                .get("show_contextual_help")
-                .unwrap_or(&Value::Boolean(SHOW_CONTEXTUAL_HELP_DEFAULT))
-                .as_bool()
+            show_contextual_help: deserializable_config
+                .show_contextual_help
                 .unwrap_or(SHOW_CONTEXTUAL_HELP_DEFAULT),
         })
     }
