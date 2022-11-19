@@ -184,7 +184,7 @@ impl UserInterface {
                             Some(inside_rect) => wrapper
                                 .component
                                 .render(frame, inside_rect, &app_context)
-                                .expect("no component rendering error"),
+                                .expect("main UI loop: no component rendering error"),
                         }
                     }
 

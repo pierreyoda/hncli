@@ -12,8 +12,8 @@ pub type UiTickScalar = u64;
 pub type UiComponentId = &'static str;
 
 /// A `Component` in this Terminal UI context is a self-contained
-/// widget or group of widgets with each their own updating and
-/// rendering logic.
+/// widget or group of widgets with each their own updating,
+/// events handling and rendering logic.
 #[async_trait]
 pub trait UiComponent {
     /// Must return a constant, **application-unique** component ID.

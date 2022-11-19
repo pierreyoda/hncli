@@ -107,7 +107,7 @@ pub struct AppState {
     main_search_mode_query: Option<String>,
     /// The currently viewed item (not a comment).
     currently_viewed_item: Option<DisplayableHackerNewsItem>,
-    /// Has the currently viewed item (not a comment) changed recently? For internal usage.
+    /// Has the currently viewed item (not a comment) changed recently?
     currently_viewed_item_switched: bool,
     /// The comments of the currently viewed item, if applicable.
     currently_viewed_item_comments: Option<DisplayableHackerNewsItemComments>,
@@ -192,6 +192,11 @@ impl AppState {
     pub fn set_currently_viewed_item(&mut self, viewed: Option<DisplayableHackerNewsItem>) {
         self.currently_viewed_item = viewed;
         self.currently_viewed_item_switched = true;
+    }
+
+    /// Get has the currently viewed item (not a comment) changed recently.
+    pub fn get_currently_viewed_item_switched(&self) -> bool {
+        self.currently_viewed_item_switched
     }
 
     /// Get the comments of the currently viewed item.

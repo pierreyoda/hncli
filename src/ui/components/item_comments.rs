@@ -53,6 +53,7 @@ const MEAN_TICKS_BETWEEN_UPDATES: UiTickScalar = 1800; // approx. every 3 minute
 
 pub const ITEM_COMMENTS_ID: UiComponentId = "item_comments";
 
+// TODO: fix bug where inputs are no longer responsive on some comments
 #[async_trait]
 impl UiComponent for ItemComments {
     fn id(&self) -> UiComponentId {
@@ -60,6 +61,14 @@ impl UiComponent for ItemComments {
     }
 
     fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
+        if ctx.get_state().get_currently_viewed_item_switched() {
+            // update comments on viewed item switch
+            // TODO: try to find a not too contrived way of forcing the loading screen to display on switching
+            self.inputs_debouncer.reset();
+            self.loading = true;
+            return Ok(true);
+        }
+
         self.ticks_since_last_update += elapsed_ticks;
         self.inputs_debouncer.tick(elapsed_ticks);
 
@@ -198,15 +207,12 @@ impl UiComponent for ItemComments {
         inside: Rect,
         ctx: &AppContext,
     ) -> Result<()> {
-        info!(
-            "chain={:?}",
-            ctx.get_state().get_currently_viewed_item_comments_chain()
-        );
-
         // (Initial) loading case
         if self.loading {
             return Self::render_text_message(f, inside, "Loading...");
         }
+
+        // Unavailable comments cache
         let viewed_item_comments =
             if let Some(cached_comments) = ctx.get_state().get_currently_viewed_item_comments() {
                 cached_comments
