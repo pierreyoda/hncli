@@ -12,7 +12,7 @@ pub const HNCLI_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub const ENABLE_GLOBAL_SUB_SCREEN_QUIT_SHORTCUT_DEFAULT: bool = true;
 pub const DISPLAY_COMMENTS_PANEL_BY_DEFAULT_DEFAULT: bool = false;
-pub const SHOW_CONTEXTUAL_HELP_DEFAULT: bool = false;
+pub const SHOW_CONTEXTUAL_HELP_DEFAULT: bool = true;
 
 /// Persisted, global application configuration.
 #[derive(Debug, Serialize)]
@@ -25,6 +25,16 @@ pub struct AppConfiguration {
     show_contextual_help: bool,
 }
 
+impl Default for AppConfiguration {
+    fn default() -> Self {
+        Self {
+            enable_global_sub_screen_quit_shortcut: ENABLE_GLOBAL_SUB_SCREEN_QUIT_SHORTCUT_DEFAULT,
+            display_comments_panel_by_default: DISPLAY_COMMENTS_PANEL_BY_DEFAULT_DEFAULT,
+            show_contextual_help: SHOW_CONTEXTUAL_HELP_DEFAULT,
+        }
+    }
+}
+
 /// Intermediate structure used solely for deserialization.
 ///
 /// This is needed due to potentially missing values in the TOML configuration,
@@ -34,16 +44,6 @@ struct DeserializableAppConfiguration {
     enable_global_sub_screen_quit_shortcut: Option<bool>,
     display_comments_panel_by_default: Option<bool>,
     show_contextual_help: Option<bool>,
-}
-
-impl Default for AppConfiguration {
-    fn default() -> Self {
-        Self {
-            enable_global_sub_screen_quit_shortcut: false,
-            display_comments_panel_by_default: false,
-            show_contextual_help: true,
-        }
-    }
 }
 
 // TODO: better error handling when the configuration cannot be saved/restored (should not panic but be logged)
@@ -103,11 +103,25 @@ impl AppConfiguration {
 
     fn from_file_or_environment() -> Result<Self> {
         let config_filepath = Self::get_config_file_path()?;
-        // TODO: use Default when not found
+
+        // File existence/permissions check: return Default if no access
+        if !config_filepath.try_exists().map_err(|err| {
+            HnCliError::ConfigSynchronizationError(format!(
+                "cannot check if config file ({}) exists: {}",
+                config_filepath.display(),
+                err
+            ))
+        })? {
+            let default_config = Self::default();
+            default_config.save_to_file()?;
+            return Ok(default_config);
+        }
+
         let config_raw = read_to_string(&config_filepath).map_err(|err| {
             HnCliError::ConfigSynchronizationError(format!(
-                "cannot open config file ({:?}): {}",
-                config_filepath, err
+                "cannot open config file ({}): {}",
+                config_filepath.display(),
+                err
             ))
         })?;
 
