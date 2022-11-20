@@ -192,6 +192,10 @@ impl InputsController {
         action.matches_event(self)
     }
 
+    pub fn has_ctrl_modifier(&self) -> bool {
+        self.modifier == KeyModifier::Control
+    }
+
     pub fn has_shift_modifier(&self) -> bool {
         self.modifier == KeyModifier::Shift
     }

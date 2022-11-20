@@ -87,8 +87,8 @@ impl ContextualHelper {
             } else {
                 HelpWidget::KeyReminder('🌐', "open the item link".into(), Key::Char('o'))
             },
-            if app_inputs.has_shift_modifier() {
-                HelpWidget::Text("❌ - SHIFT + 'c' to quit".into())
+            if app_inputs.has_ctrl_modifier() {
+                HelpWidget::Text("❌ - CTRL + 'c' to quit".into())
             } else {
                 HelpWidget::KeyReminder('❌', "quit".into(), Key::Char('q'))
             },
