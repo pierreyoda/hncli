@@ -10,16 +10,15 @@ A Terminal User Interface-based application for browsing Hacker News, written in
 
 ## Usage
 
-1) Clone the repository
-
-```sh
-git clone git@github.com:pierreyoda/hncli.git
-# or:
-gh repo clone pierreyoda/hncli
-```
-
-2) Run the project
+### With the Rust toolchain
 
 ```sh
 cargo run --release
+```
+
+### With Docker
+
+```sh
+docker build -t hncli .
+docker run -t hncli
 ```
