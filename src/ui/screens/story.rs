@@ -6,7 +6,7 @@ use crate::{
     app::AppState,
     config::AppConfiguration,
     ui::{
-        components::{item_comments::ITEM_COMMENTS_ID, item_details::ITEM_DETAILS_ID},
+        components::{item_comments::ITEM_TOP_LEVEL_COMMENTS_ID, item_details::ITEM_DETAILS_ID},
         displayable_item::DisplayableHackerNewsItem,
         handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
@@ -131,7 +131,7 @@ impl Screen for StoryDetailsScreen {
 
         components_registry.insert(ITEM_DETAILS_ID, main_layout_chunks[0]);
         if display_comments_panel {
-            components_registry.insert(ITEM_COMMENTS_ID, main_layout_chunks[1]);
+            components_registry.insert(ITEM_TOP_LEVEL_COMMENTS_ID, main_layout_chunks[1]);
         }
     }
 }

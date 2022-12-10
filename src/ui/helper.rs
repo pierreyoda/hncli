@@ -67,7 +67,7 @@ impl ContextualHelper {
             AppRoute::ItemDetails(item) => {
                 self.render_item_page_help(f, inside, app_state, app_inputs, item)
             }
-            AppRoute::ItemSubComments(_) => self.render_comments_page_help(f, inside),
+            AppRoute::ItemNestedComments(_) => self.render_comments_page_help(f, inside),
             AppRoute::Settings => self.render_settings_page_help(f, inside),
             AppRoute::Help => self.render_help_page_help(f, inside),
         }

@@ -28,8 +28,11 @@ use crate::{
 
 use self::{
     components::{
-        item_comments::ItemComments, item_details::ItemDetails, item_summary::ItemSummary,
-        search::Search, settings::Settings,
+        item_comments::{CommentItemNestedComments, ItemTopLevelComments},
+        item_details::ItemDetails,
+        item_summary::ItemSummary,
+        search::Search,
+        settings::Settings,
     },
     handlers::ApplicationAction,
     helper::ContextualHelper,
@@ -128,7 +131,8 @@ impl UserInterface {
         self.register_component(StoriesPanel::default());
         self.register_component(ItemDetails::default());
         self.register_component(ItemSummary::default());
-        self.register_component(ItemComments::default());
+        self.register_component(ItemTopLevelComments::default());
+        self.register_component(CommentItemNestedComments::default());
         self.register_component(Options::default());
 
         for component_wrapper in self.components.values_mut() {

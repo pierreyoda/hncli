@@ -37,6 +37,7 @@ pub trait UiComponent {
     /// Renderer for the component.
     fn render(
         &mut self,
+        // TODO: make public type for this parameter
         f: &mut Frame<CrosstermBackend<Stdout>>,
         inside: Rect,
         ctx: &AppContext,

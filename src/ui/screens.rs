@@ -12,9 +12,9 @@ use super::{
 
 pub mod help;
 pub mod home;
+pub mod nested_comments;
 pub mod settings;
 pub mod story;
-pub mod sub_comments;
 
 /// Defines layout state by associating each visible component
 /// with a defined target `Rect`.
