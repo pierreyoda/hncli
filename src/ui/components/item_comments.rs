@@ -63,7 +63,7 @@ impl UiComponent for ItemComments {
     fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
         if ctx.get_state().get_currently_viewed_item_switched() {
             // update comments on viewed item switch
-            // TODO: try to find a not too contrived way of forcing the loading screen to display on switching
+            // TODO: try to find a not too contrived way of forcing the loading screen to display on switching between items
             self.inputs_debouncer.reset();
             self.loading = true;
             return Ok(true);
@@ -105,7 +105,7 @@ impl UiComponent for ItemComments {
         {
             item_or_comment.clone()
         } else {
-            self.loading = false;
+            self.loading = true;
             return Ok(());
         };
         let viewed_item_kids: &[HnItemIdScalar] = viewed_item
@@ -147,6 +147,8 @@ impl UiComponent for ItemComments {
             return Ok(false);
         }
 
+        info!("handle_inputs.before_check");
+
         let viewed_item_kids = if let Some(item_or_comment) =
             Self::get_viewed_item_or_parent_comment(ctx.get_state())
         {
@@ -165,10 +167,6 @@ impl UiComponent for ItemComments {
                 .map(|item| item.id)
         );
         info!("handle_inputs.viewed_item_kids = {:?}", viewed_item_kids);
-        info!(
-            "comments={:?}",
-            ctx.get_state().get_currently_viewed_item_comments()
-        );
 
         info!(
             "handle_inputs, chain={:?}",
@@ -224,6 +222,10 @@ impl UiComponent for ItemComments {
             return Self::render_text_message(f, inside, "Loading...");
         }
 
+        // Are we rendering a sub-comment?
+        let rendering_nested_comment = Self::get_viewed_item_or_parent_comment(ctx.get_state())
+            .map_or(false, |item| item.is_comment);
+
         // Unavailable comments cache
         let viewed_item_comments =
             if let Some(cached_comments) = ctx.get_state().get_currently_viewed_item_comments() {
@@ -236,20 +238,20 @@ impl UiComponent for ItemComments {
                 );
             };
 
-        // Invalid viewed item case
-        let _viewed_item = if ctx
+        // Invalid viewed item cases
+        if ctx
             .get_state()
             .get_currently_viewed_item_comments_chain()
             .len()
             > 1
         {
-            if let Some(item_or_comment) = Self::get_viewed_item_or_comment(ctx.get_state()) {
+            if let Some(item_or_comment) = if rendering_nested_comment {
+                Self::get_viewed_item_or_parent_comment(ctx.get_state())
+            } else {
+                Self::get_viewed_item_or_comment(ctx.get_state())
+            } {
                 // No comments case
-                if item_or_comment
-                    .kids
-                    .as_ref()
-                    .map_or(true, |item_or_comment_kids| item_or_comment_kids.is_empty())
-                {
+                if item_or_comment.kids.is_none() {
                     return Self::render_text_message(f, inside, "No comments yet.");
                 }
                 // Main-level comment case
@@ -265,9 +267,8 @@ impl UiComponent for ItemComments {
         } else {
             return Self::render_text_message(f, inside, "Cannot render this item.");
         };
-        info!("> _viewed_item.id={}", _viewed_item.id);
 
-        // General case
+        // Rendering
         let widget = ItemCommentsWidget::with_comments(&self.widget_state, viewed_item_comments);
         f.render_widget(widget, inside);
 

@@ -70,6 +70,7 @@ pub struct HnClient {
 /// Flat storage structure for a comments thread.
 pub type HnItemComments = HashMap<HnItemIdScalar, HnItem>;
 
+// TODO: timeouts should be logged and not panic in every case except first ever request (how to track?)
 impl HnClient {
     pub fn new() -> Result<Self> {
         Ok(Self {

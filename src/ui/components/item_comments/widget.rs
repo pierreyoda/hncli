@@ -221,3 +221,5 @@ impl<'a> Widget for ItemCommentsWidget<'a> {
         )
     }
 }
+
+// TODO: unit tests for the widget state would be so nice, but would require some manually created Hacker News comments of a whole thread
