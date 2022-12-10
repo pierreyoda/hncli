@@ -159,6 +159,18 @@ impl UiComponent for ItemComments {
         };
 
         info!(
+            "handle_inputs.viewed_item_id={:?}",
+            ctx.get_state()
+                .get_currently_viewed_item()
+                .map(|item| item.id)
+        );
+        info!("handle_inputs.viewed_item_kids = {:?}", viewed_item_kids);
+        info!(
+            "comments={:?}",
+            ctx.get_state().get_currently_viewed_item_comments()
+        );
+
+        info!(
             "handle_inputs, chain={:?}",
             ctx.get_state().get_currently_viewed_item_comments_chain()
         );
@@ -253,6 +265,7 @@ impl UiComponent for ItemComments {
         } else {
             return Self::render_text_message(f, inside, "Cannot render this item.");
         };
+        info!("> _viewed_item.id={}", _viewed_item.id);
 
         // General case
         let widget = ItemCommentsWidget::with_comments(&self.widget_state, viewed_item_comments);
@@ -266,6 +279,13 @@ impl ItemComments {
     /// Get the currently viewed main HackerNews item, which can be the current comment in this case.
     fn get_viewed_item_or_comment(state: &AppState) -> Option<&DisplayableHackerNewsItem> {
         let comments_chain = state.get_currently_viewed_item_comments_chain();
+        info!("get_viewed_item_or_comment:chain={:?}", comments_chain);
+        info!(
+            "\tget_viewed_item_or_comment:available comments IDs={:?}",
+            state
+                .get_currently_viewed_item_comments()
+                .map(|cached| cached.keys())
+        );
         if let Some(latest_comment_id) = comments_chain.last() {
             match state.get_currently_viewed_item_comments() {
                 Some(cached_comments) => cached_comments.get(latest_comment_id),

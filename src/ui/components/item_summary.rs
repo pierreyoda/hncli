@@ -31,12 +31,9 @@ use super::common::COMMON_BLOCK_NORMAL_COLOR;
 /// ```
 #[derive(Debug, Default)]
 pub struct ItemSummary {
-    ticks_since_last_update: u64,
     /// HackerNews ID of the parent comment, cached for efficiency.
     parent_comment_id: Option<HnItemIdScalar>,
 }
-
-const MEAN_TICKS_BETWEEN_UPDATES: UiTickScalar = 600; // approx. every 1 minute
 
 pub const ITEM_SUMMARY_ID: UiComponentId = "item_summary";
 
@@ -46,19 +43,11 @@ impl UiComponent for ItemSummary {
         ITEM_SUMMARY_ID
     }
 
-    fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
-        self.ticks_since_last_update += elapsed_ticks;
-
-        // This is done to not overload the `get_parent_comment_id` function
-        if self.ticks_since_last_update < MEAN_TICKS_BETWEEN_UPDATES {
-            return Ok(false);
-        }
-
+    fn should_update(&mut self, _elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
         Ok(self.get_parent_comment_id(ctx.get_state()) != self.parent_comment_id)
     }
 
     async fn update(&mut self, _client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
-        self.ticks_since_last_update = 0;
         self.parent_comment_id = self.get_parent_comment_id(ctx.get_state());
         Ok(())
     }
