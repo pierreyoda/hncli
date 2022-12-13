@@ -16,12 +16,17 @@ use crate::{
     },
 };
 
+use self::history::AppHistory;
+
+pub mod history;
+
 /// Interact with application state from the components.
 pub struct AppContext<'a> {
     state: &'a mut AppState,
     router: &'a mut AppRouter,
     config: &'a mut AppConfiguration,
     inputs: &'a InputsController,
+    history: &'a mut AppHistory,
     /// Stored to change screen on route change.
     screen: &'a mut Box<dyn Screen>,
 }
@@ -41,6 +46,10 @@ impl<'a> AppContext<'a> {
 
     pub fn get_config_mut(&mut self) -> &mut AppConfiguration {
         self.config
+    }
+
+    pub fn get_history(&self) -> &AppHistory {
+        self.history
     }
 
     pub fn get_inputs(&self) -> &InputsController {
@@ -194,7 +203,7 @@ impl AppState {
         self.currently_viewed_item_switched = true;
     }
 
-    /// Get has the currently viewed item (not a comment) changed recently.
+    /// Get has the currently viewed item (not a comment) changed recently?
     pub fn get_currently_viewed_item_switched(&self) -> bool {
         self.currently_viewed_item_switched
     }
@@ -322,6 +331,8 @@ pub struct App {
     config: AppConfiguration,
     /// Application inputs controller.
     inputs: InputsController,
+    /// Application usage history.
+    history: AppHistory,
     /// Cached current Screen.
     current_screen: Box<dyn Screen>,
     /// The current layout state.
@@ -338,10 +349,13 @@ impl App {
         let mut state = AppState::from_config(&config);
         let initial_route = AppRoute::Home(HnStoriesSections::Home);
         let (router, current_screen) = AppRouter::new(initial_route, &mut state, &config);
+        let history = AppHistory::restored();
+
         Self {
             state,
             router,
             config,
+            history,
             current_screen,
             inputs: InputsController::new(),
             layout_components: HashMap::new(),
@@ -355,6 +369,7 @@ impl App {
             state: &mut self.state,
             router: &mut self.router,
             config: &mut self.config,
+            history: &mut self.history,
             screen: &mut self.current_screen,
         }
     }
@@ -379,9 +394,12 @@ impl App {
         }
 
         // screen event handling
-        let (response, new_route) =
-            self.current_screen
-                .handle_inputs(&self.inputs, &mut self.router, &mut self.state);
+        let (response, new_route) = self.current_screen.handle_inputs(
+            &self.inputs,
+            &mut self.router,
+            &mut self.state,
+            &mut self.history,
+        );
         if let Some(route) = new_route {
             // update the current screen if the route changed
             self.current_screen = AppRouter::build_screen_from_route(route);

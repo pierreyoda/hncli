@@ -1,7 +1,7 @@
 use tui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
-    app::AppState,
+    app::{history::AppHistory, AppState},
     ui::{
         components::{navigation::NAVIGATION_ID, settings::SETTINGS_ID},
         handlers::{ApplicationAction, InputsController},
@@ -27,6 +27,7 @@ impl Screen for SettingsScreen {
         inputs: &InputsController,
         router: &mut AppRouter,
         _state: &mut AppState,
+        _history: &mut AppHistory,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
         if inputs.is_active(&ApplicationAction::Back) {
             router.pop_navigation_stack();

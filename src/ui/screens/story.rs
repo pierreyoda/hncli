@@ -1,9 +1,7 @@
 use tui::layout::{Constraint, Direction, Layout, Rect};
 
-use log::info;
-
 use crate::{
-    app::AppState,
+    app::{history::AppHistory, AppState},
     config::AppConfiguration,
     ui::{
         components::{item_comments::ITEM_TOP_LEVEL_COMMENTS_ID, item_details::ITEM_DETAILS_ID},
@@ -69,9 +67,21 @@ impl Screen for StoryDetailsScreen {
         inputs: &InputsController,
         router: &mut AppRouter,
         state: &mut AppState,
+        history: &mut AppHistory,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
-        info!("story_SCREEN.handle_inputs");
         if inputs.is_active(&ApplicationAction::Back) {
+            // navigation history handling
+            // TODO: should also persist when quitting the app
+            if let Some(focused_top_level_comment_id) =
+                state.get_currently_viewed_item_comments_chain().first()
+            {
+                history.persist_top_level_comment_id_for_story(
+                    self.item.id,
+                    *focused_top_level_comment_id,
+                );
+                history.persist();
+            }
+
             router.pop_navigation_stack();
             (
                 ScreenEventResponse::Caught,
