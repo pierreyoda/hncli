@@ -95,7 +95,7 @@ impl ItemCommentsCommon {
         let widget = ItemCommentsWidget::with_comments(&self.widget_state, viewed_item_comments);
         f.render_widget(widget, inside);
 
-        return Ok(());
+        Ok(())
     }
 
     fn render_text_message(

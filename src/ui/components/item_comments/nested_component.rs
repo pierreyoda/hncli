@@ -26,6 +26,8 @@ pub const COMMENT_ITEM_NESTED_COMMENTS_ID: UiComponentId = "item_nested_comments
 #[derive(Debug, Default)]
 pub struct CommentItemNestedComments {
     common: ItemCommentsCommon,
+    /// Cached parent comment ID.
+    parent_comment_id: Option<HnItemIdScalar>,
 }
 
 #[async_trait]
@@ -39,8 +41,7 @@ impl UiComponent for CommentItemNestedComments {
         self.common.inputs_debouncer.tick(elapsed_ticks);
 
         let should_update = self.common.ticks_since_last_update >= MEAN_TICKS_BETWEEN_UPDATES
-            || Self::get_parent_comment_id(ctx.get_state())
-                != self.common.widget_state.get_focused_comment_id();
+            || Self::get_parent_comment_id(ctx.get_state()) != self.parent_comment_id;
 
         if should_update {
             self.common.loading = true;
@@ -51,6 +52,12 @@ impl UiComponent for CommentItemNestedComments {
 
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
         self.common.loading = true;
+
+        self.parent_comment_id = Self::get_parent_comment_id(ctx.get_state());
+        if self.parent_comment_id.is_none() {
+            warn!("CommentItemNestedComments.update: no parent comment ID available.");
+            return Ok(());
+        }
 
         // Parent comment handling
         let parent_comment_kids = if let Some(kids) = Self::get_parent_comment_kids(ctx.get_state())
@@ -82,6 +89,12 @@ impl UiComponent for CommentItemNestedComments {
     }
 
     fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
+        if ctx.get_inputs().is_active(&ApplicationAction::Back) {
+            // TODO: this should be handled at screen level but seems to be needed somehow
+            ctx.router_pop_navigation_stack();
+            return Ok(true);
+        }
+
         if self.common.loading || !self.common.inputs_debouncer.is_action_allowed() {
             return Ok(false);
         }
@@ -134,10 +147,6 @@ impl UiComponent for CommentItemNestedComments {
                 return Ok(false);
             }
             ctx.router_push_navigation_stack(AppRoute::ItemNestedComments(focused_comment));
-            true
-        } else if inputs.is_active(&ApplicationAction::Back) {
-            // TODO: this should be handled at screen level but seems to be needed most of the times
-            ctx.router_pop_navigation_stack();
             true
         } else {
             false
