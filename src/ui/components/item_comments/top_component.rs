@@ -39,6 +39,23 @@ impl UiComponent for ItemTopLevelComments {
             // update comments on viewed item switch
             self.common.inputs_debouncer.reset();
             self.common.loading = true;
+
+            // history navigation handling
+            let currently_viewed_item =
+                if let Some(item) = ctx.get_state().get_currently_viewed_item() {
+                    item
+                } else {
+                    return Ok(true);
+                };
+            if let Some(restored_comment_id) = ctx
+                .get_history()
+                .restored_top_level_comment_id_for_story(currently_viewed_item.id)
+            {
+                self.common
+                    .widget_state
+                    .history_prepare_focus_on_comment_id(restored_comment_id);
+            }
+
             return Ok(true);
         }
 

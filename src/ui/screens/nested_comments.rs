@@ -2,7 +2,7 @@ use tui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
     api::types::HnItemIdScalar,
-    app::AppState,
+    app::{history::AppHistory, AppState},
     config::AppConfiguration,
     ui::{
         components::{
@@ -52,6 +52,7 @@ impl Screen for NestedCommentsScreen {
         inputs: &InputsController,
         router: &mut AppRouter,
         state: &mut AppState,
+        _history: &mut AppHistory,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
         if inputs.is_active(&ApplicationAction::Back) {
             let restored_comment_id = state.pop_currently_viewed_item_comments_chain();

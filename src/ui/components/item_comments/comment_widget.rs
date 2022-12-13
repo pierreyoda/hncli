@@ -1,3 +1,4 @@
+use log::warn;
 use tui::{
     buffer::Buffer,
     layout::{Margin, Rect},
@@ -18,8 +19,11 @@ pub struct ItemCommentsWidgetState {
     focused_comment_index: Option<usize>,
     /// Number of same-level comments currently being offered for display.
     focused_same_level_comments_count: usize,
+    /// If Some, prepare to restore from history navigation state the focused comment.
+    history_should_focus_comment_id: Option<HnItemIdScalar>,
 }
 
+// TODO: unit tests harness (create new state.rs sub-module)
 impl ItemCommentsWidgetState {
     pub fn update(
         &mut self,
@@ -88,6 +92,13 @@ impl ItemCommentsWidgetState {
         }
     }
 
+    pub fn history_prepare_focus_on_comment_id(
+        &mut self,
+        history_focused_comment_id: HnItemIdScalar,
+    ) {
+        self.history_should_focus_comment_id = Some(history_focused_comment_id);
+    }
+
     pub fn get_focused_same_level_comments_count(&self) -> usize {
         self.focused_same_level_comments_count
     }
@@ -99,6 +110,16 @@ impl ItemCommentsWidgetState {
         comments: &DisplayableHackerNewsItemComments,
         parent_item_kids: &[HnItemIdScalar],
     ) {
+        // navigation history handling
+        if let Some(history_focused_comment_id) = self.history_should_focus_comment_id {
+            if comments.contains_key(&history_focused_comment_id) {
+                self.focused_comment_id = Some(history_focused_comment_id);
+            } else {
+                warn!("ItemCommentsWidgetState.reconciliate_focused_comment: could not find comment ID: {}", history_focused_comment_id);
+            }
+            self.history_should_focus_comment_id = None;
+        }
+
         match self.focused_comment_id {
             Some(comment_id) if comments.contains_key(&comment_id) => {
                 self.focused_same_level_comments_count = parent_item_kids.len();
