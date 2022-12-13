@@ -194,14 +194,14 @@ pub const SYNCHRONIZED_HISTORY_ITEMS_LIMIT: usize = 500;
 
 /// Responsible for tracking previous navigation state in a given top-level Hacker News item.
 #[derive(Debug)]
-pub struct History {
+pub struct AppHistory {
     /// File-synchronized part of the navigation History.
     ///
     /// Reading must be done at application startup, and writing as rarely as possible.
     synchronized: SynchronizedHistory,
 }
 
-impl History {
+impl AppHistory {
     pub fn restored() -> Self {
         match Self::get_history_file_path() {
             Ok(history_file_path) => Self {
@@ -287,7 +287,7 @@ mod tests {
 
     #[test]
     fn test_simple_item_top_level_persist_comment_id_scenario() {
-        let mut history = History {
+        let mut history = AppHistory {
             synchronized: SynchronizedHistory::empty(),
         };
 
