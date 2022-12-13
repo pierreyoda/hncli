@@ -2,7 +2,7 @@ use tui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
     api::types::HnItemIdScalar,
-    app::{history::AppHistory, AppState},
+    app::{history::AppHistory, state::AppState},
     config::AppConfiguration,
     ui::{
         components::{

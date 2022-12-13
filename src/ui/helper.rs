@@ -8,7 +8,7 @@ use tui::{
     Frame,
 };
 
-use crate::app::AppState;
+use crate::app::state::AppState;
 
 use super::{
     displayable_item::DisplayableHackerNewsItem,

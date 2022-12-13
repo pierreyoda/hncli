@@ -2,7 +2,7 @@ use std::fmt;
 
 use crate::{
     api::HnStoriesSections,
-    app::AppState,
+    app::state::AppState,
     config::AppConfiguration,
     ui::screens::{
         help::HelpScreen, home::HomeScreen, nested_comments::NestedCommentsScreen,

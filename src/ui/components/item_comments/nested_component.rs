@@ -6,7 +6,7 @@ use tui::{backend::CrosstermBackend, layout::Rect, Frame};
 
 use crate::{
     api::{types::HnItemIdScalar, HnClient},
-    app::{AppContext, AppState},
+    app::{state::AppState, AppContext},
     errors::Result,
     ui::{
         common::{UiComponent, UiComponentId, UiTickScalar},

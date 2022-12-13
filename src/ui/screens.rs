@@ -3,7 +3,7 @@ use std::{collections::HashMap, fmt::Debug};
 use tui::layout::Rect;
 
 use crate::{
-    app::{history::AppHistory, AppState},
+    app::{history::AppHistory, state::AppState},
     config::AppConfiguration,
 };
 

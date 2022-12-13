@@ -1,7 +1,7 @@
 use tui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
-    app::{history::AppHistory, AppState},
+    app::{history::AppHistory, state::AppState},
     config::AppConfiguration,
     ui::{
         components::{item_comments::ITEM_TOP_LEVEL_COMMENTS_ID, item_details::ITEM_DETAILS_ID},
