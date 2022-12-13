@@ -142,7 +142,7 @@ impl SynchronizedHistory {
         let history_directory = history_filepath.parent().expect(
             "SynchronizedHistory.write_to_json_file: history filepath parent folder can be read",
         );
-        create_dir_all(&history_filepath).map_err(|err| {
+        create_dir_all(&history_directory).map_err(|err| {
             HnCliError::HistorySynchronizationError(format!(
                 "cannot create history directory ({:?}): {}",
                 history_directory.display(),
