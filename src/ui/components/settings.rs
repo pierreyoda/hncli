@@ -20,7 +20,6 @@ use crate::{
     },
 };
 
-// TODO: add toggle for global 'q' immediate application quitting in addition to CTRL+C
 #[derive(Debug)]
 enum SettingsOption {
     /// On the item details page, should we display the comments panel by default or not?

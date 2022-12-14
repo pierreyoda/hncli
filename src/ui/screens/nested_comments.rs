@@ -1,12 +1,13 @@
-use log::info;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
     api::types::HnItemIdScalar,
-    app::AppState,
+    app::{history::AppHistory, state::AppState},
     config::AppConfiguration,
     ui::{
-        components::{item_comments::ITEM_COMMENTS_ID, item_summary::ITEM_SUMMARY_ID},
+        components::{
+            item_comments::COMMENT_ITEM_NESTED_COMMENTS_ID, item_summary::ITEM_SUMMARY_ID,
+        },
         displayable_item::DisplayableHackerNewsItem,
         handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
@@ -17,11 +18,11 @@ use super::{Screen, ScreenComponentsRegistry, ScreenEventResponse};
 
 /// Screen displaying the sub-comments of an HackerNews comment.
 #[derive(Debug)]
-pub struct SubCommentsScreen {
+pub struct NestedCommentsScreen {
     parent_comment: DisplayableHackerNewsItem,
 }
 
-impl SubCommentsScreen {
+impl NestedCommentsScreen {
     pub fn new(parent_comment: DisplayableHackerNewsItem) -> Self {
         assert!(parent_comment.is_comment);
         assert!(!Self::get_parent_comment_kids(&parent_comment).is_empty());
@@ -36,7 +37,7 @@ impl SubCommentsScreen {
     }
 }
 
-impl Screen for SubCommentsScreen {
+impl Screen for NestedCommentsScreen {
     fn before_mount(&mut self, state: &mut AppState, _config: &AppConfiguration) {
         state.push_currently_viewed_item_comments_chain(self.parent_comment.id);
         state.push_currently_viewed_item_comments_chain(
@@ -51,10 +52,9 @@ impl Screen for SubCommentsScreen {
         inputs: &InputsController,
         router: &mut AppRouter,
         state: &mut AppState,
+        _history: &mut AppHistory,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
-        info!("sub_comments_SCREENS.handle_inputs");
         if inputs.is_active(&ApplicationAction::Back) {
-            info!("sub_comments_SCREEN.back");
             let restored_comment_id = state.pop_currently_viewed_item_comments_chain();
             state.set_previously_viewed_comment_id(restored_comment_id);
             router.pop_navigation_stack();
@@ -80,6 +80,6 @@ impl Screen for SubCommentsScreen {
             .split(frame_size);
 
         components_registry.insert(ITEM_SUMMARY_ID, main_layout_chunks[0]);
-        components_registry.insert(ITEM_COMMENTS_ID, main_layout_chunks[1]);
+        components_registry.insert(COMMENT_ITEM_NESTED_COMMENTS_ID, main_layout_chunks[1]);
     }
 }

@@ -88,7 +88,6 @@ impl StoriesPanel {
 
 pub const STORIES_PANEL_ID: UiComponentId = "panel_stories";
 
-// TODO: add loading screen when fetching data
 #[async_trait]
 impl UiComponent for StoriesPanel {
     fn id(&self) -> UiComponentId {

@@ -2,7 +2,7 @@ use tui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
     api::HnStoriesSections,
-    app::AppState,
+    app::{history::AppHistory, state::AppState},
     config::AppConfiguration,
     ui::{
         components::{
@@ -54,6 +54,7 @@ impl Screen for HomeScreen {
         inputs: &InputsController,
         _router: &mut AppRouter,
         state: &mut AppState,
+        _history: &mut AppHistory,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
         if inputs.is_active(&ApplicationAction::HomeToggleSearchMode) {
             state.set_main_search_mode_query(if state.get_main_search_mode_query().is_some() {

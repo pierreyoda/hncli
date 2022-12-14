@@ -81,11 +81,14 @@ impl AppConfiguration {
 
     fn save_to_file(&self) -> Result<()> {
         let config_filepath = Self::get_config_file_path()?;
-        let config_directory = config_filepath.parent().unwrap();
+        let config_directory = config_filepath
+            .parent()
+            .expect("AppConfiguration.save_to_file: config filepath parent folder can be read");
         create_dir_all(config_directory).map_err(|err| {
             HnCliError::ConfigSynchronizationError(format!(
-                "cannot create config directory ({:?}): {}",
-                config_directory, err
+                "cannot create config directory ({}): {}",
+                config_directory.display(),
+                err
             ))
         })?;
 
@@ -95,8 +98,9 @@ impl AppConfiguration {
 
         write(&config_filepath, config_raw).map_err(|err| {
             HnCliError::ConfigSynchronizationError(format!(
-                "cannot save config file ({:?}): {}",
-                config_filepath, err
+                "cannot save config file ({}): {}",
+                config_filepath.display(),
+                err
             ))
         })
     }
@@ -147,13 +151,14 @@ impl AppConfiguration {
     }
 
     fn get_config_file_path() -> Result<PathBuf> {
-        let project_directories =
-            ProjectDirs::from("", "pierreyoda", "hncli").ok_or_else(|| {
-                HnCliError::ConfigSynchronizationError(
-                    "cannot get hncli config directory from OS".into(),
-                )
-            })?;
-        let config_directory = project_directories.config_dir();
-        Ok(config_directory.join("hncli.toml"))
+        let project_os_directory = get_project_os_directory()?;
+        Ok(project_os_directory.join("hncli.toml"))
     }
+}
+
+pub fn get_project_os_directory() -> Result<PathBuf> {
+    let project_directories = ProjectDirs::from("", "pierreyoda", "hncli").ok_or_else(|| {
+        HnCliError::ConfigSynchronizationError("cannot get hncli config directory from OS".into())
+    })?;
+    Ok(project_directories.config_dir().to_path_buf())
 }

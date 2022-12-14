@@ -2,11 +2,11 @@ use std::fmt;
 
 use crate::{
     api::HnStoriesSections,
-    app::AppState,
+    app::state::AppState,
     config::AppConfiguration,
     ui::screens::{
-        help::HelpScreen, home::HomeScreen, settings::SettingsScreen, story::StoryDetailsScreen,
-        sub_comments::SubCommentsScreen,
+        help::HelpScreen, home::HomeScreen, nested_comments::NestedCommentsScreen,
+        settings::SettingsScreen, story::StoryDetailsScreen,
     },
 };
 
@@ -19,8 +19,8 @@ pub enum AppRoute {
     Home(HnStoriesSections),
     /// Item details screen.
     ItemDetails(DisplayableHackerNewsItem),
-    /// Item sub-comments screen.
-    ItemSubComments(DisplayableHackerNewsItem),
+    /// Item nested comments screen.
+    ItemNestedComments(DisplayableHackerNewsItem),
     /// Settings screen.
     Settings,
     /// Help screen.
@@ -106,7 +106,9 @@ impl AppRouter {
             Settings => Box::new(SettingsScreen::new()),
             Home(section) => Box::new(HomeScreen::new(section)),
             ItemDetails(item) => Box::new(StoryDetailsScreen::new(item)),
-            ItemSubComments(parent_comment) => Box::new(SubCommentsScreen::new(parent_comment)),
+            ItemNestedComments(parent_comment) => {
+                Box::new(NestedCommentsScreen::new(parent_comment))
+            }
         }
     }
 }

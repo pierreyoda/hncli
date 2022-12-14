@@ -1,7 +1,7 @@
 use crossterm::event::{self, KeyModifiers};
 use event::{KeyCode, KeyEvent};
 
-use crate::app::AppState;
+use crate::app::state::AppState;
 
 /// Abstraction over a key event.
 ///

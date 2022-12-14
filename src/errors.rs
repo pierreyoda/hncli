@@ -20,6 +20,8 @@ pub enum HnCliError {
     CrosstermError(#[from] ErrorKind),
     #[error("Config synchronization error: {0}")]
     ConfigSynchronizationError(String),
+    #[error("History synchronization error: {0}")]
+    HistorySynchronizationError(String),
     #[error("URL parsing error")]
     UrlParsingError(#[from] ParseError),
     #[error("The HN item with ID {0} was not found")]

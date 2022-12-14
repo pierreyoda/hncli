@@ -2,7 +2,10 @@ use std::{collections::HashMap, fmt::Debug};
 
 use tui::layout::Rect;
 
-use crate::{app::AppState, config::AppConfiguration};
+use crate::{
+    app::{history::AppHistory, state::AppState},
+    config::AppConfiguration,
+};
 
 use super::{
     common::UiComponentId,
@@ -12,9 +15,9 @@ use super::{
 
 pub mod help;
 pub mod home;
+pub mod nested_comments;
 pub mod settings;
 pub mod story;
-pub mod sub_comments;
 
 /// Defines layout state by associating each visible component
 /// with a defined target `Rect`.
@@ -43,6 +46,7 @@ pub trait Screen: Debug + Send {
         inputs: &InputsController,
         router: &mut AppRouter,
         state: &mut AppState,
+        history: &mut AppHistory,
     ) -> (ScreenEventResponse, Option<AppRoute>);
 
     /// Compute the components' layout according to current terminal frame size.
