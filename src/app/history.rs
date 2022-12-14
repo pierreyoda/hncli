@@ -52,10 +52,6 @@ impl SynchronizedHistoryItem {
             }
         }
     }
-
-    fn is_top_level_item_comment(&self) -> bool {
-        matches!(self, Self::TopLevelComment(_))
-    }
 }
 
 type SynchronizedHistoryItemStorage = HashMap<HnItemIdScalar, SynchronizedHistoryItem>;
@@ -64,7 +60,7 @@ type SynchronizedHistoryItemStorage = HashMap<HnItemIdScalar, SynchronizedHistor
 pub struct SynchronizedHistory {
     /// Stores the latest focused top-level comment for a given Hacker News item.
     ///
-    /// Also keeps track of the insertion order to enforce hard limits on the history size.
+    /// Also keeps track of the insertion datetime to enforce hard limits on the history size.
     latest_top_level_comments_per_item_map: SynchronizedHistoryItemStorage,
 }
 
@@ -219,7 +215,7 @@ impl AppHistory {
         }
     }
 
-    /// Persist the history in OS-dependant JSON storage.
+    /// Persist the history in OS-dependent JSON storage.
     ///
     /// Should not be called too often for performance reasons.
     pub fn persist(&self) {
