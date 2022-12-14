@@ -105,6 +105,8 @@ impl ItemCommentsWidgetState {
 
     /// Reconciliate the currently focused main-level comment when replacing
     /// the comments of a currently viewed HackerNews item.
+    ///
+    /// Takes into account the past navigation history, if any pending.
     fn reconciliate_focused_comment(
         &mut self,
         comments: &DisplayableHackerNewsItemComments,
