@@ -1,5 +1,8 @@
 use crate::{
-    api::{types::HnItemIdScalar, HnStoriesSections, HnStoriesSorting},
+    api::{
+        client::{HnStoriesSections, HnStoriesSorting},
+        types::HnItemIdScalar,
+    },
     config::AppConfiguration,
     ui::{
         common::UiComponentId,

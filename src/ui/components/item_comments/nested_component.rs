@@ -68,6 +68,7 @@ impl UiComponent for CommentItemNestedComments {
 
         // Comments fetching
         let comments_raw = client
+            .classic()
             .get_item_comments(parent_comment_kids.as_slice())
             .await?;
         let comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;

@@ -4,8 +4,8 @@ use chrono::{DateTime, Utc};
 
 use crate::{
     api::{
+        client::HnItemComments,
         types::{HnItem, HnItemIdScalar},
-        HnItemComments,
     },
     errors::{HnCliError, Result},
 };

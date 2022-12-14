@@ -1,7 +1,7 @@
 use tui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
-    api::HnStoriesSections,
+    api::client::HnStoriesSections,
     app::{history::AppHistory, state::AppState},
     config::AppConfiguration,
     ui::{

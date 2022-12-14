@@ -8,7 +8,7 @@ use tui::{
 };
 
 use crate::{
-    api::{HnClient, HnStoriesSections},
+    api::{client::HnStoriesSections, HnClient},
     app::AppContext,
     errors::Result,
     ui::{

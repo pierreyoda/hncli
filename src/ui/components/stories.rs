@@ -14,7 +14,11 @@ use tui::{
 use unicode_width::UnicodeWidthStr;
 
 use crate::{
-    api::{types::HnItemIdScalar, HnClient, HnStoriesSections, HnStoriesSorting},
+    api::{
+        client::{HnStoriesSections, HnStoriesSorting},
+        types::HnItemIdScalar,
+        HnClient,
+    },
     app::AppContext,
     errors::Result,
     ui::{
@@ -132,15 +136,16 @@ impl UiComponent for StoriesPanel {
         let search_query = ctx.get_state().get_main_search_mode_query();
 
         // Data fetching
+        let api = client.classic();
         let router = ctx.get_router();
         let stories = if let Some(current_section) = router.get_current_route().get_home_section() {
             if current_section == &HnStoriesSections::Home {
-                client.get_home_items(&sorting_type).await?
+                api.get_home_items(&sorting_type).await?
             } else {
-                client.get_home_section_items(current_section).await?
+                api.get_home_section_items(current_section).await?
             }
         } else {
-            client.get_home_items(&sorting_type).await?
+            api.get_home_items(&sorting_type).await?
         };
         let cut_stories_iter = stories.iter();
         let displayable_stories = cut_stories_iter.cloned().map(|item| {

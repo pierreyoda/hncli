@@ -4,7 +4,7 @@ use crossterm::event::KeyEvent;
 use tui::layout::Rect;
 
 use crate::{
-    api::HnStoriesSections,
+    api::client::HnStoriesSections,
     config::AppConfiguration,
     ui::{
         common::UiComponentId,

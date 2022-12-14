@@ -1,7 +1,7 @@
 use std::fmt;
 
 use crate::{
-    api::HnStoriesSections,
+    api::client::HnStoriesSections,
     app::state::AppState,
     config::AppConfiguration,
     ui::screens::{
