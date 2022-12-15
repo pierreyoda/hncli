@@ -1,3 +1,7 @@
+//! See https://hn.algolia.com/api.
+
+use serde::Deserialize;
+
 use crate::api::types::HnItemIdScalar;
 
 pub trait AlgoliaHnFilter {
@@ -51,5 +55,31 @@ impl AlgoliaHnFilter for AlgoliaHnNumericFilter {
             Self::Points => "points".into(),
             Self::CommentsCount => "num_comments".into(),
         }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct AlgoliaHnFullTextSearchHit {
+    objectId: String,
+}
+
+impl AlgoliaHnFullTextSearchHit {
+    pub fn try_parse_id(&self) -> Option<HnItemIdScalar> {
+        self.objectId.parse::<HnItemIdScalar>().ok()
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct AlgoliaHnFullTextSearchResult {
+    hits: Vec<AlgoliaHnFullTextSearchHit>,
+    page: usize,
+    query: String,
+    /// Format: "query={...}".
+    params: String,
+}
+
+impl AlgoliaHnFullTextSearchResult {
+    pub fn get_hits(&self) -> &Vec<AlgoliaHnFullTextSearchHit> {
+        &self.hits
     }
 }

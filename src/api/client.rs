@@ -227,7 +227,7 @@ impl ClassicHnClient {
                 }
                 // general case
                 serde_json::from_str(&raw).expect(&format!(
-                    "api.get_item: deserialization should work for item with ID {}",
+                    "api.classic.get_item: deserialization should work for item with ID {}",
                     id
                 ))
             })
