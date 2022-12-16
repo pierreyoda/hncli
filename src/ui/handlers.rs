@@ -41,7 +41,7 @@ impl Key {
             Escape => "⎋ (escape)".into(),
             Enter => "↵ (enter)".into(),
             Backspace => "← (backspace)".into(),
-            Tab => "⇥ (tabulation)".into(),
+            Tab => "⇥ (tab)".into(),
             Up => "⬆️ (up)".into(),
             Down => "⬇️ (down)".into(),
             Left => "⬅️ (left)".into(),

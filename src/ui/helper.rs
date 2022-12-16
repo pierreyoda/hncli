@@ -167,7 +167,7 @@ impl ContextualHelper {
     fn render_settings_page_help(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
         let widgets = vec![
             HelpWidget::Text("⬆️  / i or ⬇️  / k to navigate".into()),
-            HelpWidget::KeyReminder('✅', "toggle the setting".into(), Key::Tab),
+            HelpWidget::KeyReminder('✅', "toggle setting".into(), Key::Tab),
             HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape),
         ];
         Self::render_widgets(f, inside, widgets.as_ref());
