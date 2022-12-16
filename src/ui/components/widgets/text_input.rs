@@ -28,6 +28,31 @@
 
 use tui::{buffer::Buffer, layout::Rect, widgets::Widget};
 
+use crate::ui::handlers::ApplicationAction;
+
+/// "Bridge" between the application's event handling and the corresponding `TextInputStateAction`s.
+trait TextInputStateActionBridge {
+    type ApplicationEvent;
+
+    // TODO: can we use a slice and not a Vec? in the context of a future independant crate
+    fn available_events(&self) -> Vec<Self::ApplicationEvent>;
+
+    fn handle_event(&self, event: &Self::ApplicationEvent);
+}
+
+impl TextInputStateActionBridge for TextInputStateAction {
+    type ApplicationEvent = ApplicationAction;
+
+    fn available_events(&self) -> Vec<Self::ApplicationEvent> {
+        let mut actions = vec![];
+        actions
+    }
+
+    fn handle_event(&self, event: &Self::ApplicationEvent) {
+        todo!()
+    }
+}
+
 /// The various interactions with `TextInputState`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TextInputStateAction {
@@ -41,7 +66,8 @@ pub enum TextInputStateAction {
     GoToEnd,
     DeletePreviousCharacter,
     DeleteNextCharacter,
-    DeleteTillEnd,
+    DeleteBeforeCursor,
+    DeleteAfterCursor,
 }
 
 /// State for `TextInputWidget`, to be used in the parent structure.
