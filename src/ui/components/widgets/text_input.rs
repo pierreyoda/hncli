@@ -26,24 +26,53 @@
 
 // TODO: make a separate crate?
 
-use tui::{buffer::Buffer, layout::Rect, widgets::Widget};
+use tui::{
+    buffer::Buffer,
+    layout::Rect,
+    widgets::{Block, Widget},
+};
 
 use crate::ui::handlers::ApplicationAction;
 
+/// The various interactions with `TextInputState`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum TextInputStateAction {
+    SetCursorIndex(usize),
+    /// The corresponding UTF-8 character on the keyboard.
+    InsertCharacter(char),
+    /// Typically the left arrow key.
+    GoToPreviousCharacter,
+    /// Typically the right arrow key.
+    GoToNextCharacter,
+    GoToPreviousWord,
+    GoToNextWord,
+    /// Typically CTRL + A.
+    GoToStart,
+    /// Typically CTRL + E.
+    GoToEnd,
+    /// Typically Backspace.
+    DeletePreviousCharacter,
+    DeleteNextCharacter,
+    /// Typically CTRL + U.
+    DeleteBeforeCursor,
+    /// Typically CTRL + K.
+    DeleteAfterCursor,
+}
+
 /// "Bridge" between the application's event handling and the corresponding `TextInputStateAction`s.
-trait TextInputStateActionBridge {
+pub trait TextInputStateActionBridge {
     type ApplicationEvent;
 
     // TODO: can we use a slice and not a Vec? in the context of a future independant crate
-    fn available_events(&self) -> Vec<Self::ApplicationEvent>;
+    fn available_actions(&self) -> Vec<Self::ApplicationEvent>;
 
     fn handle_event(&self, event: &Self::ApplicationEvent);
 }
 
-impl TextInputStateActionBridge for TextInputStateAction {
+impl TextInputStateActionBridge for TextInputState {
     type ApplicationEvent = ApplicationAction;
 
-    fn available_events(&self) -> Vec<Self::ApplicationEvent> {
+    fn available_actions(&self) -> Vec<Self::ApplicationEvent> {
         let mut actions = vec![];
         actions
     }
@@ -53,25 +82,8 @@ impl TextInputStateActionBridge for TextInputStateAction {
     }
 }
 
-/// The various interactions with `TextInputState`.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum TextInputStateAction {
-    SetCursorIndex(usize),
-    InsertCharacter(char),
-    GoToPreviousCharacter,
-    GoToNextCharacter,
-    GoToPreviousWord,
-    GoToNextWord,
-    GoToStart,
-    GoToEnd,
-    DeletePreviousCharacter,
-    DeleteNextCharacter,
-    DeleteBeforeCursor,
-    DeleteAfterCursor,
-}
-
 /// State for `TextInputWidget`, to be used in the parent structure.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct TextInputState {
     value: String,
     cursor_index: usize,
@@ -105,16 +117,32 @@ impl TextInputState {
 pub struct TextInputWidget<'a> {
     /// Persistent state.
     state: &'a TextInputState,
+    /// (Optional) Wrapping `tui-rs` Block widget.
+    block: Option<Block<'a>>,
 }
 
 impl<'a> TextInputWidget<'a> {
     pub fn with_state(state: &'a TextInputState) -> Self {
-        Self { state }
+        Self { state, block: None }
+    }
+
+    pub fn block(mut self, block: Block<'a>) -> Self {
+        self.block = Some(block);
+        self
     }
 }
 
 impl<'a> Widget for TextInputWidget<'a> {
-    fn render(self, area: Rect, buf: &mut Buffer) {
+    fn render(mut self, area: Rect, buf: &mut Buffer) {
+        let text_area = match self.block.take() {
+            Some(b) => {
+                let inner_area = b.inner(area);
+                b.render(area, buf);
+                inner_area
+            }
+            None => area,
+        };
+
         todo!()
     }
 }
