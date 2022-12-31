@@ -12,6 +12,7 @@ pub const HNCLI_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub const ENABLE_GLOBAL_SUB_SCREEN_QUIT_SHORTCUT_DEFAULT: bool = true;
 pub const DISPLAY_COMMENTS_PANEL_BY_DEFAULT_DEFAULT: bool = false;
+pub const DISPLAY_MAIN_ITEMS_LIST_ITEM_META: bool = false;
 pub const SHOW_CONTEXTUAL_HELP_DEFAULT: bool = true;
 
 /// Persisted, global application configuration.
@@ -21,6 +22,8 @@ pub struct AppConfiguration {
     enable_global_sub_screen_quit_shortcut: bool,
     /// On the item details page, should we display the comments panel by default or not?
     display_comments_panel_by_default: bool,
+    /// On the main items list (home screen), should we display the items' metadata (score, number of comments, etc.)?
+    display_main_items_list_item_meta: bool,
     /// Show the global contextual help?
     show_contextual_help: bool,
 }
@@ -30,6 +33,7 @@ impl Default for AppConfiguration {
         Self {
             enable_global_sub_screen_quit_shortcut: ENABLE_GLOBAL_SUB_SCREEN_QUIT_SHORTCUT_DEFAULT,
             display_comments_panel_by_default: DISPLAY_COMMENTS_PANEL_BY_DEFAULT_DEFAULT,
+            display_main_items_list_item_meta: DISPLAY_MAIN_ITEMS_LIST_ITEM_META,
             show_contextual_help: SHOW_CONTEXTUAL_HELP_DEFAULT,
         }
     }
@@ -67,6 +71,15 @@ impl AppConfiguration {
 
     pub fn toggle_display_comments_panel_by_default(&mut self) {
         self.display_comments_panel_by_default = !self.display_comments_panel_by_default;
+        self.save_to_file().unwrap();
+    }
+
+    pub fn get_display_main_items_list_item_meta(&self) -> bool {
+        self.display_main_items_list_item_meta
+    }
+
+    pub fn toggle_display_main_items_list_item_meta(&mut self) {
+        self.display_main_items_list_item_meta = !self.display_main_items_list_item_meta;
         self.save_to_file().unwrap();
     }
 
@@ -144,6 +157,9 @@ impl AppConfiguration {
             display_comments_panel_by_default: deserializable_config
                 .display_comments_panel_by_default
                 .unwrap_or(DISPLAY_COMMENTS_PANEL_BY_DEFAULT_DEFAULT),
+            display_main_items_list_item_meta: deserializable_config
+                .display_main_items_list_item_meta
+                .unwrap_or(DISPLAY_MAIN_ITEMS_LIST_ITEM_META),
             show_contextual_help: deserializable_config
                 .show_contextual_help
                 .unwrap_or(SHOW_CONTEXTUAL_HELP_DEFAULT),

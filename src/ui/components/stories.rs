@@ -9,9 +9,10 @@ use tui::{
     backend::CrosstermBackend,
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
-    text::{Span, Spans},
-    widgets::{Block, BorderType, Borders, List, ListItem, Paragraph},
+    text::Spans,
+    widgets::{Block, BorderType, Borders, Paragraph},
 };
+use unicode_width::UnicodeWidthStr;
 
 use crate::{
     api::{types::HnItemIdScalar, HnClient, HnStoriesSections, HnStoriesSorting},
@@ -234,20 +235,35 @@ impl UiComponent for StoriesPanel {
             .title(block_title);
 
         // Custom List
+        let display_story_meta = ctx.get_config().get_display_main_items_list_item_meta();
         let custom_list_stories = CustomList::new(
             &mut self.list_state,
             |rect, buf, item, is_selected| {
+                let style = Style::default().fg(if is_selected {
+                    Color::Yellow
+                } else {
+                    Color::White
+                });
+                // title
                 let title = item.title.clone().unwrap_or_default();
+                let (x, _) = buf.set_stringn(rect.x, rect.y, title, rect.width as usize, style);
+                // (optional) points & comments count
+                if !display_story_meta || x >= rect.width {
+                    return;
+                }
+                let meta = format!(
+                    "{}, {} score, {} comments",
+                    item.posted_since,
+                    item.score,
+                    item.kids.as_ref().map_or(0, |kids| kids.len()),
+                );
+                let meta_width = meta.width();
                 buf.set_stringn(
-                    rect.x,
+                    rect.x + rect.width - (meta_width as u16) - 5,
                     rect.y,
-                    title,
-                    rect.width as usize,
-                    Style::default().fg(if is_selected {
-                        Color::Yellow
-                    } else {
-                        Color::White
-                    }),
+                    meta,
+                    meta_width,
+                    style,
                 );
             },
             |_| 1,
