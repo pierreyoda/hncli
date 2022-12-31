@@ -22,6 +22,8 @@ use crate::{
 
 #[derive(Debug)]
 enum SettingsOption {
+    /// On the main items list (home screen), should we display the items' metadata (score, number of comments, etc.)?
+    DisplayItemsListItemMeta(bool),
     /// On the item details page, should we display the comments panel by default or not?
     DisplayCommentsPanelByDefault(bool),
     /// Show the global contextual help?
@@ -33,6 +35,7 @@ enum SettingsOption {
 impl SettingsOption {
     pub fn get_representation(&self) -> Span {
         match self {
+            Self::DisplayItemsListItemMeta(value) => Self::get_boolean_representation(*value),
             Self::DisplayCommentsPanelByDefault(value) => Self::get_boolean_representation(*value),
             Self::ShowContextualHelp(value) => Self::get_boolean_representation(*value),
             Self::EnableGlobalSubScreenQuitShortcut(value) => {
@@ -182,38 +185,40 @@ impl Settings {
     }
 
     fn toggle_current_control(&mut self, ctx: &mut AppContext) {
+        let config = ctx.get_config_mut();
         match self.selected_control_index {
-            0 => ctx
-                .get_config_mut()
-                .toggle_display_comments_panel_by_default(),
-            1 => ctx.get_config_mut().toggle_show_contextual_help(),
-            2 => ctx
-                .get_config_mut()
-                .toggle_enable_global_sub_screen_quit_shortcut(),
+            0 => config.toggle_display_main_items_list_item_meta(),
+            1 => config.toggle_display_comments_panel_by_default(),
+            2 => config.toggle_show_contextual_help(),
+            3 => config.toggle_enable_global_sub_screen_quit_shortcut(),
             _ => (),
         }
         self.refresh_controls(ctx);
     }
 
     fn refresh_controls(&mut self, ctx: &AppContext) {
+        let config = ctx.get_config();
         self.controls = vec![
+            SettingsControl {
+                label: "Display the stories' metadata on main screen:".into(),
+                option: SettingsOption::DisplayItemsListItemMeta(
+                    config.get_display_main_items_list_item_meta(),
+                ),
+            },
             SettingsControl {
                 label: "Display the comments panel by default:".into(),
                 option: SettingsOption::DisplayCommentsPanelByDefault(
-                    ctx.get_config().get_display_comments_panel_by_default(),
+                    config.get_display_comments_panel_by_default(),
                 ),
             },
             SettingsControl {
                 label: "Show the global contextual help:".into(),
-                option: SettingsOption::ShowContextualHelp(
-                    ctx.get_config().get_show_contextual_help(),
-                ),
+                option: SettingsOption::ShowContextualHelp(config.get_show_contextual_help()),
             },
             SettingsControl {
                 label: "Enable the global 'q' quit shortcut in sub-screens, besides CTRL+C:".into(),
                 option: SettingsOption::EnableGlobalSubScreenQuitShortcut(
-                    ctx.get_config()
-                        .get_enable_global_sub_screen_quit_shortcut(),
+                    config.get_enable_global_sub_screen_quit_shortcut(),
                 ),
             },
         ];
