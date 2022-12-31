@@ -20,7 +20,7 @@ cargo run --release
 
 ```sh
 docker build -t hncli .
-docker run -t hncli
+docker run -it hncli
 ```
 
 ### Controls
