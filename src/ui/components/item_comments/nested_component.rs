@@ -30,6 +30,7 @@ pub struct CommentItemNestedComments {
     parent_comment_id: Option<HnItemIdScalar>,
 }
 
+// TODO: fix bug where needs to scroll up/down to display the first nested comment
 #[async_trait]
 impl UiComponent for CommentItemNestedComments {
     fn id(&self) -> UiComponentId {

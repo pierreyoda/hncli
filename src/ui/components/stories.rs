@@ -22,11 +22,14 @@ use crate::{
         displayable_item::DisplayableHackerNewsItem,
         handlers::ApplicationAction,
         router::AppRoute,
-        utils::{open_browser_tab, StatefulList},
+        utils::open_browser_tab,
     },
 };
 
-use super::common::COMMON_BLOCK_NORMAL_COLOR;
+use super::{
+    common::COMMON_BLOCK_NORMAL_COLOR,
+    widgets::custom_list::{CustomList, CustomListState},
+};
 
 #[derive(Debug)]
 pub struct StoriesPanel {
@@ -34,7 +37,7 @@ pub struct StoriesPanel {
     sorting_type_for_last_update: Option<HnStoriesSorting>,
     search_for_last_update: Option<String>,
     list_cutoff: usize,
-    list_state: StatefulList<HnItemIdScalar, DisplayableHackerNewsItem>,
+    list_state: CustomListState<HnItemIdScalar, DisplayableHackerNewsItem>,
 }
 
 // TODO: load from configuration
@@ -48,7 +51,7 @@ impl Default for StoriesPanel {
             sorting_type_for_last_update: None,
             search_for_last_update: None,
             list_cutoff: HOME_MAX_DISPLAYED_STORIES,
-            list_state: StatefulList::with_items(vec![]),
+            list_state: CustomListState::with_items(vec![]),
         }
     }
 }
@@ -138,8 +141,8 @@ impl UiComponent for StoriesPanel {
         };
 
         self.list_state.replace_items(filtered_stories);
-        if self.list_state.get_state().selected().is_none() {
-            self.list_state.get_state().select(Some(0));
+        if self.list_state.selected().is_none() {
+            self.list_state.select(Some(0));
         }
 
         self.sorting_type_for_last_update = Some(sorting_type);
@@ -156,7 +159,7 @@ impl UiComponent for StoriesPanel {
         }
 
         let inputs = ctx.get_inputs();
-        let selected = self.list_state.get_state().selected();
+        let selected = self.list_state.selected();
         Ok(if inputs.is_active(&ApplicationAction::NavigateUp) {
             self.list_state.previous();
             true
@@ -183,7 +186,7 @@ impl UiComponent for StoriesPanel {
                 && ctx.get_state().get_latest_interacted_with_component() == Some(&STORIES_PANEL_ID)
             {
                 let items = self.list_state.get_items();
-                let selected_item = &items[selected_index];
+                let selected_item = &items[*selected_index];
                 ctx.get_state_mut()
                     .set_currently_viewed_item(Some(selected_item.clone()));
                 ctx.router_push_navigation_stack(AppRoute::ItemDetails(selected_item.clone()));
@@ -230,32 +233,36 @@ impl UiComponent for StoriesPanel {
             .border_type(BorderType::Rounded)
             .title(block_title);
 
-        // List Items
-        let stories = self.list_state.get_items();
-        let list_stories_items: Vec<ListItem> = stories
-            .iter()
-            .map(|item| {
-                ListItem::new(Spans::from(vec![Span::styled(
-                    item.title.clone().unwrap_or_else(|| "".into()),
-                    Style::default().fg(Color::White),
-                )]))
-            })
-            .collect();
-
-        // List
-        let list_stories = List::new(list_stories_items)
-            .block(block)
-            .style(Style::default().fg(Color::White))
-            .highlight_style(
-                Style::default()
-                    .bg(Color::Yellow)
-                    .fg(Color::Black)
-                    .add_modifier(Modifier::BOLD),
-            )
-            .highlight_symbol(">> ")
-            .highlight_style(Style::default().fg(Color::Yellow));
-
-        f.render_stateful_widget(list_stories, inside, self.list_state.get_state());
+        // Custom List
+        let custom_list_stories = CustomList::new(
+            &mut self.list_state,
+            |rect, buf, item, is_selected| {
+                let title = item.title.clone().unwrap_or_default();
+                buf.set_stringn(
+                    rect.x,
+                    rect.y,
+                    title,
+                    rect.width as usize,
+                    Style::default().fg(if is_selected {
+                        Color::Yellow
+                    } else {
+                        Color::White
+                    }),
+                );
+            },
+            |_| 1,
+        )
+        .block(block)
+        .style(Style::default().fg(Color::White))
+        .highlight_style(
+            Style::default()
+                .bg(Color::Yellow)
+                .fg(Color::Black)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol(">> ")
+        .highlight_style(Style::default().fg(Color::Yellow));
+        f.render_widget(custom_list_stories, inside);
 
         Ok(())
     }

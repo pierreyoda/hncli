@@ -8,3 +8,4 @@ pub mod options;
 pub mod search;
 pub mod settings;
 pub mod stories;
+pub mod widgets;
