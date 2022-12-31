@@ -4,6 +4,7 @@ use std::{
 };
 
 use directories::ProjectDirs;
+use log::warn;
 use serde::{Deserialize, Serialize};
 
 use crate::errors::{HnCliError, Result};
@@ -46,7 +47,6 @@ struct DeserializableAppConfiguration {
     show_contextual_help: Option<bool>,
 }
 
-// TODO: better error handling when the configuration cannot be saved/restored (should not panic but be logged)
 impl AppConfiguration {
     pub fn from_file_or_defaults() -> Self {
         Self::from_file_or_environment().unwrap_or_default()
@@ -108,34 +108,69 @@ impl AppConfiguration {
     fn from_file_or_environment() -> Result<Self> {
         let config_filepath = Self::get_config_file_path()?;
 
-        // File existence/permissions check: return Default if no access
-        if !config_filepath.try_exists().map_err(|err| {
+        let load_defaults_and_save = || {
+            let default_config = Self::default();
+            match default_config.save_to_file() {
+                Err(why) => {
+                    warn!("{}", why);
+                }
+                Ok(_) => {}
+            }
+            Ok(default_config)
+        };
+
+        // File existence/permissions check
+        match config_filepath.try_exists().map_err(|err| {
             HnCliError::ConfigSynchronizationError(format!(
                 "cannot check if config file ({}) exists: {}",
                 config_filepath.display(),
                 err
             ))
-        })? {
-            let default_config = Self::default();
-            default_config.save_to_file()?;
-            return Ok(default_config);
+        }) {
+            Err(why) => {
+                warn!("{}", why);
+                return load_defaults_and_save();
+            }
+            Ok(exists) => {
+                if !exists {
+                    warn!(
+                        "config file ({}) does not exist yet",
+                        config_filepath.display()
+                    );
+                    return load_defaults_and_save();
+                }
+            }
         }
 
-        let config_raw = read_to_string(&config_filepath).map_err(|err| {
+        // Read
+        let config_raw = match read_to_string(&config_filepath).map_err(|err| {
             HnCliError::ConfigSynchronizationError(format!(
                 "cannot open config file ({}): {}",
                 config_filepath.display(),
                 err
             ))
-        })?;
+        }) {
+            Ok(raw) => raw,
+            Err(why) => {
+                warn!("{}", why);
+                return Ok(Self::default());
+            }
+        };
 
-        let deserializable_config: DeserializableAppConfiguration = toml::from_str(&config_raw)
-            .map_err(|err| {
+        // Deserialize
+        let deserializable_config: DeserializableAppConfiguration =
+            match toml::from_str(&config_raw).map_err(|err| {
                 HnCliError::ConfigSynchronizationError(format!(
                     "cannot deserialize config: {}",
                     err
                 ))
-            })?;
+            }) {
+                Ok(read_config) => read_config,
+                Err(why) => {
+                    warn!("{}", why);
+                    return Ok(Self::default());
+                }
+            };
 
         Ok(Self {
             enable_global_sub_screen_quit_shortcut: deserializable_config
