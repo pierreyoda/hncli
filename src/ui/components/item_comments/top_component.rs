@@ -28,6 +28,8 @@ pub struct ItemTopLevelComments {
     common: ItemCommentsCommon,
 }
 
+// TODO: fix behavior when stuck (ALL inputs not working) in top/nested comments (probably due to update's awaits)...
+// TODO: ...maybe perform updates in another thread?
 #[async_trait]
 impl UiComponent for ItemTopLevelComments {
     fn id(&self) -> UiComponentId {
@@ -112,20 +114,18 @@ impl UiComponent for ItemTopLevelComments {
         let comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
         ctx.get_state_mut()
             .set_currently_viewed_item_comments(Some(comments));
+        self.common.loading = false;
 
         // Widget state
         let viewed_item_comments =
             if let Some(cached_comments) = ctx.get_state().get_currently_viewed_item_comments() {
                 cached_comments
             } else {
-                self.common.loading = false;
                 return Ok(());
             };
         self.common
             .widget_state
             .update(viewed_item_comments, parent_item_kids.as_slice());
-
-        // TODO: restore previously viewed comment, if any
 
         self.common.loading = false;
 
@@ -133,6 +133,12 @@ impl UiComponent for ItemTopLevelComments {
     }
 
     fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
+        if ctx.get_inputs().is_active(&ApplicationAction::Back) {
+            // TODO: this should be handled at screen level but seems to be needed sometimes
+            ctx.router_pop_navigation_stack();
+            return Ok(true);
+        }
+
         if self.common.loading || !self.common.inputs_debouncer.is_action_allowed() {
             return Ok(false);
         }

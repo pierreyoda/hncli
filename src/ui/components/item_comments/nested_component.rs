@@ -30,7 +30,7 @@ pub struct CommentItemNestedComments {
     parent_comment_id: Option<HnItemIdScalar>,
 }
 
-// TODO: fix bug where needs to scroll up/down to display the first nested comment
+// TODO: fix behavior when stuck (ALL inputs not working) in nested comments (probably due to update's awaits)
 #[async_trait]
 impl UiComponent for CommentItemNestedComments {
     fn id(&self) -> UiComponentId {
@@ -77,6 +77,17 @@ impl UiComponent for CommentItemNestedComments {
             .set_currently_viewed_item_comments(Some(comments));
 
         self.common.loading = false;
+
+        // Widget state
+        let viewed_item_comments =
+            if let Some(cached_comments) = ctx.get_state().get_currently_viewed_item_comments() {
+                cached_comments
+            } else {
+                return Ok(());
+            };
+        self.common
+            .widget_state
+            .update(viewed_item_comments, parent_comment_kids.as_slice());
 
         // Latest focused comment, if applicable
         if let Some(restored_comment_id) = ctx.get_state().get_previously_viewed_comment_id() {

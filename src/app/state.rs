@@ -148,7 +148,7 @@ impl AppState {
         }
     }
 
-    /// Ensure that there are now invalid (*i.e.*, from our point of view, unfetchable) comment kids in our currently viewed item.
+    /// Ensure that there are no invalid (*i.e.*, from our point of view, unfetchable) comment kids in our currently viewed item.
     fn update_currently_viewed_item_kids_from_fetched_comments(
         &mut self,
         comments: &Option<DisplayableHackerNewsItemComments>,
