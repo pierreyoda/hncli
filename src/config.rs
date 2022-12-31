@@ -4,6 +4,7 @@ use std::{
 };
 
 use directories::ProjectDirs;
+use log::warn;
 use serde::{Deserialize, Serialize};
 
 use crate::errors::{HnCliError, Result};
@@ -47,13 +48,20 @@ impl Default for AppConfiguration {
 struct DeserializableAppConfiguration {
     enable_global_sub_screen_quit_shortcut: Option<bool>,
     display_comments_panel_by_default: Option<bool>,
+    display_main_items_list_item_meta: Option<bool>,
     show_contextual_help: Option<bool>,
 }
 
 // TODO: better error handling when the configuration cannot be saved/restored (should not panic but be logged)
 impl AppConfiguration {
     pub fn from_file_or_defaults() -> Self {
-        Self::from_file_or_environment().unwrap_or_default()
+        match Self::from_file_or_environment() {
+            Ok(config) => config,
+            Err(why) => {
+                warn!("AppConfiguration loading error, using defaults. {}", why);
+                Self::default()
+            }
+        }
     }
 
     pub fn get_enable_global_sub_screen_quit_shortcut(&self) -> bool {
@@ -62,7 +70,7 @@ impl AppConfiguration {
 
     pub fn toggle_enable_global_sub_screen_quit_shortcut(&mut self) {
         self.enable_global_sub_screen_quit_shortcut = !self.enable_global_sub_screen_quit_shortcut;
-        self.save_to_file().unwrap();
+        self.save_to_file_warn_if_fail();
     }
 
     pub fn get_display_comments_panel_by_default(&self) -> bool {
@@ -71,7 +79,7 @@ impl AppConfiguration {
 
     pub fn toggle_display_comments_panel_by_default(&mut self) {
         self.display_comments_panel_by_default = !self.display_comments_panel_by_default;
-        self.save_to_file().unwrap();
+        self.save_to_file_warn_if_fail();
     }
 
     pub fn get_display_main_items_list_item_meta(&self) -> bool {
@@ -80,7 +88,7 @@ impl AppConfiguration {
 
     pub fn toggle_display_main_items_list_item_meta(&mut self) {
         self.display_main_items_list_item_meta = !self.display_main_items_list_item_meta;
-        self.save_to_file().unwrap();
+        self.save_to_file_warn_if_fail();
     }
 
     pub fn get_show_contextual_help(&self) -> bool {
@@ -89,7 +97,7 @@ impl AppConfiguration {
 
     pub fn toggle_show_contextual_help(&mut self) {
         self.show_contextual_help = !self.show_contextual_help;
-        self.save_to_file().unwrap();
+        self.save_to_file_warn_if_fail();
     }
 
     fn save_to_file(&self) -> Result<()> {
@@ -116,6 +124,15 @@ impl AppConfiguration {
                 err
             ))
         })
+    }
+
+    fn save_to_file_warn_if_fail(&self) {
+        match self.save_to_file() {
+            Ok(()) => (),
+            Err(why) => {
+                warn!("AppConfiguration saving error, skipping. {}", why);
+            }
+        }
     }
 
     fn from_file_or_environment() -> Result<Self> {

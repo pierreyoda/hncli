@@ -22,7 +22,7 @@ use crate::{
 
 #[derive(Debug)]
 enum SettingsOption {
-    /// On the main items list (home screen), should we display the items' metadata (score, number of comments)?
+    /// On the main items list (home screen), should we display the items' metadata (score, number of comments, etc.)?
     DisplayItemsListItemMeta(bool),
     /// On the item details page, should we display the comments panel by default or not?
     DisplayCommentsPanelByDefault(bool),
