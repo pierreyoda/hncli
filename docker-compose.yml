@@ -1,4 +1,0 @@
-services:
-  hncli:
-    build: .
-    command: cargo test

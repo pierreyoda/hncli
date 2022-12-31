@@ -12,7 +12,10 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v3
-      - name: Run docker-compose stack
-        run: docker-compose -f docker-compose.yml build
-      - name: Run unit tests
-        run: docker-compose run hncli cargo test -- --nocapture
+      - name: Setup latest stable Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - name: Tests
+        run: cargo test -- --nocapture
