@@ -26,4 +26,4 @@ toml = "0.5.10"
 tui = { version = "0.19.0", default-features = false, features = ["crossterm"] }
 unicode-width = "0.1.10"
 url = "2.3.1"
-webbrowser = "0.8.2"
+webbrowser = "0.8.3"
