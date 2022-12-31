@@ -3,8 +3,8 @@
 use std::convert::TryFrom;
 
 use async_trait::async_trait;
-use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 
+use log::warn;
 use tui::{
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
@@ -15,6 +15,7 @@ use unicode_width::UnicodeWidthStr;
 
 use crate::{
     api::{
+        algolia_types::AlgoliaHnSearchTag,
         client::{HnStoriesSections, HnStoriesSorting},
         types::HnItemIdScalar,
         HnClient,
@@ -64,40 +65,16 @@ impl Default for StoriesPanel {
     }
 }
 
-const FUZZY_MATCHING_SCORE_CUTOFF: i64 = 90;
+pub const STORIES_PANEL_ID: UiComponentId = "panel_stories";
 
-impl StoriesPanel {
-    fn filtered_items(
-        items: impl Iterator<Item = DisplayableHackerNewsItem>,
-        filter_query: String,
-        max_count: usize,
-    ) -> Vec<DisplayableHackerNewsItem> {
-        if filter_query.trim().is_empty() {
-            return items.take(max_count).collect();
-        }
-        let matcher = SkimMatcherV2::default();
-        let processed_filter_query = filter_query.to_lowercase();
-        items
-            .filter(move |i| {
-                if let Some(fuzzy_score) = matcher.fuzzy_match(
-                    i.title
-                        .clone()
-                        .unwrap_or_else(|| "".into())
-                        .to_lowercase()
-                        .as_str(),
-                    &processed_filter_query,
-                ) {
-                    fuzzy_score >= FUZZY_MATCHING_SCORE_CUTOFF
-                } else {
-                    false
-                }
-            })
-            .take(max_count)
-            .collect()
+fn tag_from_main_stories_section(main_stories_section: &HnStoriesSections) -> AlgoliaHnSearchTag {
+    match main_stories_section {
+        HnStoriesSections::Home => AlgoliaHnSearchTag::FrontPage,
+        HnStoriesSections::Ask => AlgoliaHnSearchTag::AskHackerNews,
+        HnStoriesSections::Show => AlgoliaHnSearchTag::ShowHackerNews,
+        HnStoriesSections::Jobs => AlgoliaHnSearchTag::Story, // TODO: no alternative?
     }
 }
-
-pub const STORIES_PANEL_ID: UiComponentId = "panel_stories";
 
 #[async_trait]
 impl UiComponent for StoriesPanel {
@@ -135,30 +112,77 @@ impl UiComponent for StoriesPanel {
         let sorting_type = *ctx.get_state().get_main_stories_sorting();
         let search_query = ctx.get_state().get_main_search_mode_query();
 
+        // Search handling
+        let main_search_mode_query = ctx.get_state().get_main_search_mode_query();
+        let searched_stories_ids: Option<Vec<HnItemIdScalar>> =
+            if let Some(query) = main_search_mode_query {
+                if query.is_empty() {
+                    None
+                } else {
+                    let tags = [tag_from_main_stories_section(
+                        ctx.get_state().get_main_stories_section(),
+                    )];
+                    match client.algolia().search(&query, &tags).await {
+                        Ok(ids) => Some(ids),
+                        Err(why) => {
+                            warn!(
+                                "StoriesPanel.update: could not search for query ({}): {}",
+                                query, why
+                            );
+                            None
+                        }
+                    }
+                }
+            } else {
+                None
+            };
+
         // Data fetching
         let api = client.classic();
         let router = ctx.get_router();
-        let stories = if let Some(current_section) = router.get_current_route().get_home_section() {
-            if current_section == &HnStoriesSections::Home {
-                api.get_home_items(&sorting_type).await?
-            } else {
-                api.get_home_section_items(current_section).await?
+        let displayable_stories = if let Some(filtered_ids) = searched_stories_ids {
+            match api.get_items(filtered_ids.as_slice()).await {
+                Ok(raw_items) => raw_items
+                    .iter()
+                    .take(self.list_cutoff)
+                    .map(|raw_item| {
+                        DisplayableHackerNewsItem::try_from(raw_item.clone()).expect(
+                            "StoriesPanel.update: can map filtered DisplayableHackerNewsItem",
+                        )
+                    })
+                    .collect(),
+                Err(why) => {
+                    warn!(
+                        "StoriesPanel.update: could not fetch filtered items by IDs: {}",
+                        why
+                    );
+                    vec![]
+                }
             }
         } else {
-            api.get_home_items(&sorting_type).await?
+            // TODO: harden error handling here (should not crash)
+            let stories =
+                if let Some(current_section) = router.get_current_route().get_home_section() {
+                    if current_section == &HnStoriesSections::Home {
+                        api.get_home_items(&sorting_type).await?
+                    } else {
+                        api.get_home_section_items(current_section).await?
+                    }
+                } else {
+                    api.get_home_items(&sorting_type).await?
+                };
+            let cut_stories_iter = stories.iter();
+            cut_stories_iter
+                .take(self.list_cutoff)
+                .cloned()
+                .map(|raw_item| {
+                    DisplayableHackerNewsItem::try_from(raw_item)
+                        .expect("StoriesPanel.update: can map DisplayableHackerNewsItem")
+                })
+                .collect()
         };
-        let cut_stories_iter = stories.iter();
-        let displayable_stories = cut_stories_iter.cloned().map(|item| {
-            DisplayableHackerNewsItem::try_from(item).expect("can map DisplayableHackerNewsItem")
-        });
 
-        let filtered_stories = if let Some(filter_query) = search_query {
-            Self::filtered_items(displayable_stories, filter_query.clone(), self.list_cutoff)
-        } else {
-            displayable_stories.take(self.list_cutoff).collect()
-        };
-
-        self.list_state.replace_items(filtered_stories);
+        self.list_state.replace_items(displayable_stories);
         if self.list_state.selected().is_none() {
             self.list_state.select(Some(0));
         }

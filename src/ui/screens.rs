@@ -21,7 +21,7 @@ pub mod story;
 pub mod user;
 
 /// Defines layout state by associating each visible component
-/// with a defined target `Rect`.
+/// with a defined rendering target `Rect`.
 pub type ScreenComponentsRegistry = HashMap<UiComponentId, Rect>;
 
 /// Actions requested by a Screen when handling an input event.

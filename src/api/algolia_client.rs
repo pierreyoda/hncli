@@ -5,9 +5,7 @@ use reqwest::Client;
 use crate::errors::{HnCliError, Result};
 
 use super::{
-    algolia_types::{
-        AlgoliaHnFilter, AlgoliaHnFullTextSearchResult, AlgoliaHnNumericFilter, AlgoliaHnSearchTag,
-    },
+    algolia_types::{AlgoliaHnFilter, AlgoliaHnFullTextSearchResult, AlgoliaHnSearchTag},
     types::HnItemIdScalar,
 };
 
@@ -70,8 +68,7 @@ impl AlgoliaHnClient {
             .text()
             .await
             .map(|raw| {
-                serde_json::from_str(&raw)
-                    .expect(&format!("api.algolia.search: deserialization should work"))
+                serde_json::from_str(&raw).expect("api.algolia.search: deserialization should work")
             })
             .map_err(HnCliError::HttpError)?;
 
