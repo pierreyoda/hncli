@@ -185,6 +185,15 @@ impl UiComponent for ItemTopLevelComments {
             } else {
                 false
             }
+        } else if inputs.is_active(&ApplicationAction::FocusedCommentViewUserProfile) {
+            if let Some(focused_comment) = self.common.get_focused_comment(ctx.get_state()) {
+                ctx.router_push_navigation_stack(AppRoute::UserProfile(
+                    focused_comment.by_username.clone(),
+                ));
+                true
+            } else {
+                false
+            }
         } else {
             false
         })

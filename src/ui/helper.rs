@@ -68,6 +68,7 @@ impl ContextualHelper {
                 self.render_item_page_help(f, inside, app_state, app_inputs, item)
             }
             AppRoute::ItemNestedComments(_) => self.render_comments_page_help(f, inside),
+            AppRoute::UserProfile(_) => self.render_user_page_help(f, inside),
             AppRoute::Settings => self.render_settings_page_help(f, inside),
             AppRoute::Help => self.render_help_page_help(f, inside),
         }
@@ -93,7 +94,7 @@ impl ContextualHelper {
                 HelpWidget::KeyReminder('❌', "quit".into(), Key::Char('q'))
             },
         ];
-        Self::render_widgets(f, inside, widgets.as_ref());
+        Self::render_widgets(f, inside, &widgets);
     }
 
     fn render_item_page_help(
@@ -147,12 +148,19 @@ impl ContextualHelper {
                 "focus comment".into(),
                 Key::Enter,
             ));
+            widgets.push(HelpWidget::KeyReminder(
+                '👤',
+                "user profile".into(),
+                Key::Char('p'),
+            ));
         }
 
-        // go back widget
-        widgets.push(HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape));
+        // go back widget (if there is room)
+        if widgets.len() < 3 {
+            widgets.push(HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape));
+        }
 
-        Self::render_widgets(f, inside, widgets.as_ref());
+        Self::render_widgets(f, inside, &widgets);
     }
 
     fn render_comments_page_help(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
@@ -164,13 +172,22 @@ impl ContextualHelper {
         Self::render_widgets(f, inside, &widgets);
     }
 
+    fn render_user_page_help(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
+        let widget_open_profile_page =
+            HelpWidget::KeyReminder('🌐', "open the profile page".into(), Key::Char('o'));
+        let widget_go_back = HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape);
+
+        let widgets = vec![widget_open_profile_page, widget_go_back];
+        Self::render_widgets(f, inside, &widgets);
+    }
+
     fn render_settings_page_help(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
         let widgets = vec![
             HelpWidget::Text("⬆️  / i or ⬇️  / k to navigate".into()),
             HelpWidget::KeyReminder('✅', "toggle setting".into(), Key::Tab),
             HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape),
         ];
-        Self::render_widgets(f, inside, widgets.as_ref());
+        Self::render_widgets(f, inside, &widgets);
     }
 
     fn render_help_page_help(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
@@ -178,7 +195,7 @@ impl ContextualHelper {
             HelpWidget::KeyReminder('💡', "toggle help".into(), Key::Char('h')),
             HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape),
         ];
-        Self::render_widgets(f, inside, widgets.as_ref());
+        Self::render_widgets(f, inside, &widgets);
     }
 
     fn render_widgets(

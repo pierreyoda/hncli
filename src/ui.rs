@@ -33,6 +33,7 @@ use self::{
         item_summary::ItemSummary,
         search::Search,
         settings::Settings,
+        user_profile::UserProfile,
     },
     handlers::ApplicationAction,
     helper::ContextualHelper,
@@ -133,6 +134,7 @@ impl UserInterface {
         self.register_component(ItemSummary::default());
         self.register_component(ItemTopLevelComments::default());
         self.register_component(CommentItemNestedComments::default());
+        self.register_component(UserProfile::default());
         self.register_component(Options::default());
 
         for component_wrapper in self.components.values_mut() {

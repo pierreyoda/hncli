@@ -18,6 +18,7 @@ pub mod home;
 pub mod nested_comments;
 pub mod settings;
 pub mod story;
+pub mod user;
 
 /// Defines layout state by associating each visible component
 /// with a defined target `Rect`.

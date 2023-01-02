@@ -126,7 +126,7 @@ impl ItemDetails {
             } else {
                 let rendered = html_to_plain_text(corpus.as_str(), inside.width as usize);
                 let spans = rendered
-                    .split('\n')
+                    .lines()
                     .map(|line| Spans::from(line.to_string()))
                     .collect();
                 [vec![Spans::from(""), Spans::from("")], spans].concat()

@@ -6,11 +6,14 @@ use crate::{
     config::AppConfiguration,
     ui::screens::{
         help::HelpScreen, home::HomeScreen, nested_comments::NestedCommentsScreen,
-        settings::SettingsScreen, story::StoryDetailsScreen,
+        settings::SettingsScreen, story::StoryDetailsScreen, user::UserDetailsScreen,
     },
 };
 
-use super::{displayable_item::DisplayableHackerNewsItem, screens::Screen};
+use super::{
+    displayable_item::{user::DisplayableHackerNewsUser, DisplayableHackerNewsItem},
+    screens::Screen,
+};
 
 /// All the possible routes in the application.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -21,6 +24,8 @@ pub enum AppRoute {
     ItemDetails(DisplayableHackerNewsItem),
     /// Item nested comments screen.
     ItemNestedComments(DisplayableHackerNewsItem),
+    /// User profile screen. Only stores the user ID.
+    UserProfile(String),
     /// Settings screen.
     Settings,
     /// Help screen.
@@ -109,6 +114,7 @@ impl AppRouter {
             ItemNestedComments(parent_comment) => {
                 Box::new(NestedCommentsScreen::new(parent_comment))
             }
+            UserProfile(user_id) => Box::new(UserDetailsScreen::new(user_id)),
         }
     }
 }
