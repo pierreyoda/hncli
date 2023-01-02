@@ -10,6 +10,8 @@ use crate::{
     errors::{HnCliError, Result},
 };
 
+pub mod user;
+
 use super::utils::{datetime_from_hn_time, ItemWithId};
 
 /// Flat storage structure for a displayable comments thread.
@@ -93,6 +95,7 @@ impl ItemWithId<HnItemIdScalar> for DisplayableHackerNewsItem {
     }
 }
 
+// TODO: avoid url.clone here
 impl TryFrom<HnItem> for DisplayableHackerNewsItem {
     type Error = HnCliError;
 
