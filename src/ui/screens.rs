@@ -37,8 +37,7 @@ pub trait Screen: Debug + Send {
     /// Called after instantiation and before mounting the screen.
     fn before_mount(&mut self, _state: &mut AppState, _config: &AppConfiguration) {}
 
-    /// Handle an incoming key event, at the application level. Returns true if
-    /// the event is to be captured (swallowed) and not passed down to components.
+    /// Handle an incoming key event, at the application level.
     ///
     /// Returns the (event_response, new_route_if_navigated) tuple.
     fn handle_inputs(

@@ -188,7 +188,7 @@ impl SynchronizedHistory {
 /// Maximum number of entries that will be kept in the history file.
 pub const SYNCHRONIZED_HISTORY_ITEMS_LIMIT: usize = 500;
 
-/// Responsible for tracking previous navigation state in a given top-level Hacker News item.
+/// Responsible for restoring navigation state in the application from previous sessions.
 #[derive(Debug)]
 pub struct AppHistory {
     /// File-synchronized part of the navigation History.
