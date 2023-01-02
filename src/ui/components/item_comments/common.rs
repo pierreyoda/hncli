@@ -9,10 +9,12 @@ use tui::{
 };
 
 use crate::{
-    app::AppContext,
+    app::{state::AppState, AppContext},
     errors::Result,
     ui::{
-        common::UiTickScalar, components::common::COMMON_BLOCK_NORMAL_COLOR,
+        common::UiTickScalar,
+        components::common::{render_text_message, COMMON_BLOCK_NORMAL_COLOR},
+        displayable_item::DisplayableHackerNewsItem,
         utils::debouncer::Debouncer,
     },
 };
@@ -54,19 +56,18 @@ impl ItemCommentsCommon {
     {
         // (Initial) loading case
         if self.loading {
-            Self::render_text_message(f, inside, "Loading...");
+            render_text_message(f, inside, "Loading...");
             return Ok(());
         }
 
         // Unavailable comments cache case
-        let viewed_item_comments = if let Some(cached_comments) =
-            ctx.get_state().get_currently_viewed_item_comments()
-        {
-            cached_comments
-        } else {
-            Self::render_text_message(f, inside, "Comments fetching issue. Please retry later.");
-            return Ok(());
-        };
+        let viewed_item_comments =
+            if let Some(cached_comments) = ctx.get_state().get_currently_viewed_item_comments() {
+                cached_comments
+            } else {
+                render_text_message(f, inside, "Comments fetching issue. Please retry later.");
+                return Ok(());
+            };
 
         // Common error cases
         if ctx
@@ -74,20 +75,20 @@ impl ItemCommentsCommon {
             .get_currently_viewed_item_comments_chain()
             .is_empty()
         {
-            Self::render_text_message(
+            render_text_message(
                 f,
                 inside,
                 "An error has occurred on this thread. Please retry later.",
             );
             return Ok(());
         } else if viewed_item_comments.is_empty() {
-            Self::render_text_message(f, inside, "No comments yet.");
+            render_text_message(f, inside, "No comments yet.");
             return Ok(());
         }
 
         // Specific error cases
         if let Some(error_message) = specific_error_handler() {
-            Self::render_text_message(f, inside, error_message.as_str());
+            render_text_message(f, inside, error_message.as_str());
             return Ok(());
         }
 
@@ -98,20 +99,25 @@ impl ItemCommentsCommon {
         Ok(())
     }
 
-    fn render_text_message(
-        f: &mut tui::Frame<CrosstermBackend<Stdout>>,
-        inside: Rect,
-        message: &str,
-    ) {
-        let block = Block::default()
-            .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
-            .borders(Borders::ALL)
-            .border_type(BorderType::Rounded);
-
-        let text = vec![Spans::from(""), Spans::from(message.to_string())];
-        let paragraph = Paragraph::new(text)
-            .block(block)
-            .alignment(Alignment::Center);
-        f.render_widget(paragraph, inside);
+    /// Try to retrieve a reference to the currently focused comment, if any.
+    ///
+    /// NB: will panic if some invariants about cached comments do not hold true.
+    pub(super) fn get_focused_comment<'a>(
+        &self,
+        state: &'a AppState,
+    ) -> Option<&'a DisplayableHackerNewsItem> {
+        let focused_comment_id =
+            if let Some(comment_id) = self.widget_state.get_focused_comment_id() {
+                comment_id
+            } else {
+                return None;
+            };
+        Some(
+            state
+                .get_currently_viewed_item_comments()
+                .expect("comments should be cached in the global state")
+                .get(&focused_comment_id)
+                .expect("focused comment should be present in the global state"),
+        )
     }
 }

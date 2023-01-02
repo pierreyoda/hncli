@@ -169,29 +169,22 @@ impl UiComponent for ItemTopLevelComments {
                 .replace_latest_in_currently_viewed_item_comments_chain(new_focused_id);
             true
         } else if inputs.is_active(&ApplicationAction::ItemExpandFocusedComment) {
-            let focused_comment_id =
-                if let Some(comment_id) = self.common.widget_state.get_focused_comment_id() {
-                    comment_id
-                } else {
+            if let Some(focused_comment) = self.common.get_focused_comment(ctx.get_state()) {
+                if focused_comment
+                    .kids
+                    .as_ref()
+                    .map_or(true, |kids| kids.is_empty())
+                {
+                    // a comment with no sub-comments cannot be focused
                     return Ok(false);
-                };
-            let focused_comment = ctx
-                .get_state()
-                .get_currently_viewed_item_comments()
-                .expect("comments should be cached in the global state")
-                .get(&focused_comment_id)
-                .expect("focused comment should be present in the global state")
-                .clone();
-            if focused_comment
-                .kids
-                .as_ref()
-                .map_or(true, |kids| kids.is_empty())
-            {
-                // a comment with no sub-comments cannot be focused
-                return Ok(false);
+                }
+                ctx.router_push_navigation_stack(AppRoute::ItemNestedComments(
+                    focused_comment.clone(),
+                ));
+                true
+            } else {
+                false
             }
-            ctx.router_push_navigation_stack(AppRoute::ItemNestedComments(focused_comment));
-            true
         } else {
             false
         })
