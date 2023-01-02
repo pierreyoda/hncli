@@ -5,6 +5,7 @@ use tui::{
     style::{Color, Style},
     widgets::Widget,
 };
+use unicode_width::UnicodeWidthStr;
 
 use crate::{api::types::HnItemIdScalar, ui::displayable_item::DisplayableHackerNewsItemComments};
 
@@ -237,11 +238,11 @@ impl<'a> Widget for ItemCommentsWidget<'a> {
             )
         };
         buf.set_string(
-            (footer_area.right() - footer_area.left()) / 2 - footer_text.len() as u16 / 2,
+            (footer_area.right() - footer_area.left()) / 2 - footer_text.width() as u16 / 2,
             footer_area.y,
             footer_text,
             Style::default().fg(Color::LightBlue),
-        )
+        );
     }
 }
 
