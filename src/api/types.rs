@@ -1,4 +1,4 @@
-//! See https://github.com/HackerNews/API.
+//! See https://github.com/HackerNews/API for official documentation.
 
 use serde::Deserialize;
 

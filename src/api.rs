@@ -5,9 +5,12 @@ use futures::future::join_all;
 use reqwest::Client;
 use types::{HnItem, HnItemIdScalar};
 
-use crate::errors::{HnCliError, Result};
+use crate::{
+    errors::{HnCliError, Result},
+    ui::displayable_item::user,
+};
 
-use self::types::{HnDead, HnDeleted};
+use self::types::{HnDead, HnDeleted, HnUser};
 
 pub mod types;
 
@@ -59,6 +62,11 @@ impl HnStoriesSections {
     }
 }
 
+/// Get the resource URL fragment corresponding to the given user ID.
+fn get_user_data_resource(id: &str) -> String {
+    format!("/user/{}", id)
+}
+
 /// The internal Hacker News API client.
 pub struct HnClient {
     /// Base URL of the Hacker News API.
@@ -78,6 +86,37 @@ impl HnClient {
             // TODO: duration from CLI args and/or local configuration
             client: Client::builder().timeout(Duration::from_secs(10)).build()?,
         })
+    }
+
+    /// Try to fetch user data from its **case-sensitive** ID (the username).
+    ///
+    /// NB: as per the [documentation](https://github.com/HackerNews/API#users),
+    /// "only users that have public activity (comments or story submissions) on the site are available through the API".
+    /// From my own testing, unknown/inaccessible user accounts return the string "null".
+    /// In such a case, we return the error `HnCliError::UserNotFound`.
+    pub async fn get_user_data(&self, username: &str) -> Result<HnUser> {
+        let raw = self
+            .client
+            .get(&format!(
+                "{}/{}.json",
+                self.base_url,
+                get_user_data_resource(username)
+            ))
+            .send()
+            .await?
+            .text()
+            .await
+            .map_err(HnCliError::HttpError)?;
+        // handle null case (not found or no public activity)
+        if raw == "null" {
+            return Err(HnCliError::UserNotFound(username.into()));
+        }
+        // general case
+        let user: HnUser = serde_json::from_str(&raw).expect(&format!(
+            "api.get_user_data: deserialization should work for user with ID {}",
+            username
+        ));
+        Ok(user)
     }
 
     /// Try to fetch the items of the home page, with the given sorting strategy.

@@ -4,11 +4,15 @@ use crate::{
     ui::{
         common::UiComponentId,
         components::stories::STORIES_PANEL_ID,
-        displayable_item::{DisplayableHackerNewsItem, DisplayableHackerNewsItemComments},
+        displayable_item::{
+            user::DisplayableHackerNewsUser, DisplayableHackerNewsItem,
+            DisplayableHackerNewsItemComments,
+        },
     },
 };
 
 /// Global application state.
+/// TODO: avoid some cloning if not too inconvenient (current item viewed / current user from Screens)
 #[derive(Debug)]
 pub struct AppState {
     /// Latest component interacted with, *i.e.* the latest component having
@@ -34,6 +38,8 @@ pub struct AppState {
     previously_viewed_comment_id: Option<HnItemIdScalar>,
     /// Item details screen: is the comments panel visible or not.
     item_page_display_comments_panel: bool,
+    /// The currently viewed user ID.
+    currently_viewed_user_id: Option<String>,
 }
 
 impl AppState {
@@ -50,6 +56,7 @@ impl AppState {
             currently_viewed_item_comments_chain: vec![],
             previously_viewed_comment_id: None,
             item_page_display_comments_panel: config.get_display_comments_panel_by_default(),
+            currently_viewed_user_id: None,
         }
     }
 }
@@ -225,5 +232,15 @@ impl AppState {
     /// Set the is comments panel visible on item details screen boolean.
     pub fn set_item_page_should_display_comments_panel(&mut self, value: bool) {
         self.item_page_display_comments_panel = value;
+    }
+
+    /// Get the currently viewed user ID.
+    pub fn get_currently_viewed_user_id(&self) -> Option<&String> {
+        self.currently_viewed_user_id.as_ref()
+    }
+
+    /// Set the currently viewed user ID.
+    pub fn set_currently_viewed_user_id(&mut self, viewed_id: Option<String>) {
+        self.currently_viewed_user_id = viewed_id;
     }
 }
