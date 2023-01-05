@@ -4,6 +4,11 @@ version = "0.1.0"
 authors = ["pierreyoda <pierreyoda@users.noreply.github.com>"]
 edition = "2021"
 
+[profile.release]
+strip = true # strip symbols from binary
+opt-level = "z" # optimize for binary size
+lto = true # enable Link Time Optimization
+
 [dependencies]
 async-recursion = "1.0.0"
 async-trait = "0.1.59"
