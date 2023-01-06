@@ -13,6 +13,7 @@ A Terminal User Interface-based application for browsing Hacker News, written in
 ### With the Rust toolchain
 
 ```sh
+cd app
 cargo run --release
 ```
 

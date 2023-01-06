@@ -7,7 +7,7 @@ RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y pkg-config libssl-dev
 
-COPY . ./
+COPY ./app ./
 RUN cargo build --release
 
 ENTRYPOINT ["./target/release/hncli"]

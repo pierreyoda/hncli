@@ -2,7 +2,7 @@
 *.dockerfile*
 
 # Rust
-**/target/
+app/**/target/
 
 # Logs
-hncli_log.txt
+app/hncli_log.txt

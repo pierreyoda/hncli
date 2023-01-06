@@ -1,4 +1,4 @@
-/target
-hncli_log.txt
+app/target
+app/hncli_log.txt
 
 .DS_Store
