@@ -11,6 +11,8 @@ pub type UiTickScalar = u64;
 /// A hashable type for application-unique component IDs.
 pub type UiComponentId = &'static str;
 
+pub type RenderFrame<'a> = Frame<'a, CrosstermBackend<Stdout>>;
+
 /// A `Component` in this Terminal UI context is a self-contained
 /// widget or group of widgets with each their own updating,
 /// events handling and rendering logic.
@@ -35,11 +37,5 @@ pub trait UiComponent {
     fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool>;
 
     /// Renderer for the component.
-    fn render(
-        &mut self,
-        // TODO: make public type for this parameter
-        f: &mut Frame<CrosstermBackend<Stdout>>,
-        inside: Rect,
-        ctx: &AppContext,
-    ) -> Result<()>;
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()>;
 }

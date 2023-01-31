@@ -21,7 +21,7 @@ const HOME_MAX_DISPLAYED_STORIES: usize = 20;
 
 /// Renders a panel of *selectable* Hacker News stories.
 pub fn render_stories_panel(
-    f: &mut Frame<CrosstermBackend<Stdout>>,
+    f: &mut RenderFrame,
     in_rect: Rect,
     ranked_stories: &[DisplayableHackerNewsStory],
     selected_story_id: Option<HnItemIdScalar>,

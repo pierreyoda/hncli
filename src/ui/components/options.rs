@@ -1,13 +1,11 @@
-use std::{convert::TryInto, io::Stdout};
+use std::convert::TryInto;
 
 use async_trait::async_trait;
 use tui::{
-    backend::CrosstermBackend,
     layout::Rect,
     style::{Color, Style},
     text::{Span, Spans},
     widgets::{Block, BorderType, Borders, Tabs},
-    Frame,
 };
 
 use crate::{
@@ -15,7 +13,7 @@ use crate::{
     app::AppContext,
     errors::{HnCliError, Result},
     ui::{
-        common::{UiComponent, UiComponentId, UiTickScalar},
+        common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         handlers::ApplicationAction,
         utils::debouncer::Debouncer,
     },
@@ -118,12 +116,7 @@ impl UiComponent for Options {
         }
     }
 
-    fn render(
-        &mut self,
-        f: &mut Frame<CrosstermBackend<Stdout>>,
-        inside: Rect,
-        _ctx: &AppContext,
-    ) -> Result<()> {
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, _ctx: &AppContext) -> Result<()> {
         let block = Block::default()
             .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
             .border_type(BorderType::Thick)

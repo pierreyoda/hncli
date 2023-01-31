@@ -1,15 +1,13 @@
-use std::io::Stdout;
-
 use async_trait::async_trait;
 use log::warn;
-use tui::{backend::CrosstermBackend, layout::Rect, Frame};
+use tui::layout::Rect;
 
 use crate::{
     api::{types::HnItemIdScalar, HnClient},
     app::{state::AppState, AppContext},
     errors::Result,
     ui::{
-        common::{UiComponent, UiComponentId, UiTickScalar},
+        common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         displayable_item::DisplayableHackerNewsItem,
         handlers::ApplicationAction,
         router::AppRoute,
@@ -167,12 +165,7 @@ impl UiComponent for CommentItemNestedComments {
         })
     }
 
-    fn render(
-        &mut self,
-        f: &mut Frame<CrosstermBackend<Stdout>>,
-        inside: Rect,
-        ctx: &AppContext,
-    ) -> Result<()> {
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
         // TODO: handle specific errors that may arise
         self.common.render(f, inside, ctx, || None)
     }

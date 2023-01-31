@@ -1,13 +1,9 @@
-use std::{io::Stdout, vec};
-
 use async_trait::async_trait;
 use tui::{
-    backend::CrosstermBackend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     text::{Span, Spans},
     widgets::{Block, BorderType, Borders, Paragraph},
-    Frame,
 };
 
 use crate::{
@@ -15,7 +11,7 @@ use crate::{
     app::AppContext,
     errors::Result,
     ui::{
-        common::{UiComponent, UiComponentId, UiTickScalar},
+        common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         handlers::ApplicationAction,
     },
 };
@@ -60,7 +56,7 @@ struct SettingsControl {
 }
 
 impl SettingsControl {
-    pub fn render(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect, is_active: bool) {
+    pub fn render(&self, f: &mut RenderFrame, inside: Rect, is_active: bool) {
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
             .constraints(vec![Constraint::Percentage(75), Constraint::Percentage(25)].as_ref())
@@ -135,12 +131,7 @@ impl UiComponent for Settings {
         })
     }
 
-    fn render(
-        &mut self,
-        f: &mut Frame<CrosstermBackend<Stdout>>,
-        inside: Rect,
-        _ctx: &AppContext,
-    ) -> Result<()> {
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, _ctx: &AppContext) -> Result<()> {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([Constraint::Percentage(7), Constraint::Percentage(93)].as_ref())

@@ -1,20 +1,15 @@
-use std::io::Stdout;
-
 use tui::{
-    backend::CrosstermBackend,
     layout::{Alignment, Rect},
     style::{Color, Style},
     text::Spans,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
 
+use crate::ui::common::RenderFrame;
+
 pub const COMMON_BLOCK_NORMAL_COLOR: Color = Color::White;
 
-pub fn render_text_message(
-    f: &mut tui::Frame<CrosstermBackend<Stdout>>,
-    inside: Rect,
-    message: &str,
-) {
+pub fn render_text_message(f: &mut RenderFrame, inside: Rect, message: &str) {
     let block = Block::default()
         .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
         .borders(Borders::ALL)

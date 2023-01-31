@@ -1,19 +1,11 @@
-use std::io::Stdout;
-
-use tui::{
-    backend::CrosstermBackend,
-    layout::{Alignment, Rect},
-    style::Style,
-    text::Spans,
-    widgets::{Block, BorderType, Borders, Paragraph},
-};
+use tui::layout::Rect;
 
 use crate::{
     app::{state::AppState, AppContext},
     errors::Result,
     ui::{
-        common::UiTickScalar,
-        components::common::{render_text_message, COMMON_BLOCK_NORMAL_COLOR},
+        common::{RenderFrame, UiTickScalar},
+        components::common::render_text_message,
         displayable_item::DisplayableHackerNewsItem,
         utils::debouncer::Debouncer,
     },
@@ -46,7 +38,7 @@ impl Default for ItemCommentsCommon {
 impl ItemCommentsCommon {
     pub(super) fn render<F>(
         &self,
-        f: &mut tui::Frame<CrosstermBackend<Stdout>>,
+        f: &mut RenderFrame,
         inside: Rect,
         ctx: &AppContext,
         specific_error_handler: F,

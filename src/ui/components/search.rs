@@ -1,13 +1,9 @@
-use std::io::Stdout;
-
 use async_trait::async_trait;
 use tui::{
-    backend::CrosstermBackend,
     layout::{Alignment, Rect},
     style::Style,
     text::Spans,
     widgets::{Block, BorderType, Borders, Paragraph},
-    Frame,
 };
 
 use crate::{
@@ -15,7 +11,7 @@ use crate::{
     app::AppContext,
     errors::Result,
     ui::{
-        common::{UiComponent, UiComponentId, UiTickScalar},
+        common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         handlers::ApplicationAction,
     },
 };
@@ -76,12 +72,7 @@ impl UiComponent for Search {
         })
     }
 
-    fn render(
-        &mut self,
-        f: &mut Frame<CrosstermBackend<Stdout>>,
-        inside: Rect,
-        _ctx: &AppContext,
-    ) -> Result<()> {
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, _ctx: &AppContext) -> Result<()> {
         let block = Block::default()
             .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
             .borders(Borders::ALL)

@@ -1,9 +1,6 @@
-use std::io::Stdout;
-
 use async_trait::async_trait;
 use log::warn;
 use tui::{
-    backend::CrosstermBackend,
     layout::{Alignment, Rect},
     style::Style,
     text::Spans,
@@ -15,7 +12,7 @@ use crate::{
     app::AppContext,
     errors::Result,
     ui::{
-        common::{UiComponent, UiComponentId, UiTickScalar},
+        common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         displayable_item::user::DisplayableHackerNewsUser,
         utils::html_to_plain_text,
     },
@@ -100,12 +97,7 @@ impl UiComponent for UserProfile {
         Ok(false)
     }
 
-    fn render(
-        &mut self,
-        f: &mut tui::Frame<CrosstermBackend<Stdout>>,
-        inside: Rect,
-        ctx: &AppContext,
-    ) -> Result<()> {
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
         // Loading case
         if self.loading {
             render_text_message(f, inside, "Loading...");

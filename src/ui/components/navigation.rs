@@ -1,14 +1,10 @@
-use std::io::Stdout;
-
 use async_trait::async_trait;
 
 use tui::{
-    backend::CrosstermBackend,
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Span, Spans},
     widgets::{Block, BorderType, Borders, Tabs},
-    Frame,
 };
 
 use crate::{
@@ -16,7 +12,7 @@ use crate::{
     app::AppContext,
     errors::Result,
     ui::{
-        common::{UiComponent, UiComponentId, UiTickScalar},
+        common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         handlers::ApplicationAction,
         router::AppRoute,
     },
@@ -94,12 +90,7 @@ impl UiComponent for Navigation {
         })
     }
 
-    fn render(
-        &mut self,
-        f: &mut Frame<CrosstermBackend<Stdout>>,
-        inside: Rect,
-        ctx: &AppContext,
-    ) -> Result<()> {
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
         let current_tab_index = match ctx.get_router().get_current_route() {
             AppRoute::Home(section) => match section {
                 HnStoriesSections::Home => 0,

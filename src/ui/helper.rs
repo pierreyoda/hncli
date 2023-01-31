@@ -1,16 +1,13 @@
-use std::io::Stdout;
-
 use tui::{
-    backend::CrosstermBackend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     text::Spans,
     widgets::Paragraph,
-    Frame,
 };
 
 use crate::app::state::AppState;
 
 use super::{
+    common::RenderFrame,
     displayable_item::DisplayableHackerNewsItem,
     handlers::{InputsController, Key},
     router::AppRoute,
@@ -27,7 +24,7 @@ enum HelpWidget {
 }
 
 impl HelpWidget {
-    pub fn render(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
+    pub fn render(&self, f: &mut RenderFrame, inside: Rect) {
         use HelpWidget::*;
 
         let widget_text = match self {
@@ -56,7 +53,7 @@ impl ContextualHelper {
     /// Renderer.
     pub fn render(
         &self,
-        f: &mut Frame<CrosstermBackend<Stdout>>,
+        f: &mut RenderFrame,
         inside: Rect,
         for_route: &AppRoute,
         app_state: &AppState,
@@ -77,7 +74,7 @@ impl ContextualHelper {
     // TODO: add centralized key bindings manager
     fn render_home_page_help(
         &self,
-        f: &mut Frame<CrosstermBackend<Stdout>>,
+        f: &mut RenderFrame,
         inside: Rect,
         app_inputs: &InputsController,
     ) {
@@ -99,7 +96,7 @@ impl ContextualHelper {
 
     fn render_item_page_help(
         &self,
-        f: &mut Frame<CrosstermBackend<Stdout>>,
+        f: &mut RenderFrame,
         inside: Rect,
         app_state: &AppState,
         app_inputs: &InputsController,
@@ -163,7 +160,7 @@ impl ContextualHelper {
         Self::render_widgets(f, inside, &widgets);
     }
 
-    fn render_comments_page_help(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
+    fn render_comments_page_help(&self, f: &mut RenderFrame, inside: Rect) {
         let widget_focus_sub_comments =
             HelpWidget::KeyReminder('💬', "view sub-comment(s)".into(), Key::Enter);
         let widget_go_back = HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape);
@@ -172,7 +169,7 @@ impl ContextualHelper {
         Self::render_widgets(f, inside, &widgets);
     }
 
-    fn render_user_page_help(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
+    fn render_user_page_help(&self, f: &mut RenderFrame, inside: Rect) {
         let widget_open_profile_page =
             HelpWidget::KeyReminder('🌐', "open the profile page".into(), Key::Char('o'));
         let widget_go_back = HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape);
@@ -181,7 +178,7 @@ impl ContextualHelper {
         Self::render_widgets(f, inside, &widgets);
     }
 
-    fn render_settings_page_help(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
+    fn render_settings_page_help(&self, f: &mut RenderFrame, inside: Rect) {
         let widgets = vec![
             HelpWidget::Text("⬆️  / i or ⬇️  / k to navigate".into()),
             HelpWidget::KeyReminder('✅', "toggle setting".into(), Key::Tab),
@@ -190,7 +187,7 @@ impl ContextualHelper {
         Self::render_widgets(f, inside, &widgets);
     }
 
-    fn render_help_page_help(&self, f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
+    fn render_help_page_help(&self, f: &mut RenderFrame, inside: Rect) {
         let widgets = vec![
             HelpWidget::KeyReminder('💡', "toggle help".into(), Key::Char('h')),
             HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape),
@@ -198,11 +195,7 @@ impl ContextualHelper {
         Self::render_widgets(f, inside, &widgets);
     }
 
-    fn render_widgets(
-        f: &mut Frame<CrosstermBackend<Stdout>>,
-        inside: Rect,
-        widgets: &[HelpWidget],
-    ) {
+    fn render_widgets(f: &mut RenderFrame, inside: Rect, widgets: &[HelpWidget]) {
         // automatic layout
         assert!(!widgets.is_empty());
         let width_percentage = 100 / widgets.len() as u16;

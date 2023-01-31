@@ -1,8 +1,5 @@
-use std::{io::Stdout, vec};
-
 use async_trait::async_trait;
 use tui::{
-    backend::CrosstermBackend,
     layout::{Alignment, Rect},
     style::Style,
     text::Spans,
@@ -14,7 +11,7 @@ use crate::{
     app::AppContext,
     errors::Result,
     ui::{
-        common::{UiComponent, UiComponentId, UiTickScalar},
+        common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         components::common::COMMON_BLOCK_NORMAL_COLOR,
         utils::html_to_plain_text,
     },
@@ -69,12 +66,7 @@ impl UiComponent for ItemDetails {
         Ok(false)
     }
 
-    fn render(
-        &mut self,
-        f: &mut tui::Frame<CrosstermBackend<Stdout>>,
-        inside: Rect,
-        ctx: &AppContext,
-    ) -> Result<()> {
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
         let viewed_item = if let Some(item) = ctx.get_state().get_currently_viewed_item() {
             item
         } else {

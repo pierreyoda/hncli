@@ -1,8 +1,5 @@
-use std::io::Stdout;
-
 use async_trait::async_trait;
 use tui::{
-    backend::CrosstermBackend,
     layout::{Alignment, Rect},
     style::Style,
     text::Spans,
@@ -13,7 +10,7 @@ use crate::{
     api::{types::HnItemIdScalar, HnClient},
     app::{state::AppState, AppContext},
     errors::Result,
-    ui::common::{UiComponent, UiComponentId, UiTickScalar},
+    ui::common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
 };
 
 use super::common::COMMON_BLOCK_NORMAL_COLOR;
@@ -56,12 +53,7 @@ impl UiComponent for ItemSummary {
         Ok(false)
     }
 
-    fn render(
-        &mut self,
-        f: &mut tui::Frame<CrosstermBackend<Stdout>>,
-        inside: Rect,
-        ctx: &AppContext,
-    ) -> Result<()> {
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
         let comments = ctx
             .get_state()
             .get_currently_viewed_item_comments()

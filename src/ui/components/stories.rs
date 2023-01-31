@@ -1,12 +1,11 @@
 //! The stories panel lists all the given Hacker News stories.
 
-use std::{convert::TryFrom, io::Stdout};
+use std::convert::TryFrom;
 
 use async_trait::async_trait;
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 
 use tui::{
-    backend::CrosstermBackend,
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
     text::Spans,
@@ -19,7 +18,7 @@ use crate::{
     app::AppContext,
     errors::Result,
     ui::{
-        common::{UiComponent, UiComponentId, UiTickScalar},
+        common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         displayable_item::DisplayableHackerNewsItem,
         handlers::ApplicationAction,
         router::AppRoute,
@@ -200,12 +199,7 @@ impl UiComponent for StoriesPanel {
         })
     }
 
-    fn render(
-        &mut self,
-        f: &mut tui::Frame<CrosstermBackend<Stdout>>,
-        inside: Rect,
-        ctx: &AppContext,
-    ) -> Result<()> {
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
         // Loading case
         if ctx.get_state().get_main_stories_loading() {
             let block = Block::default()

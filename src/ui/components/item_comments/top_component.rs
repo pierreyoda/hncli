@@ -1,15 +1,13 @@
-use std::{io::Stdout, vec};
-
 use async_trait::async_trait;
 use log::warn;
-use tui::{backend::CrosstermBackend, layout::Rect};
+use tui::layout::Rect;
 
 use crate::{
     api::{types::HnItemIdScalar, HnClient},
     app::AppContext,
     errors::Result,
     ui::{
-        common::{UiComponent, UiComponentId, UiTickScalar},
+        common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         displayable_item::DisplayableHackerNewsItem,
         handlers::ApplicationAction,
         router::AppRoute,
@@ -199,12 +197,7 @@ impl UiComponent for ItemTopLevelComments {
         })
     }
 
-    fn render(
-        &mut self,
-        f: &mut tui::Frame<CrosstermBackend<Stdout>>,
-        inside: Rect,
-        ctx: &AppContext,
-    ) -> Result<()> {
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
         self.common.render(f, inside, ctx, || None)
     }
 }

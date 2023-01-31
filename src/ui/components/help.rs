@@ -1,13 +1,9 @@
-use std::io::Stdout;
-
 use async_trait::async_trait;
 
 use tui::{
-    backend::CrosstermBackend,
     layout::{Alignment::Center, Constraint, Direction, Layout, Rect},
     text::Spans,
     widgets::{Block, BorderType, Borders, Paragraph},
-    Frame,
 };
 
 use crate::{
@@ -15,7 +11,7 @@ use crate::{
     app::AppContext,
     config::HNCLI_VERSION,
     errors::Result,
-    ui::common::{UiComponent, UiComponentId, UiTickScalar},
+    ui::common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
 };
 
 /// The About component contains the version number,
@@ -44,12 +40,7 @@ impl UiComponent for Help {
         Ok(false)
     }
 
-    fn render(
-        &mut self,
-        f: &mut Frame<CrosstermBackend<Stdout>>,
-        inside: Rect,
-        _ctx: &AppContext,
-    ) -> Result<()> {
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, _ctx: &AppContext) -> Result<()> {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([Constraint::Percentage(10), Constraint::Percentage(90)].as_ref())
@@ -63,7 +54,7 @@ impl UiComponent for Help {
 }
 
 impl Help {
-    fn render_about_block(f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
+    fn render_about_block(f: &mut RenderFrame, inside: Rect) {
         let text = vec![
             Spans::from(format!("hncli {}", HNCLI_VERSION)),
             Spans::from("https://github.com/pierreyoda/hncli"),
@@ -75,7 +66,7 @@ impl Help {
         f.render_widget(paragraph, inside);
     }
 
-    fn render_help_block(f: &mut Frame<CrosstermBackend<Stdout>>, inside: Rect) {
+    fn render_help_block(f: &mut RenderFrame, inside: Rect) {
         let text = vec![
             Spans::from(""),
             Spans::from("Press 'h' to toggle help."),
