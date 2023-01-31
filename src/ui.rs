@@ -57,19 +57,42 @@ pub enum UserInterfaceEvent {
     Tick,
 }
 
+/// For components using the API client, determines the maximum amount of time
+/// allowed for data fetching before giving back priority to the inputs handling.
+///
+/// More details in the section of the `run` function implementing this feature.
+const COMPONENT_ASYNC_CLIENT_USAGE_TIMEOUT_MS: usize = 300;
+
+/// Metadata specific to components using the API client.
+#[derive(Debug)]
+pub struct ComponentWrapperClientUserMeta {
+    /// If true, updates will not
+    blocking: bool,
+    /// Was the component ever updated, *i.e.* at least once?
+    was_updated_once: bool,
+    timed_out_updates_count: usize,
+}
+
+impl ComponentWrapperClientUserMeta {}
+
 pub struct ComponentWrapper {
     component: Box<dyn UiComponent>,
     ticks_elapsed: UiTickScalar,
     /// An active component will update itself.
     active: bool,
+    client_user_meta: Option<ComponentWrapperClientUserMeta>,
 }
 
 impl ComponentWrapper {
-    pub fn from_component(component: Box<dyn UiComponent>) -> Self {
+    pub fn from_component(
+        component: Box<dyn UiComponent>,
+        client_user_meta: Option<ComponentWrapperClientUserMeta>,
+    ) -> Self {
         Self {
             component,
             ticks_elapsed: 0,
             active: true,
+            client_user_meta,
         }
     }
 }
@@ -230,7 +253,19 @@ impl UserInterface {
                     self.app.update_latest_interacted_with_component(None);
                 }
             } else {
-                self.update().await?;
+                // We use tokio's timeout mechanism for instances of components using our
+                // API client, since we do not want any induced network latency to provoke
+                // un-responsive UI due to not being able to handle key events
+                // (especially critical ones like Escape or, even worse, CTRL+C inputs).
+                // This hacky workaround unfortunately became needed due to the (sub-)comments components blocking at update
+                // with no proper way to render the loading state, which regardless should still offer responsiveness
+                // to those critical user inputs.
+                // For these two components (and maybe others in the future), we implement here a simple timeout-based
+                // mechanism that allows us to skip updates which are regardless often superfluous.
+                // NB: a less basic workaround would be needed here but would probably propagate mutexes or other synchronization primitives
+                // across the codebase, introducing unwanted complexity.
+                // TODO: find a better way to avoid cancelling content updates from API...
+                self.update().await;
             }
         }
 
@@ -295,11 +330,15 @@ impl UserInterface {
         app_context.get_router().is_on_root_screen()
     }
 
-    fn register_component<C: UiComponent + 'static>(&mut self, component: C) {
+    fn register_component<C: UiComponent + 'static>(
+        &mut self,
+        component: C,
+        client_user_meta: Option<ComponentWrapperClientUserMeta>,
+    ) {
         let boxed_component = Box::new(component);
         self.components.insert(
             boxed_component.id(),
-            ComponentWrapper::from_component(boxed_component),
+            ComponentWrapper::from_component(boxed_component, client_user_meta),
         );
     }
 }

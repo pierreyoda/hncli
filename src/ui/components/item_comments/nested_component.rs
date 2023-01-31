@@ -1,7 +1,7 @@
 use std::io::Stdout;
 
 use async_trait::async_trait;
-use log::warn;
+use log::{info, warn};
 use tui::{backend::CrosstermBackend, layout::Rect, Frame};
 
 use crate::{
@@ -30,7 +30,6 @@ pub struct CommentItemNestedComments {
     parent_comment_id: Option<HnItemIdScalar>,
 }
 
-// TODO: fix behavior when stuck (ALL inputs not working) in nested comments (probably due to update's awaits)
 #[async_trait]
 impl UiComponent for CommentItemNestedComments {
     fn id(&self) -> UiComponentId {
@@ -69,12 +68,14 @@ impl UiComponent for CommentItemNestedComments {
         };
 
         // Comments fetching
+        info!("START FETCH");
         let comments_raw = client
             .get_item_comments(parent_comment_kids.as_slice())
             .await?;
         let comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
         ctx.get_state_mut()
             .set_currently_viewed_item_comments(Some(comments));
+        info!("END FETCH");
 
         self.common.loading = false;
 
