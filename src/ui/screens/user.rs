@@ -48,7 +48,7 @@ impl Screen for UserDetailsScreen {
                 Some(router.get_current_route().clone()),
             )
         } else if inputs.is_active(&ApplicationAction::OpenHackerNewsProfile) {
-            let item_link = DisplayableHackerNewsUser::get_hacker_news_link(&self.user_id);
+            let item_link = DisplayableHackerNewsUser::build_hacker_news_link(&self.user_id);
             open_browser_tab(item_link.as_str());
             (ScreenEventResponse::Caught, None)
         } else {

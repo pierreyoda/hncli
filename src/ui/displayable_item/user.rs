@@ -26,7 +26,11 @@ pub struct DisplayableHackerNewsUser {
 }
 
 impl DisplayableHackerNewsUser {
-    pub fn get_hacker_news_link(user_id: &str) -> String {
+    pub fn get_hacker_news_link(&self) -> String {
+        Self::build_hacker_news_link(&self.id)
+    }
+
+    pub fn build_hacker_news_link(user_id: &str) -> String {
         format!("https://news.ycombinator.com/user?id={}", user_id)
     }
 }
