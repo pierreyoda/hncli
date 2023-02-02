@@ -341,7 +341,7 @@ where
             };
             let (elem_x, _) = buf.set_stringn(x, y, symbol, list_area.width as usize, self.style);
             let (item_x, max_item_width) = if has_selection {
-                (elem_x, (list_area.width - (elem_x - x)) as u16)
+                (elem_x, (list_area.width - (elem_x - x)))
             } else {
                 (x, list_area.width)
             };

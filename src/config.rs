@@ -139,11 +139,8 @@ impl AppConfiguration {
 
         let load_defaults_and_save = || {
             let default_config = Self::default();
-            match default_config.save_to_file() {
-                Err(why) => {
-                    warn!("{}", why);
-                }
-                Ok(_) => {}
+            if let Err(why) = default_config.save_to_file() {
+                warn!("{}", why);
             }
             Ok(default_config)
         };

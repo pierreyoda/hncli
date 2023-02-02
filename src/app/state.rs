@@ -4,10 +4,7 @@ use crate::{
     ui::{
         common::UiComponentId,
         components::stories::STORIES_PANEL_ID,
-        displayable_item::{
-            user::DisplayableHackerNewsUser, DisplayableHackerNewsItem,
-            DisplayableHackerNewsItemComments,
-        },
+        displayable_item::{DisplayableHackerNewsItem, DisplayableHackerNewsItemComments},
     },
 };
 

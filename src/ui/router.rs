@@ -10,10 +10,7 @@ use crate::{
     },
 };
 
-use super::{
-    displayable_item::{user::DisplayableHackerNewsUser, DisplayableHackerNewsItem},
-    screens::Screen,
-};
+use super::{displayable_item::DisplayableHackerNewsItem, screens::Screen};
 
 /// All the possible routes in the application.
 #[derive(Clone, Debug, PartialEq, Eq)]

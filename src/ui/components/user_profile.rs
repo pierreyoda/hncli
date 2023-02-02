@@ -66,7 +66,7 @@ impl UiComponent for UserProfile {
 
         let currently_viewed_user_id = ctx.get_state().get_currently_viewed_user_id();
         if let Some(user_id) = currently_viewed_user_id {
-            match client.get_user_data(&user_id).await {
+            match client.get_user_data(user_id).await {
                 Ok(user_raw) => {
                     self.current_user = Some(
                         user_raw
@@ -142,7 +142,7 @@ impl UiComponent for UserProfile {
             Spans::from(format!("Created: {}", viewed_user.created_at_formatted)),
             Spans::from(format!("Karma: {}", viewed_user.karma)),
         ];
-        let about_corpus = Self::build_user_about_spans(&self, inside, &viewed_user.about);
+        let about_corpus = self.build_user_about_spans(inside, &viewed_user.about);
 
         let paragraph = Paragraph::new([text_base, about_corpus].concat())
             .block(block)

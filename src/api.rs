@@ -5,10 +5,7 @@ use futures::future::join_all;
 use reqwest::Client;
 use types::{HnItem, HnItemIdScalar};
 
-use crate::{
-    errors::{HnCliError, Result},
-    ui::displayable_item::user,
-};
+use crate::errors::{HnCliError, Result};
 
 use self::types::{HnDead, HnDeleted, HnUser};
 

@@ -98,12 +98,7 @@ impl ItemCommentsCommon {
         &self,
         state: &'a AppState,
     ) -> Option<&'a DisplayableHackerNewsItem> {
-        let focused_comment_id =
-            if let Some(comment_id) = self.widget_state.get_focused_comment_id() {
-                comment_id
-            } else {
-                return None;
-            };
+        let focused_comment_id = self.widget_state.get_focused_comment_id()?;
         Some(
             state
                 .get_currently_viewed_item_comments()
