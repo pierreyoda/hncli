@@ -13,7 +13,7 @@ lto = true # enable Link Time Optimization
 async-recursion = "1.0.2"
 async-trait = "0.1.64"
 chrono = { version = "0.4.23", features = ["serde"] }
-crossterm = "0.26.0"
+crossterm = "0.26.1"
 directories = "4.0.1"
 futures = "0.3.26"
 fuzzy-matcher = "0.3.7"
