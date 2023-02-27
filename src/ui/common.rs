@@ -24,6 +24,9 @@ pub trait UiComponent {
     /// Called at instantiation, before any update or render pass.
     fn before_mount(&mut self, _ctx: &mut AppContext) {}
 
+    /// Called after un-mounting from a Screen.
+    fn before_unmount(&mut self) {}
+
     /// Must return `true` if the state should update itself.
     fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool>;
 

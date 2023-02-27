@@ -177,7 +177,21 @@ impl UserInterface {
                         .split(frame.size());
 
                     // refresh application chunks
-                    app.update_layout(global_layout_chunks[0]);
+                    let (previous_components_ids, current_components_ids) =
+                        app.update_layout(global_layout_chunks[0]);
+                    for previous_component_id in previous_components_ids {
+                        if !current_components_ids.contains(&previous_component_id) {
+                            components
+                                .get_mut(previous_component_id)
+                                .expect(&format!(
+                                    "main UI loop: no component found for: {}",
+                                    previous_component_id
+                                ))
+                                .component
+                                .as_mut()
+                                .before_unmount();
+                        }
+                    }
 
                     // render components
                     for (id, wrapper) in components.iter_mut() {

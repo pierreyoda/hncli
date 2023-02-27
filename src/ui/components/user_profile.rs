@@ -14,7 +14,7 @@ use crate::{
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         displayable_item::user::DisplayableHackerNewsUser,
-        utils::html_to_plain_text,
+        utils::{html_to_plain_text, loader::Loader},
     },
 };
 
@@ -34,6 +34,7 @@ use super::common::{render_text_message, COMMON_BLOCK_NORMAL_COLOR};
 #[derive(Debug, Default)]
 pub struct UserProfile {
     loading: bool,
+    loader: Loader,
     /// User not found or no public activity (if no state sync issue).
     error: bool,
     /// Cached fetched user data. Does not need to be in application state (yet).
@@ -48,12 +49,17 @@ impl UiComponent for UserProfile {
         USER_PROFILE_ID
     }
 
+    fn before_unmount(&mut self) {
+        self.loader.stop();
+    }
+
     fn should_update(&mut self, _elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
         // we don't do automatic refresh every X minutes since the information displayed has little chance to change
         // and some user profiles' JSON are very heavy due to many comments posted
         let should_update = !self.loading
             && ctx.get_state().get_currently_viewed_user_id()
                 != self.current_user.as_ref().map(|user| &user.id);
+        self.loader.update();
         if should_update {
             self.loading = true;
         }
@@ -100,7 +106,7 @@ impl UiComponent for UserProfile {
     fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
         // Loading case
         if self.loading {
-            render_text_message(f, inside, "Loading...");
+            render_text_message(f, inside, &self.loader.text());
             return Ok(());
         }
 

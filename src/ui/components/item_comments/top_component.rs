@@ -34,6 +34,10 @@ impl UiComponent for ItemTopLevelComments {
         ITEM_TOP_LEVEL_COMMENTS_ID
     }
 
+    fn before_unmount(&mut self) {
+        self.common.loader.stop();
+    }
+
     fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
         if ctx.get_state().get_currently_viewed_item_switched() {
             // update comments on viewed item switch
@@ -82,6 +86,8 @@ impl UiComponent for ItemTopLevelComments {
                     .common
                     .widget_state
                     .get_focused_same_level_comments_count();
+
+        self.common.loader.update();
 
         if should_update {
             self.common.loading = true;

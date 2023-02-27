@@ -7,7 +7,7 @@ use crate::{
         common::{RenderFrame, UiTickScalar},
         components::common::render_text_message,
         displayable_item::DisplayableHackerNewsItem,
-        utils::debouncer::Debouncer,
+        utils::{debouncer::Debouncer, loader::Loader},
     },
 };
 
@@ -17,6 +17,7 @@ use super::comment_widget::{ItemCommentsWidget, ItemCommentsWidgetState};
 #[derive(Debug)]
 pub struct ItemCommentsCommon {
     pub ticks_since_last_update: u64,
+    pub loader: Loader,
     pub inputs_debouncer: Debouncer,
     pub loading: bool,
     pub widget_state: ItemCommentsWidgetState,
@@ -28,6 +29,7 @@ impl Default for ItemCommentsCommon {
     fn default() -> Self {
         Self {
             ticks_since_last_update: 0,
+            loader: Loader::default(),
             inputs_debouncer: Debouncer::new(INPUTS_DEBOUNCER_THROTTLING_TIME),
             loading: true,
             widget_state: ItemCommentsWidgetState::default(),
@@ -35,9 +37,10 @@ impl Default for ItemCommentsCommon {
     }
 }
 
+// TODO: when switching topics/comments, ensure the previous one is properly "erased"
 impl ItemCommentsCommon {
     pub(super) fn render<F>(
-        &self,
+        &mut self,
         f: &mut RenderFrame,
         inside: Rect,
         ctx: &AppContext,
@@ -48,7 +51,7 @@ impl ItemCommentsCommon {
     {
         // (Initial) loading case
         if self.loading {
-            render_text_message(f, inside, "Loading...");
+            render_text_message(f, inside, &self.loader.text());
             return Ok(());
         }
 

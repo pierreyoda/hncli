@@ -196,10 +196,17 @@ impl App {
     ///
     /// Also organically takes care of routing, since components not found in the
     /// `layout_components` hash are not rendered. This is done for simplicity purposes.
-    pub fn update_layout(&mut self, frame_size: Rect) {
+    ///
+    /// Returns the previously mounted components, and the newly mounted ones.
+    pub fn update_layout(&mut self, frame_size: Rect) -> (Vec<&str>, Vec<&str>) {
+        let old_layout_components_ids = self.layout_components.keys().copied().collect();
         self.layout_components.clear();
         self.current_screen
             .compute_layout(frame_size, &mut self.layout_components, &self.state);
+        (
+            old_layout_components_ids,
+            self.layout_components.keys().copied().collect(),
+        )
     }
 
     /// Update the last component interacted with from the UI loop.

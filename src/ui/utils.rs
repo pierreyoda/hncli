@@ -7,6 +7,7 @@ use crate::{
 };
 
 pub mod debouncer;
+pub mod loader;
 
 pub trait ItemWithId<N: Copy + Num + Ord> {
     fn get_id(&self) -> N;

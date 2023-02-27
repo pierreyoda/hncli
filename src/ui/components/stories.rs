@@ -22,7 +22,7 @@ use crate::{
         displayable_item::DisplayableHackerNewsItem,
         handlers::ApplicationAction,
         router::AppRoute,
-        utils::open_browser_tab,
+        utils::{loader::Loader, open_browser_tab},
     },
 };
 
@@ -34,6 +34,8 @@ use super::{
 #[derive(Debug)]
 pub struct StoriesPanel {
     ticks_since_last_update: u64,
+    loading: bool,
+    loader: Loader,
     sorting_type_for_last_update: Option<HnStoriesSorting>,
     search_for_last_update: Option<String>,
     list_cutoff: usize,
@@ -48,6 +50,8 @@ impl Default for StoriesPanel {
     fn default() -> Self {
         Self {
             ticks_since_last_update: 0,
+            loading: true,
+            loader: Loader::default(),
             sorting_type_for_last_update: None,
             search_for_last_update: None,
             list_cutoff: HOME_MAX_DISPLAYED_STORIES,
@@ -97,21 +101,30 @@ impl UiComponent for StoriesPanel {
         STORIES_PANEL_ID
     }
 
+    fn before_unmount(&mut self) {
+        self.loader.stop();
+    }
+
     fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
         self.ticks_since_last_update += elapsed_ticks;
 
-        Ok(self.ticks_since_last_update >= MEAN_TICKS_BETWEEN_UPDATES
+        self.loading = self.ticks_since_last_update >= MEAN_TICKS_BETWEEN_UPDATES
             || match &self.sorting_type_for_last_update {
                 Some(last_sorting_type) => {
                     last_sorting_type != ctx.get_state().get_main_stories_sorting()
                 }
                 None => true, // first fetch
             }
-            || self.search_for_last_update.as_ref() != ctx.get_state().get_main_search_mode_query())
+            || self.search_for_last_update.as_ref() != ctx.get_state().get_main_search_mode_query();
+
+        self.loader.update();
+
+        Ok(self.loading)
     }
 
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
         self.ticks_since_last_update = 0;
+        self.loading = true;
 
         ctx.get_state_mut().set_main_stories_loading(true);
 
@@ -149,6 +162,8 @@ impl UiComponent for StoriesPanel {
         self.search_for_last_update = search_query.cloned();
 
         ctx.get_state_mut().set_main_stories_loading(false);
+
+        self.loading = false;
 
         Ok(())
     }
@@ -201,13 +216,13 @@ impl UiComponent for StoriesPanel {
 
     fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
         // Loading case
-        if ctx.get_state().get_main_stories_loading() {
+        if ctx.get_state().get_main_stories_loading() || self.loading {
             let block = Block::default()
                 .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded);
 
-            let text = vec![Spans::from(""), Spans::from("Loading...")];
+            let text = vec![Spans::from(""), Spans::from(self.loader.text())];
             let paragraph = Paragraph::new(text)
                 .block(block)
                 .alignment(Alignment::Center);
