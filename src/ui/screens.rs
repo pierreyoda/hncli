@@ -16,6 +16,7 @@ use super::{
 pub mod help;
 pub mod home;
 pub mod nested_comments;
+pub mod search;
 pub mod settings;
 pub mod story;
 pub mod user;

@@ -31,7 +31,7 @@ use self::{
         item_comments::{CommentItemNestedComments, ItemTopLevelComments},
         item_details::ItemDetails,
         item_summary::ItemSummary,
-        search::Search,
+        search::{algolia_tags::AlgoliaTags, Search},
         settings::Settings,
         user_profile::UserProfile,
     },
@@ -134,6 +134,7 @@ impl UserInterface {
         self.register_component(ItemSummary::default());
         self.register_component(ItemTopLevelComments::default());
         self.register_component(CommentItemNestedComments::default());
+        self.register_component(AlgoliaTags::default());
         self.register_component(UserProfile::default());
         self.register_component(Options::default());
 

@@ -104,6 +104,8 @@ pub enum ApplicationAction {
     ItemToggleComments,
     ItemExpandFocusedComment,
     FocusedCommentViewUserProfile,
+    // search screen
+    ApplyFilters,
     // user profile screen
     OpenHackerNewsProfile,
     // settings screen
@@ -132,6 +134,7 @@ impl ApplicationAction {
             ItemToggleComments => inputs.key == Key::Tab,
             ItemExpandFocusedComment => inputs.key == Key::Enter,
             FocusedCommentViewUserProfile => inputs.key == Key::Char('p'),
+            ApplyFilters => inputs.key == Key::Enter,
             OpenHackerNewsProfile => inputs.key == Key::Char('o'),
             SettingsToggleControl => inputs.key == Key::Tab,
         }

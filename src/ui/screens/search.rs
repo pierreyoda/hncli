@@ -3,7 +3,7 @@ use tui::layout::{Constraint, Direction, Layout, Rect};
 use crate::{
     app::{history::AppHistory, state::AppState},
     ui::{
-        components::help::HELP_ID,
+        components::search::algolia_tags::ALGOLIA_TAGS_ID,
         handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
     },
@@ -11,18 +11,17 @@ use crate::{
 
 use super::{Screen, ScreenComponentsRegistry, ScreenEventResponse};
 
-/// The Help screen of hncli.
+/// The Algolia-based search screen of hncli.
 #[derive(Debug)]
-pub struct HelpScreen;
+pub struct SearchScreen;
 
-impl HelpScreen {
+impl SearchScreen {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-// TODO: when navigating to help screen through navbar, redirect back to home if needed
-impl Screen for HelpScreen {
+impl Screen for SearchScreen {
     fn handle_inputs(
         &mut self,
         inputs: &InputsController,
@@ -47,15 +46,14 @@ impl Screen for HelpScreen {
         components_registry: &mut ScreenComponentsRegistry,
         _state: &AppState,
     ) {
-        // main layout chunks
         let main_layout_chunks = Layout::default()
             .direction(Direction::Vertical)
             .margin(2)
-            .constraints([Constraint::Length(1)].as_ref())
+            .constraints([Constraint::Percentage(10), Constraint::Percentage(90)].as_ref())
             .split(frame_size);
 
-        components_registry.insert(HELP_ID, main_layout_chunks[0]);
+        components_registry.insert(ALGOLIA_TAGS_ID, main_layout_chunks[0]);
     }
 }
 
-unsafe impl Send for HelpScreen {}
+unsafe impl Send for SearchScreen {}

@@ -6,7 +6,8 @@ use crate::{
     config::AppConfiguration,
     ui::screens::{
         help::HelpScreen, home::HomeScreen, nested_comments::NestedCommentsScreen,
-        settings::SettingsScreen, story::StoryDetailsScreen, user::UserDetailsScreen,
+        search::SearchScreen, settings::SettingsScreen, story::StoryDetailsScreen,
+        user::UserDetailsScreen,
     },
 };
 
@@ -23,6 +24,8 @@ pub enum AppRoute {
     ItemNestedComments(DisplayableHackerNewsItem),
     /// User profile screen. Only stores the user ID.
     UserProfile(String),
+    /// Algolia-based search screen.
+    Search,
     /// Settings screen.
     Settings,
     /// Help screen.
@@ -106,6 +109,7 @@ impl AppRouter {
         match route {
             Help => Box::new(HelpScreen::new()),
             Settings => Box::new(SettingsScreen::new()),
+            Search => Box::new(SearchScreen::new()),
             Home(section) => Box::new(HomeScreen::new(section)),
             ItemDetails(item) => Box::new(StoryDetailsScreen::new(item)),
             ItemNestedComments(parent_comment) => {

@@ -1,5 +1,6 @@
 use crate::{
     api::{
+        algolia_types::AlgoliaHnSearchTag,
         client::{HnStoriesSections, HnStoriesSorting},
         types::HnItemIdScalar,
     },
@@ -40,6 +41,8 @@ pub struct AppState {
     item_page_display_comments_panel: bool,
     /// The currently viewed user ID.
     currently_viewed_user_id: Option<String>,
+    /// The currently searched Hacker News Algolia category.
+    currently_searched_algolia_categories: Vec<AlgoliaHnSearchTag>,
 }
 
 impl AppState {
@@ -57,6 +60,7 @@ impl AppState {
             previously_viewed_comment_id: None,
             item_page_display_comments_panel: config.get_display_comments_panel_by_default(),
             currently_viewed_user_id: None,
+            currently_searched_algolia_categories: vec![],
         }
     }
 }
@@ -242,5 +246,15 @@ impl AppState {
     /// Set the currently viewed user ID.
     pub fn set_currently_viewed_user_id(&mut self, viewed_id: Option<String>) {
         self.currently_viewed_user_id = viewed_id;
+    }
+
+    /// Get the currently searched Hacker News Algolia categories.
+    pub fn get_currently_searched_algolia_categories(&self) -> &[AlgoliaHnSearchTag] {
+        self.currently_searched_algolia_categories.as_ref()
+    }
+
+    /// Set the currently searched Hacker News Algolia categories.
+    pub fn set_currently_searched_algolia_category(&mut self, categories: Vec<AlgoliaHnSearchTag>) {
+        self.currently_searched_algolia_categories = categories;
     }
 }
