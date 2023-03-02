@@ -3,7 +3,7 @@ use tui::layout::{Constraint, Direction, Layout, Rect};
 use crate::{
     app::{history::AppHistory, state::AppState},
     ui::{
-        components::search::algolia_tags::ALGOLIA_TAGS_ID,
+        components::search::{algolia_input::ALGOLIA_INPUT_ID, algolia_tags::ALGOLIA_TAGS_ID},
         handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
     },
@@ -49,10 +49,18 @@ impl Screen for SearchScreen {
         let main_layout_chunks = Layout::default()
             .direction(Direction::Vertical)
             .margin(2)
-            .constraints([Constraint::Percentage(10), Constraint::Percentage(90)].as_ref())
+            .constraints(
+                [
+                    Constraint::Percentage(10),
+                    Constraint::Percentage(10),
+                    Constraint::Percentage(80),
+                ]
+                .as_ref(),
+            )
             .split(frame_size);
 
         components_registry.insert(ALGOLIA_TAGS_ID, main_layout_chunks[0]);
+        components_registry.insert(ALGOLIA_INPUT_ID, main_layout_chunks[1]);
     }
 }
 

@@ -29,6 +29,7 @@
 use tui::{
     buffer::Buffer,
     layout::Rect,
+    style::Style,
     widgets::{Block, Widget},
 };
 
@@ -44,15 +45,12 @@ pub enum TextInputStateAction {
     GoToPreviousCharacter,
     /// Typically the right arrow key.
     GoToNextCharacter,
-    GoToPreviousWord,
-    GoToNextWord,
     /// Typically CTRL + A.
     GoToStart,
     /// Typically CTRL + E.
     GoToEnd,
     /// Typically Backspace.
     DeletePreviousCharacter,
-    DeleteNextCharacter,
     /// Typically CTRL + U.
     DeleteBeforeCursor,
     /// Typically CTRL + K.
@@ -69,24 +67,22 @@ pub trait TextInputStateActionBridge {
     fn handle_event(&self, event: &Self::ApplicationEvent);
 }
 
-impl TextInputStateActionBridge for TextInputState {
-    type ApplicationEvent = ApplicationAction;
-
-    fn available_actions(&self) -> Vec<Self::ApplicationEvent> {
-        let mut actions = vec![];
-        actions
-    }
-
-    fn handle_event(&self, event: &Self::ApplicationEvent) {
-        todo!()
-    }
-}
-
 /// State for `TextInputWidget`, to be used in the parent structure.
 #[derive(Debug, Default)]
 pub struct TextInputState {
     value: String,
     cursor_index: usize,
+}
+
+impl TextInputStateActionBridge for TextInputState {
+    type ApplicationEvent = ApplicationAction;
+
+    fn available_actions(&self) -> Vec<Self::ApplicationEvent> {
+        // let mut actions = vec![];
+        todo!()
+    }
+
+    fn handle_event(&self, event: &Self::ApplicationEvent) {}
 }
 
 impl TextInputState {
@@ -98,8 +94,71 @@ impl TextInputState {
     }
 
     pub fn handle_action(&mut self, action: &TextInputStateAction) {
+        use TextInputStateAction::*;
         match action {
-            _ => todo!(),
+            SetCursorIndex(index) => {
+                let position = *index.min(&self.utf8_len());
+                if position != self.cursor_index {
+                    self.cursor_index = position;
+                }
+            }
+            InsertCharacter(char) => {
+                if self.cursor_index >= self.utf8_len() {
+                    self.value.push(*char);
+                } else {
+                    self.value = self
+                        .value
+                        .chars()
+                        .take(self.cursor_index)
+                        .chain(
+                            std::iter::once(*char)
+                                .chain(self.value.chars().skip(self.cursor_index)),
+                        )
+                        .collect();
+                }
+                self.cursor_index += 1;
+            }
+            GoToPreviousCharacter => {
+                if self.cursor_index > 0 {
+                    self.cursor_index -= 1;
+                }
+            }
+            GoToNextCharacter => {
+                if self.cursor_index != self.utf8_len() {
+                    self.cursor_index += 1;
+                }
+            }
+            GoToStart => {
+                self.cursor_index = 0;
+            }
+            GoToEnd => {
+                self.cursor_index = self.utf8_len();
+            }
+            DeletePreviousCharacter => {
+                if self.cursor_index == 0 {
+                    return;
+                }
+                self.cursor_index -= 1;
+                self.value = self
+                    .value
+                    .chars()
+                    .enumerate()
+                    .filter(|(i, _)| *i != self.cursor_index)
+                    .map(|(_, char)| char)
+                    .collect();
+            }
+            DeleteBeforeCursor => {
+                if self.cursor_index == 0 {
+                    return;
+                }
+                self.value = self.value.chars().take(self.cursor_index).collect();
+            }
+            DeleteAfterCursor => {
+                if self.cursor_index >= self.utf8_len() {
+                    return;
+                }
+                self.value = self.value.chars().skip(self.cursor_index).collect();
+            }
         }
     }
 
@@ -110,6 +169,10 @@ impl TextInputState {
     pub fn get_cursor_index(&self) -> usize {
         self.cursor_index
     }
+
+    fn utf8_len(&self) -> usize {
+        self.value.chars().count()
+    }
 }
 
 /// Custom widget for handling text input.
@@ -117,17 +180,28 @@ impl TextInputState {
 pub struct TextInputWidget<'a> {
     /// Persistent state.
     state: &'a TextInputState,
+    /// (Optional) Custom rendering style.
+    style: Style,
     /// (Optional) Wrapping `tui-rs` Block widget.
     block: Option<Block<'a>>,
 }
 
 impl<'a> TextInputWidget<'a> {
     pub fn with_state(state: &'a TextInputState) -> Self {
-        Self { state, block: None }
+        Self {
+            state,
+            style: Style::default(),
+            block: None,
+        }
     }
 
     pub fn block(mut self, block: Block<'a>) -> Self {
         self.block = Some(block);
+        self
+    }
+
+    pub fn style(mut self, style: Style) -> Self {
+        self.style = style;
         self
     }
 }
@@ -143,6 +217,27 @@ impl<'a> Widget for TextInputWidget<'a> {
             None => area,
         };
 
-        todo!()
+        let cursor_position = self
+            .state
+            .value
+            .chars()
+            .enumerate()
+            .find(|(i, _)| *i == self.state.cursor_index)
+            .map(|(index, _)| index as u16);
+
+        buf.set_string(area.x, area.y, &self.state.value, self.style);
+        if let Some(cursor_index) = cursor_position {
+            buf.set_string(
+                area.x + cursor_index,
+                area.y,
+                " ",
+                Style::default().bg(tui::style::Color::LightYellow),
+            );
+        }
     }
+}
+
+#[cfg(tests)]
+mod tests {
+    // TODO:
 }
