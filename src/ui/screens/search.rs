@@ -3,13 +3,23 @@ use tui::layout::{Constraint, Direction, Layout, Rect};
 use crate::{
     app::{history::AppHistory, state::AppState},
     ui::{
-        components::search::{algolia_input::ALGOLIA_INPUT_ID, algolia_tags::ALGOLIA_TAGS_ID},
+        components::search::{
+            algolia_input::ALGOLIA_INPUT_ID, algolia_list::ALGOLIA_LIST_ID,
+            algolia_tags::ALGOLIA_TAGS_ID,
+        },
         handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
     },
 };
 
 use super::{Screen, ScreenComponentsRegistry, ScreenEventResponse};
+
+#[derive(Copy, Clone, Debug)]
+pub enum SearchScreenPart {
+    Filters,
+    Input,
+    Results,
+}
 
 /// The Algolia-based search screen of hncli.
 #[derive(Debug)]
@@ -26,7 +36,7 @@ impl Screen for SearchScreen {
         &mut self,
         inputs: &InputsController,
         router: &mut AppRouter,
-        _state: &mut AppState,
+        state: &mut AppState,
         _history: &mut AppHistory,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
         if inputs.is_active(&ApplicationAction::Back) {
@@ -35,6 +45,20 @@ impl Screen for SearchScreen {
                 ScreenEventResponse::Caught,
                 Some(router.get_current_route().clone()),
             )
+        } else if inputs.is_active(&ApplicationAction::NavigateUp) {
+            state.set_currently_used_algolia_part(match state.get_currently_used_algolia_part() {
+                SearchScreenPart::Filters => SearchScreenPart::Results,
+                SearchScreenPart::Input => SearchScreenPart::Filters,
+                SearchScreenPart::Results => SearchScreenPart::Input,
+            });
+            (ScreenEventResponse::Caught, None)
+        } else if inputs.is_active(&ApplicationAction::NavigateDown) {
+            state.set_currently_used_algolia_part(match state.get_currently_used_algolia_part() {
+                SearchScreenPart::Filters => SearchScreenPart::Input,
+                SearchScreenPart::Input => SearchScreenPart::Results,
+                SearchScreenPart::Results => SearchScreenPart::Filters,
+            });
+            (ScreenEventResponse::Caught, None)
         } else {
             (ScreenEventResponse::PassThrough, None)
         }
@@ -61,6 +85,7 @@ impl Screen for SearchScreen {
 
         components_registry.insert(ALGOLIA_TAGS_ID, main_layout_chunks[0]);
         components_registry.insert(ALGOLIA_INPUT_ID, main_layout_chunks[1]);
+        components_registry.insert(ALGOLIA_LIST_ID, main_layout_chunks[2]);
     }
 }
 

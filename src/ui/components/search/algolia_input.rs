@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use tui::{
     layout::Rect,
-    style::Style,
+    style::{Color, Style},
     widgets::{Block, BorderType, Borders},
 };
 
@@ -12,6 +12,7 @@ use crate::{
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         components::widgets::text_input::{TextInputState, TextInputWidget},
+        screens::search::SearchScreenPart,
     },
 };
 
@@ -49,11 +50,20 @@ impl UiComponent for AlgoliaInput {
         Ok(false)
     }
 
-    fn render(&mut self, f: &mut RenderFrame, inside: Rect, _ctx: &AppContext) -> Result<()> {
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
+        let input_widget_border_style = if matches!(
+            ctx.get_state().get_currently_used_algolia_part(),
+            SearchScreenPart::Input
+        ) {
+            Style::default().fg(Color::Yellow)
+        } else {
+            Style::default()
+        };
         let input_widget = TextInputWidget::with_state(&self.input_state).block(
             Block::default()
                 .borders(Borders::ALL)
                 .border_type(BorderType::Thick)
+                .border_style(input_widget_border_style)
                 .title("Search input"),
         );
         f.render_widget(input_widget, inside);

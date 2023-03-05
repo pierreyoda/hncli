@@ -5,7 +5,9 @@ use reqwest::Client;
 use crate::errors::{HnCliError, Result};
 
 use super::{
-    algolia_types::{AlgoliaHnFilter, AlgoliaHnFullTextSearchResult, AlgoliaHnSearchTag},
+    algolia_types::{
+        AlgoliaHnComment, AlgoliaHnFilter, AlgoliaHnFullTextSearchResult, AlgoliaHnSearchTag,
+    },
     types::HnItemIdScalar,
 };
 
@@ -30,10 +32,10 @@ impl AlgoliaHnClient {
         })
     }
 
-    /// Perform a full-text query with (optionally) filtering tags that will combine as AND.
+    /// Perform a full-text query search with (optionally) filtering tags that will combine as AND.
     ///
     /// Returns the most recent Hacker News items first.
-    pub async fn search(
+    pub async fn search_stories(
         &self,
         query: &str,
         tags: &[AlgoliaHnSearchTag],
@@ -77,5 +79,15 @@ impl AlgoliaHnClient {
             .iter()
             .filter_map(|hit| hit.try_parse_id())
             .collect())
+    }
+
+    /// Perform a full-text query search on Hacker News comments.
+    pub async fn search_comments(&self, query: &str) -> Result<Vec<AlgoliaHnComment>> {
+        let url = format!("{}/search?query={}=&tags=comment", self.base_url, query);
+
+        let result = self.client.get(url).send().await?.json().await?;
+        dbg!(result);
+
+        Ok(vec![])
     }
 }

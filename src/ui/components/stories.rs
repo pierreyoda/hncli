@@ -42,7 +42,6 @@ pub struct StoriesPanel {
     loading: bool,
     loader: Loader,
     sorting_type_for_last_update: Option<HnStoriesSorting>,
-    search_for_last_update: Option<String>,
     list_cutoff: usize,
     list_state: CustomListState<HnItemIdScalar, DisplayableHackerNewsItem>,
 }
@@ -58,7 +57,6 @@ impl Default for StoriesPanel {
             loading: true,
             loader: Loader::default(),
             sorting_type_for_last_update: None,
-            search_for_last_update: None,
             list_cutoff: HOME_MAX_DISPLAYED_STORIES,
             list_state: CustomListState::with_items(vec![]),
         }
@@ -95,8 +93,7 @@ impl UiComponent for StoriesPanel {
                     last_sorting_type != ctx.get_state().get_main_stories_sorting()
                 }
                 None => true, // first fetch
-            }
-            || self.search_for_last_update.as_ref() != ctx.get_state().get_main_search_mode_query();
+            };
 
         self.loader.update();
 
@@ -110,56 +107,11 @@ impl UiComponent for StoriesPanel {
         ctx.get_state_mut().set_main_stories_loading(true);
 
         let sorting_type = *ctx.get_state().get_main_stories_sorting();
-        let search_query = ctx.get_state().get_main_search_mode_query();
-
-        // Search handling
-        let main_search_mode_query = ctx.get_state().get_main_search_mode_query();
-        let searched_stories_ids: Option<Vec<HnItemIdScalar>> =
-            if let Some(query) = main_search_mode_query {
-                if query.is_empty() {
-                    None
-                } else {
-                    let tags = [tag_from_main_stories_section(
-                        ctx.get_state().get_main_stories_section(),
-                    )];
-                    match client.algolia().search(&query, &tags).await {
-                        Ok(ids) => Some(ids),
-                        Err(why) => {
-                            warn!(
-                                "StoriesPanel.update: could not search for query ({}): {}",
-                                query, why
-                            );
-                            None
-                        }
-                    }
-                }
-            } else {
-                None
-            };
 
         // Data fetching
         let api = client.classic();
         let router = ctx.get_router();
-        let displayable_stories = if let Some(filtered_ids) = searched_stories_ids {
-            match api.get_items(filtered_ids.as_slice()).await {
-                Ok(raw_items) => raw_items
-                    .iter()
-                    .take(self.list_cutoff)
-                    .map(|raw_item| {
-                        DisplayableHackerNewsItem::try_from(raw_item.clone()).expect(
-                            "StoriesPanel.update: can map filtered DisplayableHackerNewsItem",
-                        )
-                    })
-                    .collect(),
-                Err(why) => {
-                    warn!(
-                        "StoriesPanel.update: could not fetch filtered items by IDs: {}",
-                        why
-                    );
-                    vec![]
-                }
-            }
-        } else {
+        let displayable_stories = {
             // TODO: harden error handling here (should not crash)
             let stories =
                 if let Some(current_section) = router.get_current_route().get_home_section() {
@@ -171,8 +123,8 @@ impl UiComponent for StoriesPanel {
                 } else {
                     api.get_home_items(&sorting_type).await?
                 };
-            let cut_stories_iter = stories.iter();
-            cut_stories_iter
+            stories
+                .iter()
                 .take(self.list_cutoff)
                 .cloned()
                 .map(|raw_item| {
@@ -188,7 +140,6 @@ impl UiComponent for StoriesPanel {
         }
 
         self.sorting_type_for_last_update = Some(sorting_type);
-        self.search_for_last_update = search_query.cloned();
 
         ctx.get_state_mut().set_main_stories_loading(false);
 

@@ -11,6 +11,7 @@ use crate::{
 use super::widgets::text_input::{TextInputState, TextInputStateActionBridge, TextInputWidget};
 
 pub mod algolia_input;
+pub mod algolia_list;
 pub mod algolia_tags;
 
 /// Search input component, for filtering the stories list.
@@ -48,8 +49,8 @@ impl UiComponent for Search {
         let inputs = ctx.get_inputs();
         for input_available_action in self.input_state.available_actions() {
             if inputs.is_active(&input_available_action) {
-                ctx.get_state_mut()
-                    .set_main_search_mode_query(Some(self.input_state.get_value().clone()));
+                // ctx.get_state_mut()
+                //     .set_main_search_mode_query(Some(self.input_state.get_value().clone()));
                 return Ok(true);
             }
         }

@@ -14,6 +14,7 @@ use crate::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         components::common::COMMON_BLOCK_NORMAL_COLOR,
         handlers::ApplicationAction,
+        screens::search::SearchScreenPart,
     },
 };
 
@@ -51,8 +52,12 @@ impl AlgoliaTags {
     }
 
     fn toggle_search_selection(&mut self, index: usize) {
-        assert!(0 <= index && index < self.titles.len());
+        assert!(index < self.titles.len());
         self.selected_indices[index] = !self.selected_indices[index];
+        if self.selected_indices.iter().all(|activated| !activated) {
+            // TODO: find better UX?
+            self.selected_indices[0] = true;
+        }
     }
 
     fn apply_search_selections(&self, ctx: &mut AppContext) {
@@ -110,7 +115,7 @@ impl UiComponent for AlgoliaTags {
         })
     }
 
-    fn render(&mut self, f: &mut RenderFrame, inside: Rect, _ctx: &AppContext) -> Result<()> {
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
         let tabs_titles = self
             .titles
             .iter()
@@ -129,13 +134,22 @@ impl UiComponent for AlgoliaTags {
             })
             .collect();
 
+        let tabs_border_style = if matches!(
+            ctx.get_state().get_currently_used_algolia_part(),
+            SearchScreenPart::Filters
+        ) {
+            Style::default().fg(Color::Yellow)
+        } else {
+            Style::default()
+        };
         let tabs = Tabs::new(tabs_titles)
             .select(self.hovered_index)
             .block(
                 Block::default()
                     .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
-                    .borders(Borders::BOTTOM)
+                    .borders(Borders::ALL)
                     .border_type(BorderType::Plain)
+                    .border_style(tabs_border_style)
                     .title("Search Filters"),
             )
             .style(Style::default().fg(Color::White))

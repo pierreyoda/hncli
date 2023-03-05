@@ -31,7 +31,10 @@ use self::{
         item_comments::{CommentItemNestedComments, ItemTopLevelComments},
         item_details::ItemDetails,
         item_summary::ItemSummary,
-        search::{algolia_input::AlgoliaInput, algolia_tags::AlgoliaTags, Search},
+        search::{
+            algolia_input::AlgoliaInput, algolia_list::AlgoliaList, algolia_tags::AlgoliaTags,
+            Search,
+        },
         settings::Settings,
         user_profile::UserProfile,
     },
@@ -41,6 +44,7 @@ use self::{
 
 pub mod common;
 pub mod components;
+pub mod displayable_algolia_item;
 pub mod displayable_item;
 pub mod handlers;
 mod helper;
@@ -136,6 +140,7 @@ impl UserInterface {
         self.register_component(CommentItemNestedComments::default());
         self.register_component(AlgoliaTags::default());
         self.register_component(AlgoliaInput::default());
+        self.register_component(AlgoliaList::default());
         self.register_component(UserProfile::default());
         self.register_component(Options::default());
 

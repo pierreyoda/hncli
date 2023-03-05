@@ -4,6 +4,23 @@ use serde::Deserialize;
 
 use crate::api::types::HnItemIdScalar;
 
+#[derive(Clone, Debug, Deserialize)]
+pub struct AlgoliaHnHits {
+    hits: Vec<AlgoliaHnHit>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct AlgoliaHnStory {}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct AlgoliaHnComment {}
+
+#[derive(Clone, Debug, Deserialize)]
+pub enum AlgoliaHnHit {
+    AlgoliaHnHitStory(AlgoliaHnStory),
+    AlgoliaHnHitComment(AlgoliaHnComment),
+}
+
 pub trait AlgoliaHnFilter {
     fn to_query(&self) -> String;
 }
@@ -69,6 +86,7 @@ impl AlgoliaHnFullTextSearchHit {
     }
 }
 
+// TODO:
 #[derive(Debug, Deserialize)]
 pub struct AlgoliaHnFullTextSearchResult {
     hits: Vec<AlgoliaHnFullTextSearchHit>,
