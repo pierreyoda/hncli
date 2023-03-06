@@ -1,6 +1,6 @@
 use std::time::SystemTime;
 
-const LOADER_DOTS_UPDATE_MS: u128 = 200;
+const LOADER_DOTS_UPDATE_MS: u128 = 250;
 
 /// Used by UI components to provide an "animated" loading status text.
 #[derive(Debug)]

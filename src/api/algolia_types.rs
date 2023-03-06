@@ -1,19 +1,47 @@
 //! See https://hn.algolia.com/api.
 
+use chrono::{DateTime, Utc};
 use serde::Deserialize;
 
 use crate::api::types::HnItemIdScalar;
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct AlgoliaHnHits {
-    hits: Vec<AlgoliaHnHit>,
+pub struct AlgoliaHnHits<H> {
+    hits: Vec<H>,
+}
+
+impl<H> AlgoliaHnHits<H> {
+    pub fn get_hits(&self) -> &[H] {
+        &self.hits
+    }
+}
+
+pub type AlgoliaHnStoriesHits = AlgoliaHnHits<AlgoliaHnStory>;
+pub type AlgoliaHnCommentsHits = AlgoliaHnHits<AlgoliaHnComment>;
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct AlgoliaHnStory {
+    pub object_id: String,
+    pub id: Option<HnItemIdScalar>,
+    pub posted_at: DateTime<Utc>,
+    pub title: String,
+    pub url: String,
+    pub author: String,
+    pub text: Option<String>,
+    pub points: u32,
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct AlgoliaHnStory {}
-
-#[derive(Clone, Debug, Deserialize)]
-pub struct AlgoliaHnComment {}
+pub struct AlgoliaHnComment {
+    pub object_id: String,
+    pub parent_id: HnItemIdScalar,
+    pub author: String,
+    pub posted_at: DateTime<Utc>,
+    pub story_id: HnItemIdScalar,
+    pub story_url: String,
+    pub text: String,
+    pub points: Option<u32>,
+}
 
 #[derive(Clone, Debug, Deserialize)]
 pub enum AlgoliaHnHit {
@@ -72,32 +100,5 @@ impl AlgoliaHnFilter for AlgoliaHnNumericFilter {
             Self::Points => "points".into(),
             Self::CommentsCount => "num_comments".into(),
         }
-    }
-}
-
-#[derive(Debug, Deserialize)]
-pub struct AlgoliaHnFullTextSearchHit {
-    objectId: String,
-}
-
-impl AlgoliaHnFullTextSearchHit {
-    pub fn try_parse_id(&self) -> Option<HnItemIdScalar> {
-        self.objectId.parse::<HnItemIdScalar>().ok()
-    }
-}
-
-// TODO:
-#[derive(Debug, Deserialize)]
-pub struct AlgoliaHnFullTextSearchResult {
-    hits: Vec<AlgoliaHnFullTextSearchHit>,
-    page: usize,
-    query: String,
-    /// Format: "query={...}".
-    params: String,
-}
-
-impl AlgoliaHnFullTextSearchResult {
-    pub fn get_hits(&self) -> &Vec<AlgoliaHnFullTextSearchHit> {
-        &self.hits
     }
 }

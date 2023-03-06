@@ -1,15 +1,26 @@
 use async_trait::async_trait;
-use tui::layout::Rect;
+use tui::{
+    layout::{Alignment, Rect},
+    style::{Color, Style},
+    text::Spans,
+    widgets::{Block, BorderType, Borders, Paragraph},
+};
+use unicode_width::UnicodeWidthStr;
 
 use crate::{
-    api::{types::HnItemIdScalar, HnClient},
+    api::{algolia_types::AlgoliaHnSearchTag, HnClient},
     app::AppContext,
     errors::Result,
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
-        components::widgets::custom_list::CustomListState,
-        displayable_algolia_item::DisplayableAlgoliaItem,
-        utils::{debouncer::Debouncer, loader::Loader},
+        components::{
+            common::{render_text_message, COMMON_BLOCK_NORMAL_COLOR},
+            widgets::custom_list::{CustomList, CustomListState},
+        },
+        displayable_algolia_item::{DisplayableAlgoliaComment, DisplayableAlgoliaItem},
+        handlers::ApplicationAction,
+        screens::search::SearchScreenPart,
+        utils::{debouncer::Debouncer, loader::Loader, open_browser_tab},
     },
 };
 
@@ -20,7 +31,7 @@ pub struct AlgoliaList {
     loader: Loader,
     debouncer: Debouncer,
     list_state: CustomListState<u64, DisplayableAlgoliaItem>,
-    /// Cached state.
+    /// Cached query state.
     algolia_query: Option<String>,
 }
 
@@ -49,15 +60,20 @@ impl UiComponent for AlgoliaList {
     }
 
     fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
-        return Ok(true);
         self.debouncer.tick(elapsed_ticks);
-        Ok(
-            ctx.get_state().get_current_algolia_query() != self.algolia_query.as_ref()
-                && self.debouncer.is_action_allowed(),
-        )
+        let should_update = ctx.get_state().get_current_algolia_query()
+            != self.algolia_query.as_ref()
+            && self.debouncer.is_action_allowed();
+        if should_update {
+            self.loading = true;
+        }
+        self.loader.update();
+
+        Ok(should_update)
     }
 
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
+        self.loading = true;
         let state = ctx.get_state();
 
         let (algolia_query, algolia_filters) = (
@@ -65,21 +81,133 @@ impl UiComponent for AlgoliaList {
             state.get_currently_searched_algolia_categories(),
         );
 
-        // let result = client
-        //     .algolia()
-        //     .search_stories(algolia_query, &algolia_filters)
-        //     .await?;
+        // TODO: more generic
+        let for_comments = state
+            .get_currently_searched_algolia_categories()
+            .iter()
+            .find(|c| **c == AlgoliaHnSearchTag::Comment)
+            .is_some();
 
-        let result = client.algolia().search_comments("teqt");
+        // TODO: more generic?
+        if let Some(query) = algolia_query {
+            let result = client.algolia().search_comments(query).await?;
+            if for_comments {
+                self.list_state.replace_items(
+                    result
+                        .get_hits()
+                        .iter()
+                        .map(|i| {
+                            DisplayableAlgoliaItem::Comment(DisplayableAlgoliaComment::from(
+                                i.clone(), // TODO: avoid clone here?
+                            ))
+                        })
+                        .collect(),
+                );
+            } else {
+                // TODO:
+            };
+        } else {
+            self.list_state.replace_items(vec![]);
+        }
+
+        self.loading = false;
 
         Ok(())
     }
 
+    // TODO: internal links for hncli?
     fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
-        todo!()
+        if self.loading {
+            return Ok(false);
+        }
+
+        let (inputs, selected) = (ctx.get_inputs(), self.list_state.selected());
+        Ok(if inputs.is_active(&ApplicationAction::NavigateUp) {
+            self.list_state.previous();
+            true
+        } else if inputs.is_active(&ApplicationAction::NavigateDown) {
+            self.list_state.next();
+            true
+        } else if inputs.is_active(&ApplicationAction::OpenHackerNewsLink) {
+            let items = self.list_state.get_items();
+            let selected_item = &items[selected.unwrap()];
+            let item_hn_link = selected_item.get_hacker_news_link();
+            open_browser_tab(item_hn_link.as_str());
+            true
+        } else {
+            false
+        })
     }
 
     fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
-        todo!()
+        let block_border_style = if matches!(
+            ctx.get_state().get_currently_used_algolia_part(),
+            SearchScreenPart::Results
+        ) {
+            Style::default().fg(Color::Yellow)
+        } else {
+            Style::default()
+        };
+
+        // Loading case
+        if self.loading {
+            let block = Block::default()
+                .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .border_style(block_border_style);
+
+            let text = vec![Spans::from(""), Spans::from(self.loader.text())];
+            let paragraph = Paragraph::new(text)
+                .block(block)
+                .alignment(Alignment::Center);
+            f.render_widget(paragraph, inside);
+            return Ok(());
+        }
+
+        // Empty case
+        if self.list_state.is_empty() {
+            render_text_message(f, inside, "No results...");
+            return Ok(());
+        }
+
+        // Custom List
+        let block = Block::default()
+            .style(Style::default())
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded)
+            .border_style(block_border_style)
+            .title("Search results");
+        let custom_list_results = CustomList::new(
+            &mut self.list_state,
+            |rect, buf, item, is_selected| {
+                // selected color
+                let style = Style::default().fg(if is_selected {
+                    Color::Yellow
+                } else {
+                    Color::White
+                });
+                // title
+                let title = item.title();
+                let (x, _) = buf.set_stringn(rect.x, rect.y, title, rect.width as usize, style);
+                // meta information
+                if x >= rect.width {
+                    return;
+                }
+                let meta = item.meta();
+                let meta_width = meta.width();
+                buf.set_stringn(
+                    rect.x + rect.width - (meta_width as u16) - 5,
+                    rect.y,
+                    meta,
+                    meta_width,
+                    style,
+                );
+            },
+            |_| 1,
+        )
+        .block(block);
+
+        Ok(())
     }
 }

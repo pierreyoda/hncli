@@ -2,14 +2,12 @@ use std::time::Duration;
 
 use reqwest::Client;
 
-use crate::errors::{HnCliError, Result};
-
-use super::{
-    algolia_types::{
-        AlgoliaHnComment, AlgoliaHnFilter, AlgoliaHnFullTextSearchResult, AlgoliaHnSearchTag,
-    },
-    types::HnItemIdScalar,
+use crate::{
+    api::algolia_types::AlgoliaHnCommentsHits,
+    errors::{HnCliError, Result},
 };
+
+use super::algolia_types::{AlgoliaHnFilter, AlgoliaHnSearchTag, AlgoliaHnStoriesHits};
 
 const ALGOLIA_HACKER_NEWS_API_BASE_URL: &str = "http://hn.algolia.com/api/v1";
 
@@ -39,7 +37,7 @@ impl AlgoliaHnClient {
         &self,
         query: &str,
         tags: &[AlgoliaHnSearchTag],
-    ) -> Result<Vec<HnItemIdScalar>> {
+    ) -> Result<AlgoliaHnStoriesHits> {
         // TODO: handle pagination? default page size seems to be 20 items
 
         // query params handling
@@ -62,7 +60,7 @@ impl AlgoliaHnClient {
         );
 
         // request
-        let result: AlgoliaHnFullTextSearchResult = self
+        let result: AlgoliaHnStoriesHits = self
             .client
             .get(url)
             .send()
@@ -74,20 +72,26 @@ impl AlgoliaHnClient {
             })
             .map_err(HnCliError::HttpError)?;
 
-        Ok(result
-            .get_hits()
-            .iter()
-            .filter_map(|hit| hit.try_parse_id())
-            .collect())
+        Ok(result)
     }
 
     /// Perform a full-text query search on Hacker News comments.
-    pub async fn search_comments(&self, query: &str) -> Result<Vec<AlgoliaHnComment>> {
+    pub async fn search_comments(&self, query: &str) -> Result<AlgoliaHnCommentsHits> {
         let url = format!("{}/search?query={}=&tags=comment", self.base_url, query);
 
-        let result = self.client.get(url).send().await?.json().await?;
-        dbg!(result);
+        let result: AlgoliaHnCommentsHits = self
+            .client
+            .get(url)
+            .send()
+            .await?
+            .text()
+            .await
+            .map(|raw| {
+                serde_json::from_str(&raw)
+                    .expect("api.algolia.searxh_xomments: deserialization should work")
+            })
+            .map_err(HnCliError::HttpError)?;
 
-        Ok(vec![])
+        Ok(result)
     }
 }

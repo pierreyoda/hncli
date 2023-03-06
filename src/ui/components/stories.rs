@@ -4,7 +4,6 @@ use std::convert::TryFrom;
 
 use async_trait::async_trait;
 
-use log::warn;
 use tui::{
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},

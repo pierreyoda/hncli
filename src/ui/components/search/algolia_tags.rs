@@ -58,6 +58,7 @@ impl AlgoliaTags {
             // TODO: find better UX?
             self.selected_indices[0] = true;
         }
+        self.enforce_tags_coherency();
     }
 
     fn apply_search_selections(&self, ctx: &mut AppContext) {
@@ -69,6 +70,18 @@ impl AlgoliaTags {
         }
         ctx.get_state_mut()
             .set_currently_searched_algolia_category(categories);
+    }
+
+    fn enforce_tags_coherency(&mut self) {
+        if self.selected_indices[1] {
+            // comments only
+            self.selected_indices = TABS_TITLES.iter().map(|_| false).collect();
+            self.selected_indices[1] = true;
+        } else if self.selected_indices[4] {
+            // users only
+            self.selected_indices = TABS_TITLES.iter().map(|_| false).collect();
+            self.selected_indices[4] = true;
+        }
     }
 }
 

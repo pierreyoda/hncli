@@ -5,31 +5,45 @@ use std::{
 
 use chrono::{DateTime, Utc};
 
-use crate::api::types::HnItemIdScalar;
+use crate::api::{
+    algolia_types::{AlgoliaHnComment, AlgoliaHnStory},
+    types::HnItemIdScalar,
+};
 
 use super::utils::ItemWithId;
 
 #[derive(Clone, Debug)]
-pub struct DisplayableAlgoliaUser {
-    username: String,
-    about: Option<String>,
-    karma: u32,
-}
-
-#[derive(Clone, Debug)]
 pub struct DisplayableAlgoliaStory {
+    pub object_id: String,
     pub id: Option<HnItemIdScalar>,
     pub posted_at: DateTime<Utc>,
+    pub title: String,
     pub url: String,
     pub author: String,
     pub text: Option<String>,
     pub points: u32,
 }
 
+impl From<AlgoliaHnStory> for DisplayableAlgoliaStory {
+    fn from(value: AlgoliaHnStory) -> Self {
+        Self {
+            object_id: value.object_id,
+            id: value.id,
+            posted_at: value.posted_at,
+            title: value.title,
+            url: value.url,
+            author: value.author,
+            text: value.text,
+            points: value.points,
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct DisplayableAlgoliaComment {
-    pub object_id: HnItemIdScalar,
+    pub object_id: String,
     pub parent_id: HnItemIdScalar,
+    pub author: String,
     pub posted_at: DateTime<Utc>,
     pub story_id: HnItemIdScalar,
     pub story_url: String,
@@ -37,12 +51,55 @@ pub struct DisplayableAlgoliaComment {
     pub points: u32,
 }
 
+impl From<AlgoliaHnComment> for DisplayableAlgoliaComment {
+    fn from(value: AlgoliaHnComment) -> Self {
+        Self {
+            object_id: value.object_id,
+            parent_id: value.parent_id,
+            author: value.author,
+            posted_at: value.posted_at,
+            story_id: value.story_id,
+            story_url: value.story_url,
+            text: value.text,
+            points: value.points.unwrap_or(0),
+        }
+    }
+}
+
 /// A display-ready Hacker News Algolia item.
 #[derive(Clone, Debug)]
 pub enum DisplayableAlgoliaItem {
-    User(DisplayableAlgoliaUser),
     Story(DisplayableAlgoliaStory),
     Comment(DisplayableAlgoliaComment),
+}
+
+impl DisplayableAlgoliaItem {
+    pub fn get_hacker_news_link(&self) -> String {
+        use DisplayableAlgoliaItem::*;
+
+        match self {
+            Story(data) => format!("https://news.ycombinator.com/item?id={}", data.object_id),
+            Comment(data) => format!("https://news.ycombinator.com/item?id={}", data.object_id),
+        }
+    }
+
+    pub fn title(&self) -> &str {
+        use DisplayableAlgoliaItem::*;
+
+        match self {
+            Story(data) => &data.title,
+            Comment(data) => &data.author,
+        }
+    }
+
+    pub fn meta(&self) -> String {
+        use DisplayableAlgoliaItem::*;
+
+        match self {
+            Story(data) => format!("by {}, {} points", data.author, data.points),
+            Comment(data) => format!("{} points", data.points),
+        }
+    }
 }
 
 impl ItemWithId<u64> for DisplayableAlgoliaItem {
@@ -52,7 +109,6 @@ impl ItemWithId<u64> for DisplayableAlgoliaItem {
 
         let mut hasher = DefaultHasher::new();
         match self {
-            User(user_data) => user_data.username.hash(&mut hasher),
             Story(story_data) => {
                 format!("{}-{}", story_data.url, story_data.author).hash(&mut hasher)
             }
