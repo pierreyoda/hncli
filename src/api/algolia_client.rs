@@ -88,7 +88,31 @@ impl AlgoliaHnClient {
             .await
             .map(|raw| {
                 serde_json::from_str(&raw)
-                    .expect("api.algolia.searxh_xomments: deserialization should work")
+                    .expect("api.algolia.search_comments: deserialization should work")
+            })
+            .map_err(HnCliError::HttpError)?;
+
+        Ok(result)
+    }
+
+    /// Perform a full-text query search on Hacker News stories for the given username.
+    pub async fn search_user_stories(&self, username: &str) -> Result<AlgoliaHnStoriesHits> {
+        let url = format!(
+            "{}/search?tags=story,{}",
+            self.base_url,
+            AlgoliaHnSearchTag::AuthorUsername(username.into()).to_query()
+        );
+
+        let result: AlgoliaHnStoriesHits = self
+            .client
+            .get(url)
+            .send()
+            .await?
+            .text()
+            .await
+            .map(|raw| {
+                serde_json::from_str(&raw)
+                    .expect("api.algolia.search_user_stories: deserialization should work")
             })
             .map_err(HnCliError::HttpError)?;
 

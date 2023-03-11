@@ -80,6 +80,7 @@ pub enum KeyModifier {
     Control,
 }
 
+#[derive(Debug)]
 pub enum ApplicationAction {
     // general
     OpenExternalOrHackerNewsLink,
@@ -135,7 +136,7 @@ impl ApplicationAction {
             NavigateRight => inputs.key == Key::Right,
             // input
             InputSetCursor => {
-                inputs.modifier == KeyModifier::None && Self::is_key_char(&inputs.key)
+                inputs.modifier == KeyModifier::None && !Self::is_key_char(&inputs.key)
             }
             InputInsertCharacter => {
                 inputs.modifier == KeyModifier::None && Self::is_key_char(&inputs.key)
@@ -155,7 +156,6 @@ impl ApplicationAction {
             }
             // home screen
             HomeToggleSortingOption => inputs.key == Key::Char('s'),
-            HomeToggleSearchMode => inputs.key == Key::Char('f'),
             // item screen
             ItemToggleComments => inputs.key == Key::Tab,
             ItemExpandFocusedComment => inputs.key == Key::Enter,
@@ -189,11 +189,11 @@ impl InputsController {
             key: Key::None,
             modifier: KeyModifier::None,
             active_input_key: Key::None,
-            active_input_mode: false,
+            active_input_mode: true,
         }
     }
 
-    pub fn pump_event(&mut self, event: KeyEvent, state: &AppState) {
+    pub fn pump_event(&mut self, event: KeyEvent, _state: &AppState) {
         // TODO: somehow make the modifiers work properly in all circumstances
         self.modifier = match event.modifiers {
             KeyModifiers::CONTROL => KeyModifier::Control,

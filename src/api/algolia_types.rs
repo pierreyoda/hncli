@@ -11,6 +11,10 @@ pub struct AlgoliaHnHits<H> {
 }
 
 impl<H> AlgoliaHnHits<H> {
+    pub fn empty() -> Self {
+        Self { hits: vec![] }
+    }
+
     pub fn get_hits(&self) -> &[H] {
         &self.hits
     }

@@ -33,7 +33,7 @@ use tui::{
     widgets::{Block, Widget},
 };
 
-use crate::ui::handlers::ApplicationAction;
+use crate::ui::handlers::{ApplicationAction, InputsController};
 
 /// The various interactions with `TextInputState`.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -61,10 +61,9 @@ pub enum TextInputStateAction {
 pub trait TextInputStateActionBridge {
     type ApplicationEvent;
 
-    // TODO: can we use a slice and not a Vec? in the context of a future independant crate
     fn available_actions(&self) -> Vec<Self::ApplicationEvent>;
 
-    fn handle_event(&self, event: &Self::ApplicationEvent);
+    fn handle_event(&mut self, inputs: &InputsController, event: &Self::ApplicationEvent);
 }
 
 /// State for `TextInputWidget`, to be used in the parent structure.
@@ -78,11 +77,45 @@ impl TextInputStateActionBridge for TextInputState {
     type ApplicationEvent = ApplicationAction;
 
     fn available_actions(&self) -> Vec<Self::ApplicationEvent> {
-        // let mut actions = vec![];
-        todo!()
+        use ApplicationAction::*;
+
+        vec![
+            InputSetCursor,
+            InputInsertCharacter,
+            InputGoToPreviousCharacter,
+            InputGoToNextCharacter,
+            InputGoToStart,
+            InputGoToEnd,
+            InputDeletePreviousCharacter,
+            InputDeleteBeforeCursor,
+            InputDeleteAfterCursor,
+        ]
     }
 
-    fn handle_event(&self, event: &Self::ApplicationEvent) {}
+    fn handle_event(&mut self, inputs: &InputsController, event: &Self::ApplicationEvent) {
+        use TextInputStateAction::*;
+
+        let action = match event {
+            ApplicationAction::InputInsertCharacter => {
+                if let Some((_, char)) = inputs.get_active_input_key() {
+                    Some(InsertCharacter(char))
+                } else {
+                    None
+                }
+            }
+            ApplicationAction::InputGoToPreviousCharacter => Some(GoToPreviousCharacter),
+            ApplicationAction::InputGoToNextCharacter => Some(GoToNextCharacter),
+            ApplicationAction::InputGoToStart => Some(GoToStart),
+            ApplicationAction::InputGoToEnd => Some(GoToEnd),
+            ApplicationAction::InputDeletePreviousCharacter => Some(DeletePreviousCharacter),
+            ApplicationAction::InputDeleteBeforeCursor => Some(DeletePreviousCharacter),
+            ApplicationAction::InputDeleteAfterCursor => Some(DeleteAfterCursor),
+            _ => None,
+        };
+        if let Some(input_action) = action {
+            self.handle_action(&input_action);
+        }
+    }
 }
 
 impl TextInputState {
@@ -225,7 +258,7 @@ impl<'a> Widget for TextInputWidget<'a> {
             .find(|(i, _)| *i == self.state.cursor_index)
             .map(|(index, _)| index as u16);
 
-        buf.set_string(area.x, area.y, &self.state.value, self.style);
+        buf.set_string(text_area.x, text_area.y, &self.state.value, self.style);
         if let Some(cursor_index) = cursor_position {
             buf.set_string(
                 area.x + cursor_index,

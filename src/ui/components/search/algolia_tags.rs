@@ -18,7 +18,7 @@ use crate::{
     },
 };
 
-const TABS_TITLES: [&str; 5] = ["Story", "Comment", "Show HN", "Ask HN", "Username"];
+const TABS_TITLES: [&str; 3] = ["Stories", "Comment", "Username"];
 
 /// Component allowing switching between the various Hacker News Algolia tags.
 #[derive(Debug)]
@@ -26,14 +26,21 @@ pub struct AlgoliaTags {
     titles: Vec<&'static str>,
     hovered_index: usize,
     selected_indices: Vec<bool>,
+    previous_selected_indices: Vec<bool>,
 }
 
 impl Default for AlgoliaTags {
     fn default() -> Self {
+        let selected_indices: Vec<bool> = TABS_TITLES
+            .iter()
+            .enumerate()
+            .map(|(i, _)| if i == 0 { true } else { false })
+            .collect();
         Self {
             titles: TABS_TITLES.to_vec(),
             hovered_index: 0,
-            selected_indices: TABS_TITLES.iter().map(|_| false).collect(),
+            selected_indices: selected_indices.clone(),
+            previous_selected_indices: selected_indices,
         }
     }
 }
@@ -53,12 +60,18 @@ impl AlgoliaTags {
 
     fn toggle_search_selection(&mut self, index: usize) {
         assert!(index < self.titles.len());
-        self.selected_indices[index] = !self.selected_indices[index];
-        if self.selected_indices.iter().all(|activated| !activated) {
-            // TODO: find better UX?
-            self.selected_indices[0] = true;
-        }
-        self.enforce_tags_coherency();
+        self.previous_selected_indices = self.selected_indices.clone();
+        self.selected_indices = TABS_TITLES
+            .iter()
+            .enumerate()
+            .map(|(i, _)| {
+                if i == index {
+                    !self.selected_indices[index]
+                } else {
+                    false
+                }
+            })
+            .collect();
     }
 
     fn apply_search_selections(&self, ctx: &mut AppContext) {
@@ -71,27 +84,13 @@ impl AlgoliaTags {
         ctx.get_state_mut()
             .set_currently_searched_algolia_category(categories);
     }
-
-    fn enforce_tags_coherency(&mut self) {
-        if self.selected_indices[1] {
-            // comments only
-            self.selected_indices = TABS_TITLES.iter().map(|_| false).collect();
-            self.selected_indices[1] = true;
-        } else if self.selected_indices[4] {
-            // users only
-            self.selected_indices = TABS_TITLES.iter().map(|_| false).collect();
-            self.selected_indices[4] = true;
-        }
-    }
 }
 
 fn search_tag_index_to_algolia_filter(index: usize) -> AlgoliaHnSearchTag {
     match index {
         0 => AlgoliaHnSearchTag::Story,
         1 => AlgoliaHnSearchTag::Comment,
-        2 => AlgoliaHnSearchTag::ShowHackerNews,
-        3 => AlgoliaHnSearchTag::AskHackerNews,
-        4 => AlgoliaHnSearchTag::AuthorUsername("".into()),
+        2 => AlgoliaHnSearchTag::AuthorUsername("".into()),
         _ => unreachable!(),
     }
 }
@@ -105,10 +104,12 @@ impl UiComponent for AlgoliaTags {
     }
 
     fn should_update(&mut self, _elapsed_ticks: UiTickScalar, _ctx: &AppContext) -> Result<bool> {
-        Ok(false)
+        Ok(self.previous_selected_indices != self.selected_indices)
     }
 
-    async fn update(&mut self, _client: &mut HnClient, _ctx: &mut AppContext) -> Result<()> {
+    async fn update(&mut self, _client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
+        self.apply_search_selections(ctx);
+
         Ok(())
     }
 

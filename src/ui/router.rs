@@ -6,8 +6,8 @@ use crate::{
     config::AppConfiguration,
     ui::screens::{
         help::HelpScreen, home::HomeScreen, nested_comments::NestedCommentsScreen,
-        search::SearchScreen, settings::SettingsScreen, story::StoryDetailsScreen,
-        user::UserDetailsScreen,
+        search::SearchScreen, search_help::SearchHelpScreen, settings::SettingsScreen,
+        story::StoryDetailsScreen, user::UserDetailsScreen,
     },
 };
 
@@ -26,6 +26,8 @@ pub enum AppRoute {
     UserProfile(String),
     /// Algolia-based search screen.
     Search,
+    /// Algolia-based search screen help.
+    SearchHelp,
     /// Settings screen.
     Settings,
     /// Help screen.
@@ -42,6 +44,10 @@ impl AppRoute {
 
     pub fn is_home(&self) -> bool {
         matches!(self, AppRoute::Home(_))
+    }
+
+    pub fn is_search(&self) -> bool {
+        matches!(self, AppRoute::Search)
     }
 
     pub fn is_settings(&self) -> bool {
@@ -110,6 +116,7 @@ impl AppRouter {
             Help => Box::new(HelpScreen::new()),
             Settings => Box::new(SettingsScreen::new()),
             Search => Box::new(SearchScreen::new()),
+            SearchHelp => Box::new(SearchHelpScreen::new()),
             Home(section) => Box::new(HomeScreen::new(section)),
             ItemDetails(item) => Box::new(StoryDetailsScreen::new(item)),
             ItemNestedComments(parent_comment) => {

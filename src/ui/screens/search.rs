@@ -14,7 +14,7 @@ use crate::{
 
 use super::{Screen, ScreenComponentsRegistry, ScreenEventResponse};
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum SearchScreenPart {
     Filters,
     Input,
@@ -39,21 +39,29 @@ impl Screen for SearchScreen {
         state: &mut AppState,
         _history: &mut AppHistory,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
-        if inputs.is_active(&ApplicationAction::Back) {
+        let currently_used_algolia_part = state.get_currently_used_algolia_part();
+        if currently_used_algolia_part == SearchScreenPart::Results {
+            if inputs.is_active(&ApplicationAction::Back) {
+                state.set_currently_used_algolia_part(SearchScreenPart::Input);
+            }
+            (ScreenEventResponse::Caught, None)
+        } else if inputs.is_active(&ApplicationAction::ToggleHelp) {
+            (ScreenEventResponse::Caught, Some(AppRoute::SearchHelp))
+        } else if inputs.is_active(&ApplicationAction::Back) {
             router.pop_navigation_stack();
             (
                 ScreenEventResponse::Caught,
                 Some(router.get_current_route().clone()),
             )
         } else if inputs.is_active(&ApplicationAction::NavigateUp) {
-            state.set_currently_used_algolia_part(match state.get_currently_used_algolia_part() {
+            state.set_currently_used_algolia_part(match currently_used_algolia_part {
                 SearchScreenPart::Filters => SearchScreenPart::Results,
                 SearchScreenPart::Input => SearchScreenPart::Filters,
                 SearchScreenPart::Results => SearchScreenPart::Input,
             });
             (ScreenEventResponse::Caught, None)
         } else if inputs.is_active(&ApplicationAction::NavigateDown) {
-            state.set_currently_used_algolia_part(match state.get_currently_used_algolia_part() {
+            state.set_currently_used_algolia_part(match currently_used_algolia_part {
                 SearchScreenPart::Filters => SearchScreenPart::Input,
                 SearchScreenPart::Input => SearchScreenPart::Results,
                 SearchScreenPart::Results => SearchScreenPart::Filters,

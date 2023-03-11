@@ -1,3 +1,5 @@
+use std::clone;
+
 use async_trait::async_trait;
 use tui::{
     layout::{Alignment, Rect},
@@ -9,7 +11,7 @@ use unicode_width::UnicodeWidthStr;
 
 use crate::{
     api::{algolia_types::AlgoliaHnSearchTag, HnClient},
-    app::AppContext,
+    app::{state::AppState, AppContext},
     errors::Result,
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
@@ -17,7 +19,9 @@ use crate::{
             common::{render_text_message, COMMON_BLOCK_NORMAL_COLOR},
             widgets::custom_list::{CustomList, CustomListState},
         },
-        displayable_algolia_item::{DisplayableAlgoliaComment, DisplayableAlgoliaItem},
+        displayable_algolia_item::{
+            DisplayableAlgoliaComment, DisplayableAlgoliaItem, DisplayableAlgoliaStory,
+        },
         handlers::ApplicationAction,
         screens::search::SearchScreenPart,
         utils::{debouncer::Debouncer, loader::Loader, open_browser_tab},
@@ -81,33 +85,49 @@ impl UiComponent for AlgoliaList {
             state.get_currently_searched_algolia_categories(),
         );
 
-        // TODO: more generic
-        let for_comments = state
-            .get_currently_searched_algolia_categories()
-            .iter()
-            .find(|c| **c == AlgoliaHnSearchTag::Comment)
-            .is_some();
-
-        // TODO: more generic?
         if let Some(query) = algolia_query {
-            let result = client.algolia().search_comments(query).await?;
-            if for_comments {
-                self.list_state.replace_items(
-                    result
-                        .get_hits()
-                        .iter()
-                        .map(|i| {
-                            DisplayableAlgoliaItem::Comment(DisplayableAlgoliaComment::from(
-                                i.clone(), // TODO: avoid clone here?
-                            ))
-                        })
-                        .collect(),
-                );
+            let (for_stories, for_comments, for_usernames) = (
+                Self::has_algolia_tag(state, AlgoliaHnSearchTag::Story),
+                Self::has_algolia_tag(state, AlgoliaHnSearchTag::Comment),
+                Self::has_algolia_tag(state, AlgoliaHnSearchTag::AuthorUsername("".into())),
+            );
+
+            // TODO: avoid .clones
+            let displayable_algolia_items = if for_stories {
+                let results = client
+                    .algolia()
+                    .search_stories(query, algolia_filters)
+                    .await?;
+                results
+                    .get_hits()
+                    .iter()
+                    .map(|i| {
+                        DisplayableAlgoliaItem::Story(DisplayableAlgoliaStory::from(i.clone()))
+                    })
+                    .collect()
+            } else if for_comments {
+                let results = client.algolia().search_comments(query).await?;
+                results
+                    .get_hits()
+                    .iter()
+                    .map(|i| {
+                        DisplayableAlgoliaItem::Comment(DisplayableAlgoliaComment::from(i.clone()))
+                    })
+                    .collect()
+            } else if for_usernames {
+                let results = client.algolia().search_user_stories(query).await?;
+                results
+                    .get_hits()
+                    .iter()
+                    .map(|i| {
+                        DisplayableAlgoliaItem::Story(DisplayableAlgoliaStory::from(i.clone()))
+                    })
+                    .collect()
             } else {
-                // TODO:
+                vec![]
             };
-        } else {
-            self.list_state.replace_items(vec![]);
+
+            self.list_state.replace_items(displayable_algolia_items);
         }
 
         self.loading = false;
@@ -209,5 +229,15 @@ impl UiComponent for AlgoliaList {
         .block(block);
 
         Ok(())
+    }
+}
+
+impl AlgoliaList {
+    fn has_algolia_tag(state: &AppState, tag: AlgoliaHnSearchTag) -> bool {
+        state
+            .get_currently_searched_algolia_categories()
+            .iter()
+            .find(|c| **c == tag)
+            .is_some()
     }
 }

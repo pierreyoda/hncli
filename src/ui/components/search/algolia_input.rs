@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use log::{info, warn};
 use tui::{
     layout::Rect,
     style::{Color, Style},
@@ -11,7 +12,9 @@ use crate::{
     errors::Result,
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
-        components::widgets::text_input::{TextInputState, TextInputWidget},
+        components::widgets::text_input::{
+            TextInputState, TextInputStateAction, TextInputStateActionBridge, TextInputWidget,
+        },
         screens::search::SearchScreenPart,
     },
 };
@@ -46,7 +49,24 @@ impl UiComponent for AlgoliaInput {
         Ok(())
     }
 
-    fn handle_inputs(&mut self, _ctx: &mut AppContext) -> Result<bool> {
+    fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
+        if ctx.get_state().get_currently_used_algolia_part() != SearchScreenPart::Input {
+            return Ok(false);
+        }
+
+        let inputs = ctx.get_inputs();
+        if let Some((_, char)) = inputs.get_active_input_key() {
+            self.input_state
+                .handle_action(&TextInputStateAction::InsertCharacter(char));
+            return Ok(true);
+        }
+        for available_action in self.input_state.available_actions() {
+            if inputs.is_active(&available_action) {
+                info!("aa={:?}", available_action);
+                self.input_state.handle_event(inputs, &available_action);
+                return Ok(true);
+            }
+        }
         Ok(false)
     }
 
@@ -59,6 +79,7 @@ impl UiComponent for AlgoliaInput {
         } else {
             Style::default()
         };
+
         let input_widget = TextInputWidget::with_state(&self.input_state).block(
             Block::default()
                 .borders(Borders::ALL)

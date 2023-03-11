@@ -10,6 +10,7 @@ use crate::{
 
 use super::widgets::text_input::{TextInputState, TextInputStateActionBridge, TextInputWidget};
 
+pub mod algolia_help;
 pub mod algolia_input;
 pub mod algolia_list;
 pub mod algolia_tags;
