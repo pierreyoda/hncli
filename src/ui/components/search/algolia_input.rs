@@ -19,6 +19,8 @@ use crate::{
     },
 };
 
+const MAX_INPUT_LENGTH: usize = 100;
+
 /// The input controlling the Hacker News Algolia search.
 #[derive(Debug)]
 pub struct AlgoliaInput {
@@ -56,13 +58,14 @@ impl UiComponent for AlgoliaInput {
 
         let inputs = ctx.get_inputs();
         if let Some((_, char)) = inputs.get_active_input_key() {
-            self.input_state
-                .handle_action(&TextInputStateAction::InsertCharacter(char));
-            return Ok(true);
+            if self.input_state.get_value().len() < MAX_INPUT_LENGTH {
+                self.input_state
+                    .handle_action(&TextInputStateAction::InsertCharacter(char));
+                return Ok(true);
+            }
         }
         for available_action in self.input_state.available_actions() {
             if inputs.is_active(&available_action) {
-                info!("aa={:?}", available_action);
                 self.input_state.handle_event(inputs, &available_action);
                 return Ok(true);
             }
