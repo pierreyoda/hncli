@@ -7,7 +7,10 @@ use crate::{
     config::AppConfiguration,
     ui::{
         common::UiComponentId,
-        components::stories::STORIES_PANEL_ID,
+        components::{
+            stories::STORIES_PANEL_ID,
+            widgets::text_input::{TextInputState, TextInputStateAction},
+        },
         displayable_item::{DisplayableHackerNewsItem, DisplayableHackerNewsItemComments},
         screens::search::SearchScreenPart,
     },
@@ -40,8 +43,8 @@ pub struct AppState {
     item_page_display_comments_panel: bool,
     /// The currently viewed user ID.
     currently_viewed_user_id: Option<String>,
-    /// The current Hacker News Algolia search.
-    current_algolia_query: Option<String>,
+    /// The current Hacker News Algolia search state.
+    current_algolia_query_state: TextInputState,
     /// The currently used Hacker News Algolia Screen part.
     currently_used_algolia_part: SearchScreenPart,
     /// The currently searched Hacker News Algolia category.
@@ -62,7 +65,7 @@ impl AppState {
             previously_viewed_comment_id: None,
             item_page_display_comments_panel: config.get_display_comments_panel_by_default(),
             currently_viewed_user_id: None,
-            current_algolia_query: None,
+            current_algolia_query_state: TextInputState::default(),
             currently_used_algolia_part: SearchScreenPart::Filters,
             currently_searched_algolia_categories: vec![],
         }
@@ -242,14 +245,14 @@ impl AppState {
         self.currently_viewed_user_id = viewed_id;
     }
 
-    /// Get the current Hacker News Algolia search.
-    pub fn get_current_algolia_query(&self) -> Option<&String> {
-        self.current_algolia_query.as_ref()
+    /// Get the current Hacker News Algolia query search state.
+    pub fn get_current_algolia_query_state(&self) -> &TextInputState {
+        &self.current_algolia_query_state
     }
 
-    /// Set the current Hacker News Algolia search.
-    pub fn set_current_algolia_query(&mut self, query: Option<String>) {
-        self.current_algolia_query = query;
+    /// Mutably get the current Hacker News Algolia query search state.
+    pub fn get_current_algolia_query_state_mut(&mut self) -> &mut TextInputState {
+        &mut self.current_algolia_query_state
     }
 
     /// Get the currently used Hacker News Algolia Screen part.

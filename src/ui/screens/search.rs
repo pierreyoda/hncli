@@ -3,9 +3,13 @@ use tui::layout::{Constraint, Direction, Layout, Rect};
 use crate::{
     app::{history::AppHistory, state::AppState},
     ui::{
-        components::search::{
-            algolia_input::ALGOLIA_INPUT_ID, algolia_list::ALGOLIA_LIST_ID,
-            algolia_tags::ALGOLIA_TAGS_ID,
+        components::{
+            search::{
+                algolia_input::{ALGOLIA_INPUT_ID, MAX_ALGOLIA_INPUT_LENGTH},
+                algolia_list::ALGOLIA_LIST_ID,
+                algolia_tags::ALGOLIA_TAGS_ID,
+            },
+            widgets::text_input::{TextInputStateAction, TextInputStateActionBridge},
         },
         handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
@@ -40,6 +44,30 @@ impl Screen for SearchScreen {
         _history: &mut AppHistory,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
         let currently_used_algolia_part = state.get_currently_used_algolia_part();
+
+        // the Algolia searchbox input is handled here
+        // due to interference with the below commands
+        if currently_used_algolia_part == SearchScreenPart::Input {
+            if let Some((_, char)) = inputs.get_active_input_key() {
+                if state.get_current_algolia_query_state().get_value().len()
+                    < MAX_ALGOLIA_INPUT_LENGTH
+                {
+                    state
+                        .get_current_algolia_query_state_mut()
+                        .handle_action(&TextInputStateAction::InsertCharacter(char));
+                    return (ScreenEventResponse::Caught, None);
+                }
+            }
+            for available_action in state.get_current_algolia_query_state().available_actions() {
+                if inputs.is_active(&available_action) {
+                    state
+                        .get_current_algolia_query_state_mut()
+                        .handle_event(inputs, &available_action);
+                    return (ScreenEventResponse::Caught, None);
+                }
+            }
+        }
+
         if currently_used_algolia_part == SearchScreenPart::Results {
             if inputs.is_active(&ApplicationAction::Back) {
                 state.set_currently_used_algolia_part(SearchScreenPart::Input);

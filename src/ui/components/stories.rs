@@ -258,14 +258,9 @@ impl UiComponent for StoriesPanel {
         )
         .block(block)
         .style(Style::default().fg(Color::White))
-        .highlight_style(
-            Style::default()
-                .bg(Color::Yellow)
-                .fg(Color::Black)
-                .add_modifier(Modifier::BOLD),
-        )
         .highlight_symbol(">> ")
         .highlight_style(Style::default().fg(Color::Yellow));
+
         f.render_widget(custom_list_stories, inside);
 
         Ok(())

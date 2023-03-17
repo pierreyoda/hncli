@@ -3,7 +3,7 @@ use std::clone;
 use async_trait::async_trait;
 use tui::{
     layout::{Alignment, Rect},
-    style::{Color, Style},
+    style::{Color, Modifier, Style},
     text::Spans,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
@@ -65,8 +65,11 @@ impl UiComponent for AlgoliaList {
 
     fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
         self.debouncer.tick(elapsed_ticks);
-        let should_update = ctx.get_state().get_current_algolia_query()
-            != self.algolia_query.as_ref()
+        let should_update = Some(
+            ctx.get_state()
+                .get_current_algolia_query_state()
+                .get_value(),
+        ) != self.algolia_query.as_ref()
             && self.debouncer.is_action_allowed();
         if should_update {
             self.loading = true;
@@ -78,57 +81,51 @@ impl UiComponent for AlgoliaList {
 
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
         self.loading = true;
-        let state = ctx.get_state();
 
+        let state = ctx.get_state();
         let (algolia_query, algolia_filters) = (
-            state.get_current_algolia_query(),
+            state.get_current_algolia_query_state().get_value(),
             state.get_currently_searched_algolia_categories(),
         );
 
-        if let Some(query) = algolia_query {
-            let (for_stories, for_comments, for_usernames) = (
-                Self::has_algolia_tag(state, AlgoliaHnSearchTag::Story),
-                Self::has_algolia_tag(state, AlgoliaHnSearchTag::Comment),
-                Self::has_algolia_tag(state, AlgoliaHnSearchTag::AuthorUsername("".into())),
-            );
+        let (for_stories, for_comments, for_usernames) = (
+            Self::has_algolia_tag(state, AlgoliaHnSearchTag::Story),
+            Self::has_algolia_tag(state, AlgoliaHnSearchTag::Comment),
+            Self::has_algolia_tag(state, AlgoliaHnSearchTag::AuthorUsername("".into())),
+        );
 
-            // TODO: avoid .clones
-            let displayable_algolia_items = if for_stories {
-                let results = client
-                    .algolia()
-                    .search_stories(query, algolia_filters)
-                    .await?;
-                results
-                    .get_hits()
-                    .iter()
-                    .map(|i| {
-                        DisplayableAlgoliaItem::Story(DisplayableAlgoliaStory::from(i.clone()))
-                    })
-                    .collect()
-            } else if for_comments {
-                let results = client.algolia().search_comments(query).await?;
-                results
-                    .get_hits()
-                    .iter()
-                    .map(|i| {
-                        DisplayableAlgoliaItem::Comment(DisplayableAlgoliaComment::from(i.clone()))
-                    })
-                    .collect()
-            } else if for_usernames {
-                let results = client.algolia().search_user_stories(query).await?;
-                results
-                    .get_hits()
-                    .iter()
-                    .map(|i| {
-                        DisplayableAlgoliaItem::Story(DisplayableAlgoliaStory::from(i.clone()))
-                    })
-                    .collect()
-            } else {
-                vec![]
-            };
+        // TODO: avoid .clones
+        let displayable_algolia_items = if for_stories {
+            let results = client
+                .algolia()
+                .search_stories(algolia_query, algolia_filters)
+                .await?;
+            results
+                .get_hits()
+                .iter()
+                .map(|i| DisplayableAlgoliaItem::Story(DisplayableAlgoliaStory::from(i.clone())))
+                .collect()
+        } else if for_comments {
+            let results = client.algolia().search_comments(algolia_query).await?;
+            results
+                .get_hits()
+                .iter()
+                .map(|i| {
+                    DisplayableAlgoliaItem::Comment(DisplayableAlgoliaComment::from(i.clone()))
+                })
+                .collect()
+        } else if for_usernames {
+            let results = client.algolia().search_user_stories(algolia_query).await?;
+            results
+                .get_hits()
+                .iter()
+                .map(|i| DisplayableAlgoliaItem::Story(DisplayableAlgoliaStory::from(i.clone())))
+                .collect()
+        } else {
+            vec![]
+        };
 
-            self.list_state.replace_items(displayable_algolia_items);
-        }
+        self.list_state.replace_items(displayable_algolia_items);
 
         self.loading = false;
 
@@ -226,7 +223,12 @@ impl UiComponent for AlgoliaList {
             },
             |_| 1,
         )
-        .block(block);
+        .block(block)
+        .style(Style::default().fg(Color::White))
+        .highlight_symbol(">> ")
+        .highlight_style(Style::default().fg(Color::Yellow));
+
+        f.render_widget(custom_list_results, inside);
 
         Ok(())
     }

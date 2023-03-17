@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use log::{info, warn};
 use tui::{
     layout::Rect,
     style::{Color, Style},
@@ -19,21 +18,11 @@ use crate::{
     },
 };
 
-const MAX_INPUT_LENGTH: usize = 100;
+pub const MAX_ALGOLIA_INPUT_LENGTH: usize = 100;
 
 /// The input controlling the Hacker News Algolia search.
-#[derive(Debug)]
-pub struct AlgoliaInput {
-    input_state: TextInputState,
-}
-
-impl Default for AlgoliaInput {
-    fn default() -> Self {
-        Self {
-            input_state: TextInputState::default(),
-        }
-    }
-}
+#[derive(Debug, Default)]
+pub struct AlgoliaInput {}
 
 pub const ALGOLIA_INPUT_ID: UiComponentId = "algolia_input";
 
@@ -51,25 +40,7 @@ impl UiComponent for AlgoliaInput {
         Ok(())
     }
 
-    fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
-        if ctx.get_state().get_currently_used_algolia_part() != SearchScreenPart::Input {
-            return Ok(false);
-        }
-
-        let inputs = ctx.get_inputs();
-        if let Some((_, char)) = inputs.get_active_input_key() {
-            if self.input_state.get_value().len() < MAX_INPUT_LENGTH {
-                self.input_state
-                    .handle_action(&TextInputStateAction::InsertCharacter(char));
-                return Ok(true);
-            }
-        }
-        for available_action in self.input_state.available_actions() {
-            if inputs.is_active(&available_action) {
-                self.input_state.handle_event(inputs, &available_action);
-                return Ok(true);
-            }
-        }
+    fn handle_inputs(&mut self, _ctx: &mut AppContext) -> Result<bool> {
         Ok(false)
     }
 
@@ -83,13 +54,14 @@ impl UiComponent for AlgoliaInput {
             Style::default()
         };
 
-        let input_widget = TextInputWidget::with_state(&self.input_state).block(
-            Block::default()
-                .borders(Borders::ALL)
-                .border_type(BorderType::Thick)
-                .border_style(input_widget_border_style)
-                .title("Search input"),
-        );
+        let input_widget =
+            TextInputWidget::with_state(ctx.get_state().get_current_algolia_query_state()).block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Thick)
+                    .border_style(input_widget_border_style)
+                    .title("Search input"),
+            );
         f.render_widget(input_widget, inside);
 
         Ok(())
