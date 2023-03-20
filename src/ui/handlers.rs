@@ -136,7 +136,8 @@ impl ApplicationAction {
             NavigateRight => inputs.key == Key::Right,
             // input
             InputSetCursor => {
-                inputs.modifier == KeyModifier::None && !Self::is_key_char(&inputs.key)
+                inputs.modifier == KeyModifier::None
+                    && (inputs.key == Key::Left || inputs.key == Key::Right)
             }
             InputInsertCharacter => {
                 inputs.modifier == KeyModifier::None && Self::is_key_char(&inputs.key)
