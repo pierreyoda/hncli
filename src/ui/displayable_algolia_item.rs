@@ -16,7 +16,6 @@ use super::utils::ItemWithId;
 pub struct DisplayableAlgoliaStory {
     pub object_id: String,
     pub id: Option<HnItemIdScalar>,
-    pub posted_at: DateTime<Utc>,
     pub title: String,
     pub url: String,
     pub author: String,
@@ -29,7 +28,6 @@ impl From<AlgoliaHnStory> for DisplayableAlgoliaStory {
         Self {
             object_id: value.object_id,
             id: value.id,
-            posted_at: value.posted_at,
             title: value.title,
             url: value.url,
             author: value.author,
@@ -44,7 +42,6 @@ pub struct DisplayableAlgoliaComment {
     pub object_id: String,
     pub parent_id: HnItemIdScalar,
     pub author: String,
-    pub posted_at: DateTime<Utc>,
     pub story_id: HnItemIdScalar,
     pub story_url: String,
     pub text: String,
@@ -57,7 +54,6 @@ impl From<AlgoliaHnComment> for DisplayableAlgoliaComment {
             object_id: value.object_id,
             parent_id: value.parent_id,
             author: value.author,
-            posted_at: value.posted_at,
             story_id: value.story_id,
             story_url: value.story_url,
             text: value.text,

@@ -25,9 +25,9 @@ pub type AlgoliaHnCommentsHits = AlgoliaHnHits<AlgoliaHnComment>;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct AlgoliaHnStory {
+    #[serde(rename = "objectID")]
     pub object_id: String,
     pub id: Option<HnItemIdScalar>,
-    pub posted_at: DateTime<Utc>,
     pub title: String,
     pub url: String,
     pub author: String,
@@ -40,7 +40,6 @@ pub struct AlgoliaHnComment {
     pub object_id: String,
     pub parent_id: HnItemIdScalar,
     pub author: String,
-    pub posted_at: DateTime<Utc>,
     pub story_id: HnItemIdScalar,
     pub story_url: String,
     pub text: String,

@@ -1,3 +1,4 @@
+use log::info;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
@@ -60,6 +61,7 @@ impl Screen for SearchScreen {
             }
             for available_action in state.get_current_algolia_query_state().available_actions() {
                 if inputs.is_active(&available_action) {
+                    info!("{:?}", available_action);
                     state
                         .get_current_algolia_query_state_mut()
                         .handle_event(inputs, &available_action);

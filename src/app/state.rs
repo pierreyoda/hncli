@@ -48,7 +48,7 @@ pub struct AppState {
     /// The currently used Hacker News Algolia Screen part.
     currently_used_algolia_part: SearchScreenPart,
     /// The currently searched Hacker News Algolia category.
-    currently_searched_algolia_categories: Vec<AlgoliaHnSearchTag>,
+    currently_searched_algolia_category: Option<AlgoliaHnSearchTag>,
 }
 
 impl AppState {
@@ -67,7 +67,7 @@ impl AppState {
             currently_viewed_user_id: None,
             current_algolia_query_state: TextInputState::default(),
             currently_used_algolia_part: SearchScreenPart::Filters,
-            currently_searched_algolia_categories: vec![],
+            currently_searched_algolia_category: None,
         }
     }
 }
@@ -265,13 +265,16 @@ impl AppState {
         self.currently_used_algolia_part = part;
     }
 
-    /// Get the currently searched Hacker News Algolia categories.
-    pub fn get_currently_searched_algolia_categories(&self) -> &[AlgoliaHnSearchTag] {
-        self.currently_searched_algolia_categories.as_ref()
+    /// Get the currently searched Hacker News Algolia category.
+    pub fn get_currently_searched_algolia_category(&self) -> Option<&AlgoliaHnSearchTag> {
+        self.currently_searched_algolia_category.as_ref()
     }
 
-    /// Set the currently searched Hacker News Algolia categories.
-    pub fn set_currently_searched_algolia_category(&mut self, categories: Vec<AlgoliaHnSearchTag>) {
-        self.currently_searched_algolia_categories = categories;
+    /// Set the currently searched Hacker News Algolia category.
+    pub fn set_currently_searched_algolia_category(
+        &mut self,
+        category: Option<AlgoliaHnSearchTag>,
+    ) {
+        self.currently_searched_algolia_category = category;
     }
 }

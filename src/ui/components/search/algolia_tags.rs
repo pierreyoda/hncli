@@ -15,6 +15,7 @@ use crate::{
         components::common::COMMON_BLOCK_NORMAL_COLOR,
         handlers::ApplicationAction,
         screens::search::SearchScreenPart,
+        utils::debouncer::Debouncer,
     },
 };
 
@@ -25,22 +26,17 @@ const TABS_TITLES: [&str; 3] = ["Stories", "Comment", "Username"];
 pub struct AlgoliaTags {
     titles: Vec<&'static str>,
     hovered_index: usize,
-    selected_indices: Vec<bool>,
-    previous_selected_indices: Vec<bool>,
+    selected_index: Option<usize>,
+    debouncer: Debouncer,
 }
 
 impl Default for AlgoliaTags {
     fn default() -> Self {
-        let selected_indices: Vec<bool> = TABS_TITLES
-            .iter()
-            .enumerate()
-            .map(|(i, _)| if i == 0 { true } else { false })
-            .collect();
         Self {
             titles: TABS_TITLES.to_vec(),
             hovered_index: 0,
-            selected_indices: selected_indices.clone(),
-            previous_selected_indices: selected_indices,
+            selected_index: None,
+            debouncer: Debouncer::new(5),
         }
     }
 }
@@ -60,29 +56,16 @@ impl AlgoliaTags {
 
     fn toggle_search_selection(&mut self, index: usize) {
         assert!(index < self.titles.len());
-        self.previous_selected_indices = self.selected_indices.clone();
-        self.selected_indices = TABS_TITLES
-            .iter()
-            .enumerate()
-            .map(|(i, _)| {
-                if i == index {
-                    !self.selected_indices[index]
-                } else {
-                    false
-                }
-            })
-            .collect();
+        self.selected_index = Some(index);
     }
 
     fn apply_search_selections(&self, ctx: &mut AppContext) {
-        let mut categories = Vec::with_capacity(self.selected_indices.len());
-        for (index, activated) in self.selected_indices.iter().enumerate() {
-            if *activated {
-                categories.push(search_tag_index_to_algolia_filter(index));
-            }
+        if let Some(index) = self.selected_index {
+            ctx.get_state_mut()
+                .set_currently_searched_algolia_category(Some(search_tag_index_to_algolia_filter(
+                    index,
+                )));
         }
-        ctx.get_state_mut()
-            .set_currently_searched_algolia_category(categories);
     }
 }
 
@@ -103,8 +86,9 @@ impl UiComponent for AlgoliaTags {
         ALGOLIA_TAGS_ID
     }
 
-    fn should_update(&mut self, _elapsed_ticks: UiTickScalar, _ctx: &AppContext) -> Result<bool> {
-        Ok(self.previous_selected_indices != self.selected_indices)
+    fn should_update(&mut self, elapsed_ticks: UiTickScalar, _ctx: &AppContext) -> Result<bool> {
+        self.debouncer.tick(elapsed_ticks);
+        Ok(self.debouncer.is_action_allowed())
     }
 
     async fn update(&mut self, _client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
@@ -133,17 +117,17 @@ impl UiComponent for AlgoliaTags {
         let tabs_titles = self
             .titles
             .iter()
-            .zip(&self.selected_indices)
-            .map(|(title, activated)| {
+            .enumerate()
+            .map(|(i, title)| {
                 Spans::from(vec![Span::styled(
                     *title,
-                    Style::default()
-                        .fg(Color::White)
-                        .add_modifier(if *activated {
+                    Style::default().fg(Color::White).add_modifier(
+                        if Some(i) == self.selected_index {
                             Modifier::UNDERLINED | Modifier::BOLD
                         } else {
                             Modifier::BOLD
-                        }),
+                        },
+                    ),
                 )])
             })
             .collect();
