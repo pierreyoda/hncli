@@ -115,18 +115,16 @@ impl ApplicationAction {
         use ApplicationAction::*;
         match self {
             OpenExternalOrHackerNewsLink => inputs.key == Key::Char('o'),
-            OpenHackerNewsLink => {
-                inputs.modifier == KeyModifier::Shift && inputs.key == Key::Char('o')
-            }
+            OpenHackerNewsLink => inputs.key == Key::Char('l'),
             SelectItem => inputs.key == Key::Enter,
             ToggleHelp => inputs.key == Key::Char('h'),
             Back => inputs.key == Key::Escape,
             Quit => inputs.modifier == KeyModifier::Control && inputs.key == Key::Char('c'),
             QuitShortcut => inputs.key == Key::Char('q'),
-            NavigateUp => inputs.key == Key::Up || inputs.key == Key::Char('i'),
-            NavigateDown => inputs.key == Key::Down || inputs.key == Key::Char('k'),
-            NavigateLeft => inputs.key == Key::Left || inputs.key == Key::Char('j'),
-            NavigateRight => inputs.key == Key::Right || inputs.key == Key::Char('l'),
+            NavigateUp => inputs.key == Key::Up,
+            NavigateDown => inputs.key == Key::Down,
+            NavigateLeft => inputs.key == Key::Left,
+            NavigateRight => inputs.key == Key::Right,
             InputClear => inputs.modifier == KeyModifier::Control && inputs.key == Key::Char('u'),
             InputDelete => inputs.key == Key::Backspace,
             HomeToggleSortingOption => inputs.key == Key::Char('s'),
