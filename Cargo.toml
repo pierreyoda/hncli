@@ -14,7 +14,7 @@ async-recursion = "1.0.4"
 async-trait = "0.1.68"
 chrono = { version = "0.4.24", features = ["serde"] }
 crossterm = "0.26.1"
-directories = "5.0.0"
+directories = "5.0.1"
 futures = "0.3.28"
 fuzzy-matcher = "0.3.7"
 html2text = "0.5.1"
