@@ -1,10 +1,7 @@
-use std::clone;
-
 use async_trait::async_trait;
-use log::info;
 use tui::{
     layout::{Alignment, Rect},
-    style::{Color, Modifier, Style},
+    style::{Color, Style},
     text::Spans,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
@@ -12,7 +9,7 @@ use unicode_width::UnicodeWidthStr;
 
 use crate::{
     api::{algolia_types::AlgoliaHnSearchTag, HnClient},
-    app::{state::AppState, AppContext},
+    app::AppContext,
     errors::Result,
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
@@ -32,6 +29,7 @@ use crate::{
 /// The Hacker News Algolia results list.
 #[derive(Debug)]
 pub struct AlgoliaList {
+    empty_input: bool,
     loading: bool,
     loader: Loader,
     debouncer: Debouncer,
@@ -43,7 +41,8 @@ pub struct AlgoliaList {
 impl Default for AlgoliaList {
     fn default() -> Self {
         Self {
-            loading: true,
+            empty_input: false,
+            loading: false,
             loader: Loader::default(),
             debouncer: Debouncer::new(5),
             list_state: CustomListState::with_items(vec![]),
@@ -88,6 +87,13 @@ impl UiComponent for AlgoliaList {
             state.get_current_algolia_query_state().get_value(),
             state.get_currently_searched_algolia_category(),
         );
+
+        self.empty_input = algolia_query.is_empty();
+        if self.empty_input {
+            self.list_state.clear();
+            return Ok(());
+        }
+
         if let Some(category) = algolia_category {
             self.algolia_query = Some(algolia_query.clone());
 
@@ -131,9 +137,6 @@ impl UiComponent for AlgoliaList {
             } else {
                 vec![]
             };
-
-            info!("test");
-
             self.list_state.replace_items(displayable_algolia_items);
 
             self.loading = false;
@@ -175,6 +178,22 @@ impl UiComponent for AlgoliaList {
         } else {
             Style::default()
         };
+
+        // Empty input case
+        if self.empty_input {
+            let block = Block::default()
+                .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .border_style(block_border_style);
+
+            let text = vec![Spans::from("No search input.")];
+            let paragraph = Paragraph::new(text)
+                .block(block)
+                .alignment(Alignment::Center);
+            f.render_widget(paragraph, inside);
+            return Ok(());
+        }
 
         // Loading case
         if self.loading {

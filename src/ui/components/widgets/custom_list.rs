@@ -77,6 +77,11 @@ where
         &self.items
     }
 
+    /// CLear the stored items.
+    pub fn clear(&mut self) {
+        self.items.clear();
+    }
+
     /// Replace the current items with the given ones.
     pub fn replace_items(&mut self, items: Vec<T>) {
         let old_items = self.items.clone();
