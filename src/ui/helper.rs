@@ -71,7 +71,6 @@ impl ContextualHelper {
         }
     }
 
-    // TODO: add centralized key bindings manager
     fn render_home_page_help(
         &self,
         f: &mut RenderFrame,
@@ -80,11 +79,7 @@ impl ContextualHelper {
     ) {
         let widgets = vec![
             HelpWidget::KeyReminder('💡', "toggle help".into(), Key::Char('h')),
-            if app_inputs.has_shift_modifier() {
-                HelpWidget::Text("🌐 - SHIFT + 'o' to open the item Hacker News page".into())
-            } else {
-                HelpWidget::KeyReminder('🌐', "open the item link".into(), Key::Char('o'))
-            },
+            HelpWidget::Text("🌐 'l' or 'o' to open HN/item link".into()),
             if app_inputs.has_ctrl_modifier() {
                 HelpWidget::Text("❌ - CTRL + 'c' to quit".into())
             } else {
