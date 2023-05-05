@@ -1,6 +1,5 @@
 //! See https://hn.algolia.com/api.
 
-use chrono::{DateTime, Utc};
 use serde::Deserialize;
 
 use crate::api::types::HnItemIdScalar;
@@ -37,12 +36,13 @@ pub struct AlgoliaHnStory {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct AlgoliaHnComment {
+    #[serde(rename = "objectID")]
     pub object_id: String,
     pub parent_id: HnItemIdScalar,
     pub author: String,
     pub story_id: HnItemIdScalar,
     pub story_url: String,
-    pub text: String,
+    pub comment_text: String,
     pub points: Option<u32>,
 }
 

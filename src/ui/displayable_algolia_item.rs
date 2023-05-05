@@ -56,7 +56,7 @@ impl From<AlgoliaHnComment> for DisplayableAlgoliaComment {
             author: value.author,
             story_id: value.story_id,
             story_url: value.story_url,
-            text: value.text,
+            text: value.comment_text,
             points: value.points.unwrap_or(0),
         }
     }
