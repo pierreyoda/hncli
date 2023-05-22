@@ -35,7 +35,7 @@ impl Default for AlgoliaTags {
         Self {
             titles: TABS_TITLES.to_vec(),
             hovered_index: 0,
-            selected_index: None,
+            selected_index: Some(0),
             debouncer: Debouncer::new(5),
         }
     }
