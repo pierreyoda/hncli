@@ -7,10 +7,7 @@ use crate::{
     config::AppConfiguration,
     ui::{
         common::UiComponentId,
-        components::{
-            stories::STORIES_PANEL_ID,
-            widgets::text_input::{TextInputState, TextInputStateAction},
-        },
+        components::{stories::STORIES_PANEL_ID, widgets::text_input::TextInputState},
         displayable_item::{DisplayableHackerNewsItem, DisplayableHackerNewsItemComments},
         screens::search::SearchScreenPart,
     },
@@ -66,7 +63,7 @@ impl AppState {
             item_page_display_comments_panel: config.get_display_comments_panel_by_default(),
             currently_viewed_user_id: None,
             current_algolia_query_state: TextInputState::default(),
-            currently_used_algolia_part: SearchScreenPart::Filters,
+            currently_used_algolia_part: SearchScreenPart::Input,
             currently_searched_algolia_category: None,
         }
     }

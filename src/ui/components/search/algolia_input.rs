@@ -11,9 +11,7 @@ use crate::{
     errors::Result,
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
-        components::widgets::text_input::{
-            TextInputState, TextInputStateAction, TextInputStateActionBridge, TextInputWidget,
-        },
+        components::widgets::text_input::TextInputWidget,
         screens::search::SearchScreenPart,
     },
 };

@@ -3,8 +3,6 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-use chrono::{DateTime, Utc};
-
 use crate::api::{
     algolia_types::{AlgoliaHnComment, AlgoliaHnStory},
     types::HnItemIdScalar,
@@ -17,7 +15,7 @@ pub struct DisplayableAlgoliaStory {
     pub object_id: String,
     pub id: Option<HnItemIdScalar>,
     pub title: String,
-    pub url: String,
+    pub url: Option<String>,
     pub author: String,
     pub text: Option<String>,
     pub points: u32,
@@ -99,14 +97,13 @@ impl DisplayableAlgoliaItem {
 }
 
 impl ItemWithId<u64> for DisplayableAlgoliaItem {
-    // TODO: make this less brittle
     fn get_id(&self) -> u64 {
         use DisplayableAlgoliaItem::*;
 
         let mut hasher = DefaultHasher::new();
         match self {
             Story(story_data) => {
-                format!("{}-{}", story_data.url, story_data.author).hash(&mut hasher)
+                format!("{:?}-{}", story_data.id, story_data.author).hash(&mut hasher)
             }
             Comment(comment_data) => comment_data.object_id.hash(&mut hasher),
         }

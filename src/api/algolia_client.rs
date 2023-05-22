@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use log::warn;
 use reqwest::Client;
 
 use crate::{
@@ -10,6 +11,7 @@ use crate::{
 use super::algolia_types::{AlgoliaHnFilter, AlgoliaHnSearchTag, AlgoliaHnStoriesHits};
 
 const ALGOLIA_HACKER_NEWS_API_BASE_URL: &str = "http://hn.algolia.com/api/v1";
+const ALGOLIA_HACKER_NEWS_API_MAX_HITS: u8 = 2;
 
 /// The internal Algolia Hacker News API client.
 ///
@@ -49,8 +51,9 @@ impl AlgoliaHnClient {
             }
         });
         let url = format!(
-            "{}/search_by_date?query={}{}",
+            "{}/search_by_date?hitsPerPage={}&query={}{}",
             self.base_url,
+            ALGOLIA_HACKER_NEWS_API_MAX_HITS,
             query,
             if tags.is_empty() {
                 "".into()
@@ -58,6 +61,7 @@ impl AlgoliaHnClient {
                 format!("&tags={}", tags)
             }
         );
+        warn!("{}", url);
 
         // request
         let result: AlgoliaHnStoriesHits = self
@@ -77,7 +81,12 @@ impl AlgoliaHnClient {
 
     /// Perform a full-text query search on Hacker News comments.
     pub async fn search_comments(&self, query: &str) -> Result<AlgoliaHnCommentsHits> {
-        let url = format!("{}/search?query={}=&tags=comment", self.base_url, query);
+        let url = format!(
+            "{}/search?hitsPerPage={}&query={}=&tags=comment",
+            self.base_url, ALGOLIA_HACKER_NEWS_API_MAX_HITS, query
+        );
+
+        warn!("{}", url);
 
         let result: AlgoliaHnCommentsHits = self
             .client
@@ -98,10 +107,12 @@ impl AlgoliaHnClient {
     /// Perform a full-text query search on Hacker News stories for the given username.
     pub async fn search_user_stories(&self, username: &str) -> Result<AlgoliaHnStoriesHits> {
         let url = format!(
-            "{}/search?tags=story,{}",
+            "{}/search?hitsPerPage={}&tags=story,{}",
             self.base_url,
+            ALGOLIA_HACKER_NEWS_API_MAX_HITS,
             AlgoliaHnSearchTag::AuthorUsername(username.into()).to_query()
         );
+        warn!("{}", url);
 
         let result: AlgoliaHnStoriesHits = self
             .client

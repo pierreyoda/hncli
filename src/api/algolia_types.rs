@@ -28,7 +28,7 @@ pub struct AlgoliaHnStory {
     pub object_id: String,
     pub id: Option<HnItemIdScalar>,
     pub title: String,
-    pub url: String,
+    pub url: Option<String>,
     pub author: String,
     pub text: Option<String>,
     pub points: u32,

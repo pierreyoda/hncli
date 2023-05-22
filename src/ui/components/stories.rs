@@ -6,7 +6,7 @@ use async_trait::async_trait;
 
 use tui::{
     layout::{Alignment, Rect},
-    style::{Color, Modifier, Style},
+    style::{Color, Style},
     text::Spans,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
@@ -14,7 +14,6 @@ use unicode_width::UnicodeWidthStr;
 
 use crate::{
     api::{
-        algolia_types::AlgoliaHnSearchTag,
         client::{HnStoriesSections, HnStoriesSorting},
         types::HnItemIdScalar,
         HnClient,
@@ -47,7 +46,7 @@ pub struct StoriesPanel {
 
 // TODO: load from configuration
 const HOME_MAX_DISPLAYED_STORIES: usize = 50;
-const MEAN_TICKS_BETWEEN_UPDATES: UiTickScalar = 600; // approx. every minute
+const MEAN_TICKS_BETWEEN_UPDATES: UiTickScalar = 1800; // approx. every 3 minute
 
 impl Default for StoriesPanel {
     fn default() -> Self {
@@ -63,15 +62,6 @@ impl Default for StoriesPanel {
 }
 
 pub const STORIES_PANEL_ID: UiComponentId = "panel_stories";
-
-fn tag_from_main_stories_section(main_stories_section: &HnStoriesSections) -> AlgoliaHnSearchTag {
-    match main_stories_section {
-        HnStoriesSections::Home => AlgoliaHnSearchTag::FrontPage,
-        HnStoriesSections::Ask => AlgoliaHnSearchTag::AskHackerNews,
-        HnStoriesSections::Show => AlgoliaHnSearchTag::ShowHackerNews,
-        HnStoriesSections::Jobs => AlgoliaHnSearchTag::Story, // TODO: no alternative?
-    }
-}
 
 #[async_trait]
 impl UiComponent for StoriesPanel {

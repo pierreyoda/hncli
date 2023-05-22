@@ -113,6 +113,8 @@ pub enum ApplicationAction {
     FocusedCommentViewUserProfile,
     // user profile screen
     OpenHackerNewsProfile,
+    // search screen
+    ToggleFocusResults,
     // settings screen
     SettingsToggleControl,
 }
@@ -163,6 +165,8 @@ impl ApplicationAction {
             FocusedCommentViewUserProfile => inputs.key == Key::Char('p'),
             // user profile screen
             OpenHackerNewsProfile => inputs.key == Key::Char('o'),
+            // search screen
+            ToggleFocusResults => inputs.key == Key::Enter,
             // settings screen
             SettingsToggleControl => inputs.key == Key::Tab,
         }

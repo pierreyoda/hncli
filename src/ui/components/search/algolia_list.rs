@@ -29,6 +29,8 @@ use crate::{
 /// The Hacker News Algolia results list.
 #[derive(Debug)]
 pub struct AlgoliaList {
+    /// If active, can navigate between the found items.
+    active: bool,
     empty_input: bool,
     loading: bool,
     loader: Loader,
@@ -41,6 +43,7 @@ pub struct AlgoliaList {
 impl Default for AlgoliaList {
     fn default() -> Self {
         Self {
+            active: false,
             empty_input: false,
             loading: false,
             loader: Loader::default(),
@@ -145,13 +148,22 @@ impl UiComponent for AlgoliaList {
         Ok(())
     }
 
-    // TODO: internal links for hncli?
     fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
         if self.loading {
             return Ok(false);
         }
 
         let (inputs, selected) = (ctx.get_inputs(), self.list_state.selected());
+
+        if inputs.is_active(&ApplicationAction::ToggleFocusResults) {
+            self.active = !self.active;
+            return Ok(true);
+        }
+
+        if !self.active {
+            return Ok(false);
+        }
+
         Ok(if inputs.is_active(&ApplicationAction::NavigateUp) {
             self.list_state.previous();
             true
@@ -174,7 +186,11 @@ impl UiComponent for AlgoliaList {
             ctx.get_state().get_currently_used_algolia_part(),
             SearchScreenPart::Results
         ) {
-            Style::default().fg(Color::Yellow)
+            Style::default().fg(if self.active {
+                Color::LightBlue
+            } else {
+                Color::Yellow
+            })
         } else {
             Style::default()
         };
