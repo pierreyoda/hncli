@@ -36,6 +36,6 @@ async fn main() -> Result<(), HnCliError> {
 
     // UI setup & run
     let mut ui = UserInterface::new(terminal, client)?;
-    let events_receiver = ui.setup()?;
+    let events_receiver = ui.setup().await?;
     ui.run(events_receiver).await
 }

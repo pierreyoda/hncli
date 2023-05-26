@@ -1,14 +1,19 @@
-use std::{
-    collections::HashMap,
-    io::Stdout,
-    sync::mpsc::{self, Receiver},
-    thread,
-    time::{Duration, Instant},
-};
-
 use crossterm::{
     event::{self, Event, KeyEvent},
     terminal::{disable_raw_mode, enable_raw_mode},
+};
+use std::{
+    collections::HashMap,
+    io::Stdout,
+    sync::Arc,
+    time::{Duration, Instant},
+};
+use tokio::{
+    runtime::Runtime,
+    sync::{
+        mpsc::{self, Receiver},
+        Mutex,
+    },
 };
 use tui::{
     backend::CrosstermBackend,
@@ -57,6 +62,10 @@ pub mod utils;
 
 type TerminalUi = Terminal<CrosstermBackend<Stdout>>;
 
+enum UiMessage {
+    Stop,
+}
+
 #[derive(Clone, Debug)]
 pub enum UserInterfaceEvent {
     KeyEvent(KeyEvent),
@@ -64,14 +73,14 @@ pub enum UserInterfaceEvent {
 }
 
 pub struct ComponentWrapper {
-    component: Box<dyn UiComponent>,
+    component: Box<dyn UiComponent + Send>,
     ticks_elapsed: UiTickScalar,
     /// An active component will update itself.
     active: bool,
 }
 
 impl ComponentWrapper {
-    pub fn from_component(component: Box<dyn UiComponent>) -> Self {
+    pub fn from_component(component: Box<dyn UiComponent + Send>) -> Self {
         Self {
             component,
             ticks_elapsed: 0,
@@ -85,7 +94,7 @@ pub struct UserInterface {
     client: HnClient,
     app: App,
     /// Components registry.
-    components: HashMap<UiComponentId, ComponentWrapper>,
+    components: Arc<Mutex<HashMap<UiComponentId, ComponentWrapper>>>,
 }
 
 pub const UI_TICK_RATE_MS: u64 = 100;
@@ -107,16 +116,17 @@ impl UserInterface {
             terminal,
             client,
             app: App::new(config),
-            components: HashMap::new(),
+            components: Arc::new(Mutex::new(HashMap::new())),
         })
     }
 
     /// Set up the Event Loop channels and the various UI components.
-    pub fn setup(&mut self) -> Result<Receiver<UserInterfaceEvent>> {
+    pub async fn setup(&mut self) -> Result<Receiver<UserInterfaceEvent>> {
         // event loop
+        let mut runtime = Runtime::new().expect("UI event loop should instantiate");
         let tick_rate = Duration::from_millis(UI_TICK_RATE_MS);
-        let (tx, rx) = mpsc::channel();
-        thread::spawn(move || {
+        let (tx, rx) = mpsc::channel(100);
+        runtime.block_on(tokio::spawn(async {
             let mut last_tick = Instant::now();
             loop {
                 let timeout = tick_rate
@@ -125,15 +135,19 @@ impl UserInterface {
 
                 if event::poll(timeout).expect("event polling works") {
                     if let Event::Key(key_event) = event::read().unwrap() {
-                        tx.send(UserInterfaceEvent::KeyEvent(key_event)).unwrap();
+                        tx.send(UserInterfaceEvent::KeyEvent(key_event))
+                            .await
+                            .unwrap();
                     }
                 }
 
-                if last_tick.elapsed() >= tick_rate && tx.send(UserInterfaceEvent::Tick).is_ok() {
+                if last_tick.elapsed() >= tick_rate
+                    && tx.send(UserInterfaceEvent::Tick).await.is_ok()
+                {
                     last_tick = Instant::now();
                 }
             }
-        });
+        }));
 
         // Components registration
         self.register_component(Help::default());
@@ -152,7 +166,7 @@ impl UserInterface {
         self.register_component(UserProfile::default());
         self.register_component(Options::default());
 
-        for component_wrapper in self.components.values_mut() {
+        for component_wrapper in self.components.lock().await.values_mut() {
             component_wrapper
                 .component
                 .before_mount(&mut self.app.get_context());
@@ -168,124 +182,153 @@ impl UserInterface {
             .map_err(|_| HnCliError::CrosstermError("hide_cursor error".into()))?;
 
         let contextual_helper = ContextualHelper::new();
-        'ui: loop {
+
+        let (utx, urx) = mpsc::channel(100);
+        let runtime = Runtime::new().expect("UI async runtime should instantiate");
+        let mut components_ui = self.components.lock().await;
+        runtime.block_on(async {
             let app = &mut self.app;
-            let components = &mut self.components;
-            self.terminal
-                .draw(|frame| {
-                    let show_contextual_help =
-                        app.get_context().get_config().get_show_contextual_help();
+            tokio::spawn(async {
+                'ui: loop {
+                    let components = &mut self.components;
+                    self.terminal
+                        .draw(|frame| {
+                            let show_contextual_help =
+                                app.get_context().get_config().get_show_contextual_help();
 
-                    // global layout
-                    let (main_size, helper_size) = if show_contextual_help {
-                        (97, 3)
-                    } else {
-                        (100, 0)
-                    };
-                    let global_layout_chunks = Layout::default()
-                        .direction(Direction::Vertical)
-                        .constraints(vec![
-                            Constraint::Percentage(main_size),
-                            Constraint::Percentage(helper_size),
-                        ])
-                        .split(frame.size());
+                            // global layout
+                            let (main_size, helper_size) = if show_contextual_help {
+                                (97, 3)
+                            } else {
+                                (100, 0)
+                            };
+                            let global_layout_chunks = Layout::default()
+                                .direction(Direction::Vertical)
+                                .constraints(
+                                    vec![
+                                        Constraint::Percentage(main_size),
+                                        Constraint::Percentage(helper_size),
+                                    ]
+                                    .as_ref(),
+                                )
+                                .split(frame.size());
 
-                    // refresh application chunks
-                    let (previous_components_ids, current_components_ids) =
-                        app.update_layout(global_layout_chunks[0]);
-                    for previous_component_id in previous_components_ids {
-                        if !current_components_ids.contains(&previous_component_id) {
-                            components
-                                .get_mut(previous_component_id)
-                                .expect(&format!(
-                                    "main UI loop: no component found for: {}",
-                                    previous_component_id
-                                ))
-                                .component
-                                .as_mut()
-                                .before_unmount();
+                            // refresh application chunks
+                            let (previous_components_ids, current_components_ids) =
+                                app.update_layout(global_layout_chunks[0]);
+                            for previous_component_id in previous_components_ids {
+                                if !current_components_ids.contains(&previous_component_id) {
+                                    components_ui
+                                        .get_mut(previous_component_id)
+                                        .expect(&format!(
+                                            "main UI loop: no component found for: {}",
+                                            previous_component_id
+                                        ))
+                                        .component
+                                        .as_mut()
+                                        .before_unmount();
+                                }
+                            }
+
+                            // render components
+                            for (id, wrapper) in components_ui.iter_mut() {
+                                let component_rendering_rect =
+                                    app.get_component_rendering_rect(id).cloned();
+                                wrapper.active = component_rendering_rect.is_some();
+                                let app_context = app.get_context();
+                                match component_rendering_rect {
+                                    None => (), // no rendering
+                                    Some(inside_rect) => wrapper
+                                        .component
+                                        .render(frame, inside_rect, &app_context)
+                                        .expect("main UI loop: no component rendering error"),
+                                }
+                            }
+
+                            // render contextual helper
+                            if show_contextual_help {
+                                let app_context = app.get_context();
+                                let current_route = app_context.get_router().get_current_route();
+                                contextual_helper.render(
+                                    frame,
+                                    global_layout_chunks[1],
+                                    current_route,
+                                    app_context.get_state(),
+                                    app_context.get_inputs(),
+                                );
+                            }
+                        })
+                        .map_err(HnCliError::IoError)
+                        .expect("UI thread: no IO error");
+
+                    if let UserInterfaceEvent::KeyEvent(event) = rx
+                        .recv()
+                        .await
+                        .expect("UI thread: event receiver should work properly")
+                    {
+                        app.pump_event(event);
+                        let app_context = app.get_context();
+                        let inputs = app_context.get_inputs();
+                        // TODO: errors on quit should be logged but not panic
+                        if inputs.is_active(&ApplicationAction::Quit) {
+                            disable_raw_mode();
+                            self.terminal.show_cursor();
+                            utx.send(UiMessage::Stop);
+                            break 'ui;
+                        }
+                        if inputs.is_active(&ApplicationAction::QuitShortcut)
+                            && self.can_quit_via_shortcut()
+                        {
+                            self.stop(&utx);
+                            break 'ui;
+                        }
+                        if self.app.handle_inputs()
+                            && !self
+                                .handle_inputs()
+                                .await
+                                .expect("UI: inputs handling should be handled properly")
+                        {
+                            self.app.update_latest_interacted_with_component(None);
                         }
                     }
-
-                    // render components
-                    for (id, wrapper) in components.iter_mut() {
-                        let component_rendering_rect =
-                            app.get_component_rendering_rect(id).cloned();
-                        wrapper.active = component_rendering_rect.is_some();
-                        let app_context = app.get_context();
-                        match component_rendering_rect {
-                            None => (), // no rendering
-                            Some(inside_rect) => wrapper
-                                .component
-                                .render(frame, inside_rect, &app_context)
-                                .expect("main UI loop: no component rendering error"),
-                        }
+                }
+            });
+            tokio::spawn(async {
+                'updates: loop {
+                    if let UiMessage::Stop = urx
+                        .recv()
+                        .await
+                        .expect("UI: multithreading communication should work")
+                    {
+                        break 'updates;
                     }
-
-                    // render contextual helper
-                    if show_contextual_help {
-                        let app_context = app.get_context();
-                        let current_route = app_context.get_router().get_current_route();
-                        contextual_helper.render(
-                            frame,
-                            global_layout_chunks[1],
-                            current_route,
-                            app_context.get_state(),
-                            app_context.get_inputs(),
-                        );
-                    }
-                })
-                .map_err(HnCliError::IoError)?;
-
-            if let UserInterfaceEvent::KeyEvent(event) = rx.recv()? {
-                app.pump_event(event);
-                let app_context = app.get_context();
-                let inputs = app_context.get_inputs();
-                // TODO: errors on quit should be logged but not panic
-                if inputs.is_active(&ApplicationAction::Quit) {
-                    disable_raw_mode()
-                        .map_err(|_| HnCliError::CrosstermError("disable_raw_mode error".into()))?;
-                    self.terminal
-                        .show_cursor()
-                        .map_err(|_| HnCliError::CrosstermError("show_cursor error".into()))?;
-                    break 'ui;
+                    let app = &mut self.app;
+                    let components = &mut self.components;
+                    self.update()
+                        .await
+                        .expect("Components update should not crash.")
                 }
-                if inputs.is_active(&ApplicationAction::QuitShortcut)
-                    && self.can_quit_via_shortcut()
-                {
-                    disable_raw_mode()
-                        .map_err(|_| HnCliError::CrosstermError("disable_raw_mode error".into()))?;
-                    self.terminal
-                        .show_cursor()
-                        .map_err(|_| HnCliError::CrosstermError("show_curor error".into()));
-                    break 'ui;
-                }
-                if self.app.handle_inputs() && !self.handle_inputs()? {
-                    self.app.update_latest_interacted_with_component(None);
-                }
-            } else {
-                self.update().await?;
-            }
-        }
+            })
+        });
 
         Ok(())
+    }
+
+    fn stop(&mut self, utx: &mpsc::Sender<UiMessage>) {
+        disable_raw_mode();
+        self.terminal.show_cursor();
+        utx.send(UiMessage::Stop);
     }
 
     /// Check all active components for any necessary update.
     async fn update(&mut self) -> Result<()> {
         let mut app_context = self.app.get_context();
-        for wrapper in self.components.values_mut() {
+        for wrapper in self.components.lock().await.values_mut() {
             wrapper.ticks_elapsed += 1;
+            let component = &mut wrapper.component;
             // TODO: better error handling (per-component?)
-            if wrapper.active
-                && wrapper
-                    .component
-                    .should_update(wrapper.ticks_elapsed, &app_context)?
-            {
-                wrapper
-                    .component
-                    .update(&mut self.client, &mut app_context)
-                    .await?;
+            if wrapper.active && component.should_update(wrapper.ticks_elapsed, &app_context)? {
+                component.update(&mut self.client, &mut app_context).await?;
                 wrapper.ticks_elapsed = 0;
             }
         }
@@ -294,11 +337,11 @@ impl UserInterface {
     }
 
     /// Handle an incoming key event through all active components.
-    fn handle_inputs(&mut self) -> Result<bool> {
+    async fn handle_inputs(&mut self) -> Result<bool> {
         let mut swallowed = false;
         let mut latest_interacted_with_component = None;
         let mut app_context = self.app.get_context();
-        for wrapper in self.components.values_mut() {
+        for wrapper in self.components.lock().await.values_mut() {
             if !wrapper.active {
                 continue;
             }
@@ -333,9 +376,9 @@ impl UserInterface {
         app_context.get_router().is_on_root_screen()
     }
 
-    fn register_component<C: UiComponent + 'static>(&mut self, component: C) {
+    async fn register_component<C: UiComponent + Send + 'static>(&mut self, component: C) {
         let boxed_component = Box::new(component);
-        self.components.insert(
+        self.components.lock().await.insert(
             boxed_component.id(),
             ComponentWrapper::from_component(boxed_component),
         );
