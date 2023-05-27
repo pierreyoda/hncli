@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use log::warn;
 use tui::{
     layout::{Alignment, Rect},
     style::{Color, Style},
@@ -29,8 +30,7 @@ use crate::{
 /// The Hacker News Algolia results list.
 #[derive(Debug)]
 pub struct AlgoliaList {
-    /// If active, can navigate between the found items.
-    active: bool,
+    focused: bool,
     empty_input: bool,
     loading: bool,
     loader: Loader,
@@ -43,7 +43,7 @@ pub struct AlgoliaList {
 impl Default for AlgoliaList {
     fn default() -> Self {
         Self {
-            active: false,
+            focused: false,
             empty_input: false,
             loading: false,
             loader: Loader::default(),
@@ -84,6 +84,10 @@ impl UiComponent for AlgoliaList {
 
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
         self.loading = true;
+        self.focused = matches!(
+            ctx.get_state().get_currently_used_algolia_part(),
+            SearchScreenPart::Results
+        );
 
         let state = ctx.get_state();
         let (algolia_query, algolia_category) = (
@@ -149,18 +153,9 @@ impl UiComponent for AlgoliaList {
     }
 
     fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
-        if self.loading {
-            return Ok(false);
-        }
-
         let (inputs, selected) = (ctx.get_inputs(), self.list_state.selected());
 
-        if inputs.is_active(&ApplicationAction::ToggleFocusResults) {
-            self.active = !self.active;
-            return Ok(true);
-        }
-
-        if !self.active {
+        if self.loading || !self.debouncer.is_action_allowed() {
             return Ok(false);
         }
 
@@ -176,24 +171,25 @@ impl UiComponent for AlgoliaList {
             let item_hn_link = selected_item.get_hacker_news_link();
             open_browser_tab(item_hn_link.as_str());
             true
+        } else if inputs.is_active(&ApplicationAction::OpenExternalOrHackerNewsLink) {
+            let items = self.list_state.get_items();
+            let selected_item = &items[selected.unwrap()];
+            let item_link = selected_item.get_link();
+            if let Some(url) = item_link {
+                open_browser_tab(&url);
+            }
+            true
         } else {
             false
         })
     }
 
     fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
-        let block_border_style = if matches!(
-            ctx.get_state().get_currently_used_algolia_part(),
-            SearchScreenPart::Results
-        ) {
-            Style::default().fg(if self.active {
-                Color::LightBlue
-            } else {
-                Color::Yellow
-            })
+        let block_border_style = Style::default().fg(if self.focused {
+            Color::Yellow
         } else {
-            Style::default()
-        };
+            Color::White
+        });
 
         // Empty input case
         if self.empty_input {

@@ -68,6 +68,15 @@ pub enum DisplayableAlgoliaItem {
 }
 
 impl DisplayableAlgoliaItem {
+    pub fn get_link(&self) -> Option<String> {
+        use DisplayableAlgoliaItem::*;
+
+        match self {
+            Story(data) => data.url.clone(),
+            Comment(_) => None,
+        }
+    }
+
     pub fn get_hacker_news_link(&self) -> String {
         use DisplayableAlgoliaItem::*;
 
