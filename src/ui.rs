@@ -28,6 +28,7 @@ use crate::{
 
 use self::{
     components::{
+        help_search::AlgoliaHelp,
         item_comments::{CommentItemNestedComments, ItemTopLevelComments},
         item_details::ItemDetails,
         item_summary::ItemSummary,
@@ -142,6 +143,7 @@ impl UserInterface {
         self.register_component(AlgoliaTags::default());
         self.register_component(AlgoliaInput::default());
         self.register_component(AlgoliaList::default());
+        self.register_component(AlgoliaHelp::default());
         self.register_component(UserProfile::default());
         self.register_component(Options::default());
 

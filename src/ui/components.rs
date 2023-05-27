@@ -1,5 +1,6 @@
 pub mod common;
 pub mod help;
+pub mod help_search;
 pub mod item_comments;
 pub mod item_details;
 pub mod item_summary;

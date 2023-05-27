@@ -3,7 +3,7 @@ use tui::layout::{Constraint, Direction, Layout, Rect};
 use crate::{
     app::{history::AppHistory, state::AppState},
     ui::{
-        components::search::algolia_help::ALGOLIA_HELP_ID,
+        components::help_search::ALGOLIA_HELP_ID,
         handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
     },
@@ -11,16 +11,17 @@ use crate::{
 
 use super::{Screen, ScreenComponentsRegistry, ScreenEventResponse};
 
-#[derive(Debug)]
-pub struct SearchHelpScreen;
+/// The Algolia search help screen.
+#[derive(Debug, Default)]
+pub struct AlgoliaSearchScreenHelp {}
 
-impl SearchHelpScreen {
+impl AlgoliaSearchScreenHelp {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl Screen for SearchHelpScreen {
+impl Screen for AlgoliaSearchScreenHelp {
     fn handle_inputs(
         &mut self,
         inputs: &InputsController,
@@ -28,9 +29,7 @@ impl Screen for SearchHelpScreen {
         _state: &mut AppState,
         _history: &mut AppHistory,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
-        if inputs.is_active(&ApplicationAction::Back)
-            || inputs.is_active(&ApplicationAction::ToggleHelp)
-        {
+        if inputs.is_active(&ApplicationAction::Back) {
             router.pop_navigation_stack();
             (
                 ScreenEventResponse::Caught,
@@ -47,6 +46,7 @@ impl Screen for SearchHelpScreen {
         components_registry: &mut ScreenComponentsRegistry,
         _state: &AppState,
     ) {
+        // main layout chunks
         let main_layout_chunks = Layout::default()
             .direction(Direction::Vertical)
             .margin(2)
@@ -56,3 +56,5 @@ impl Screen for SearchHelpScreen {
         components_registry.insert(ALGOLIA_HELP_ID, main_layout_chunks[0]);
     }
 }
+
+unsafe impl Send for AlgoliaSearchScreenHelp {}

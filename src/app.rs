@@ -79,7 +79,7 @@ impl<'a> AppContext<'a> {
         &mut self,
         route: AppRoute,
     ) -> Option<AppRoute> {
-        if route.is_settings() || route.is_help() {
+        if route.is_settings() || route.is_help() || route.is_search_help() {
             self.router.push_navigation_stack(route);
             self.update_screen();
             None
@@ -162,7 +162,7 @@ impl App {
     /// the active event is to be captured (swallowed) and not passed down to screens.
     pub fn handle_inputs(&mut self) -> bool {
         // global help page toggle (not in search)
-        if !self.router.get_current_route().is_search() {
+        if !self.router.get_current_route().is_in_search_mode() {
             if self.inputs.is_active(&ApplicationAction::ToggleHelp) {
                 if self.router.get_current_route().is_help() {
                     self.get_context().router_pop_navigation_stack();

@@ -46,8 +46,12 @@ impl AppRoute {
         matches!(self, AppRoute::Home(_))
     }
 
-    pub fn is_search(&self) -> bool {
-        matches!(self, AppRoute::Search)
+    pub fn is_search_help(&self) -> bool {
+        matches!(self, AppRoute::SearchHelp)
+    }
+
+    pub fn is_in_search_mode(&self) -> bool {
+        matches!(self, AppRoute::Search | AppRoute::SearchHelp)
     }
 
     pub fn is_settings(&self) -> bool {

@@ -46,6 +46,19 @@ impl Screen for SearchScreen {
     ) -> (ScreenEventResponse, Option<AppRoute>) {
         let currently_used_algolia_part = state.get_currently_used_algolia_part();
 
+        // help screen toggle
+        if inputs.is_active(&ApplicationAction::ToggleHelp) {
+            if router.get_current_route().is_search_help() {
+                router.pop_navigation_stack();
+            } else {
+                router.push_navigation_stack(AppRoute::SearchHelp);
+            }
+            return (
+                ScreenEventResponse::Caught,
+                Some(router.get_current_route().clone()),
+            );
+        }
+
         // the Algolia searchbox input is handled here
         // due to interference with the below commands
         if currently_used_algolia_part == SearchScreenPart::Input {
