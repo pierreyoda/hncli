@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use log::warn;
 use tui::{
     layout::{Alignment, Rect},
     style::{Color, Style},
@@ -155,7 +154,7 @@ impl UiComponent for AlgoliaList {
     fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
         let (inputs, selected) = (ctx.get_inputs(), self.list_state.selected());
 
-        if self.loading || !self.debouncer.is_action_allowed() {
+        if self.loading || !self.debouncer.is_action_allowed() || !self.focused {
             return Ok(false);
         }
 
