@@ -217,6 +217,7 @@ impl UiComponent for StoriesPanel {
         let custom_list_stories = CustomList::new(
             &mut self.list_state,
             |rect, buf, item, is_selected| {
+                // selected color
                 let style = Style::default().fg(if is_selected {
                     Color::Yellow
                 } else {

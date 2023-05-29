@@ -145,6 +145,10 @@ impl UiComponent for AlgoliaList {
             };
             self.list_state.replace_items(displayable_algolia_items);
 
+            if self.focused && !self.list_state.is_empty() && self.list_state.selected().is_none() {
+                self.list_state.select(Some(0));
+            }
+
             self.loading = false;
         }
 
@@ -152,11 +156,11 @@ impl UiComponent for AlgoliaList {
     }
 
     fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
-        let (inputs, selected) = (ctx.get_inputs(), self.list_state.selected());
-
-        if self.loading || !self.debouncer.is_action_allowed() || !self.focused {
+        if self.loading || !self.focused {
             return Ok(false);
         }
+
+        let (inputs, selected) = (ctx.get_inputs(), self.list_state.selected());
 
         Ok(if inputs.is_active(&ApplicationAction::NavigateUp) {
             self.list_state.previous();
@@ -183,7 +187,7 @@ impl UiComponent for AlgoliaList {
         })
     }
 
-    fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, _ctx: &AppContext) -> Result<()> {
         let block_border_style = Style::default().fg(if self.focused {
             Color::Yellow
         } else {
