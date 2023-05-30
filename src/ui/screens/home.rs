@@ -1,15 +1,12 @@
 use tui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
-    api::HnStoriesSections,
+    api::client::HnStoriesSections,
     app::{history::AppHistory, state::AppState},
     config::AppConfiguration,
     ui::{
-        components::{
-            navigation::NAVIGATION_ID, options::OPTIONS_ID, search::SEARCH_ID,
-            stories::STORIES_PANEL_ID,
-        },
-        handlers::{ApplicationAction, InputsController},
+        components::{navigation::NAVIGATION_ID, options::OPTIONS_ID, stories::STORIES_PANEL_ID},
+        handlers::InputsController,
         router::{AppRoute, AppRouter},
     },
 };
@@ -56,16 +53,7 @@ impl Screen for HomeScreen {
         state: &mut AppState,
         _history: &mut AppHistory,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
-        if inputs.is_active(&ApplicationAction::HomeToggleSearchMode) {
-            state.set_main_search_mode_query(if state.get_main_search_mode_query().is_some() {
-                None
-            } else {
-                Some("".into())
-            });
-            (ScreenEventResponse::Caught, None)
-        } else {
-            (ScreenEventResponse::PassThrough, None)
-        }
+        (ScreenEventResponse::PassThrough, None)
     }
 
     fn compute_layout(
@@ -88,14 +76,7 @@ impl Screen for HomeScreen {
             )
             .split(frame_size);
 
-        components_registry.insert(
-            if state.get_main_search_mode_query().is_some() {
-                SEARCH_ID
-            } else {
-                NAVIGATION_ID
-            },
-            main_layout_chunks[0],
-        );
+        components_registry.insert(NAVIGATION_ID, main_layout_chunks[0]);
         components_registry.insert(STORIES_PANEL_ID, main_layout_chunks[1]);
         components_registry.insert(OPTIONS_ID, main_layout_chunks[2]);
     }

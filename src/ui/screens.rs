@@ -14,14 +14,17 @@ use super::{
 };
 
 pub mod help;
+pub mod help_search;
 pub mod home;
 pub mod nested_comments;
+pub mod search;
+pub mod search_help;
 pub mod settings;
 pub mod story;
 pub mod user;
 
 /// Defines layout state by associating each visible component
-/// with a defined target `Rect`.
+/// with a defined rendering target `Rect`.
 pub type ScreenComponentsRegistry = HashMap<UiComponentId, Rect>;
 
 /// Actions requested by a Screen when handling an input event.

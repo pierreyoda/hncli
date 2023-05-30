@@ -80,6 +80,7 @@ pub enum KeyModifier {
     Control,
 }
 
+#[derive(Debug)]
 pub enum ApplicationAction {
     // general
     OpenExternalOrHackerNewsLink,
@@ -95,17 +96,25 @@ pub enum ApplicationAction {
     NavigateLeft,
     NavigateRight,
     // input
-    InputClear,
-    InputDelete,
+    InputSetCursor,
+    InputInsertCharacter,
+    InputGoToPreviousCharacter,
+    InputGoToNextCharacter,
+    InputGoToStart,
+    InputGoToEnd,
+    InputDeletePreviousCharacter,
+    InputDeleteBeforeCursor,
+    InputDeleteAfterCursor,
     // home screen
     HomeToggleSortingOption,
-    HomeToggleSearchMode,
     // item screen
     ItemToggleComments,
     ItemExpandFocusedComment,
     FocusedCommentViewUserProfile,
     // user profile screen
     OpenHackerNewsProfile,
+    // search screen
+    ToggleFocusResults,
     // settings screen
     SettingsToggleControl,
 }
@@ -114,6 +123,7 @@ impl ApplicationAction {
     pub fn matches_event(&self, inputs: &InputsController) -> bool {
         use ApplicationAction::*;
         match self {
+            // general
             OpenExternalOrHackerNewsLink => inputs.key == Key::Char('o'),
             OpenHackerNewsLink => inputs.key == Key::Char('l'),
             SelectItem => inputs.key == Key::Enter,
@@ -121,20 +131,49 @@ impl ApplicationAction {
             Back => inputs.key == Key::Escape,
             Quit => inputs.modifier == KeyModifier::Control && inputs.key == Key::Char('c'),
             QuitShortcut => inputs.key == Key::Char('q'),
+            // navigation
             NavigateUp => inputs.key == Key::Up,
             NavigateDown => inputs.key == Key::Down,
             NavigateLeft => inputs.key == Key::Left,
             NavigateRight => inputs.key == Key::Right,
-            InputClear => inputs.modifier == KeyModifier::Control && inputs.key == Key::Char('u'),
-            InputDelete => inputs.key == Key::Backspace,
+            // input
+            InputSetCursor => {
+                inputs.modifier == KeyModifier::None
+                    && (inputs.key == Key::Left || inputs.key == Key::Right)
+            }
+            InputInsertCharacter => {
+                inputs.modifier == KeyModifier::None && Self::is_key_char(&inputs.key)
+            }
+            InputGoToPreviousCharacter => inputs.key == Key::Left,
+            InputGoToNextCharacter => inputs.key == Key::Right,
+            InputGoToStart => {
+                inputs.modifier == KeyModifier::Control && inputs.key == Key::Char('a')
+            }
+            InputGoToEnd => inputs.modifier == KeyModifier::Control && inputs.key == Key::Char('e'),
+            InputDeletePreviousCharacter => inputs.key == Key::Backspace,
+            InputDeleteBeforeCursor => {
+                inputs.modifier == KeyModifier::Control && inputs.key == Key::Char('u')
+            }
+            InputDeleteAfterCursor => {
+                inputs.modifier == KeyModifier::Control && inputs.key == Key::Char('k')
+            }
+            // home screen
             HomeToggleSortingOption => inputs.key == Key::Char('s'),
-            HomeToggleSearchMode => inputs.key == Key::Char('f'),
+            // item screen
             ItemToggleComments => inputs.key == Key::Tab,
             ItemExpandFocusedComment => inputs.key == Key::Enter,
             FocusedCommentViewUserProfile => inputs.key == Key::Char('p'),
+            // user profile screen
             OpenHackerNewsProfile => inputs.key == Key::Char('o'),
+            // search screen
+            ToggleFocusResults => inputs.key == Key::Enter,
+            // settings screen
             SettingsToggleControl => inputs.key == Key::Tab,
         }
+    }
+
+    fn is_key_char(key: &Key) -> bool {
+        matches!(key, Key::Char(_))
     }
 }
 
@@ -155,32 +194,18 @@ impl InputsController {
             key: Key::None,
             modifier: KeyModifier::None,
             active_input_key: Key::None,
-            active_input_mode: false,
+            active_input_mode: true,
         }
     }
 
-    pub fn pump_event(&mut self, event: KeyEvent, state: &AppState) {
+    pub fn pump_event(&mut self, event: KeyEvent, _state: &AppState) {
         // TODO: somehow make the modifiers work properly in all circumstances
         self.modifier = match event.modifiers {
             KeyModifiers::CONTROL => KeyModifier::Control,
             KeyModifiers::SHIFT => KeyModifier::Shift,
             _ => KeyModifier::None,
         };
-        self.active_input_mode = state.get_main_search_mode_query().is_some();
-        self.key = if self.active_input_mode {
-            match Key::from(event) {
-                Key::Char(c) => {
-                    if self.modifier == KeyModifier::Control && (c == 'c' || c == 'C') {
-                        Key::Char(c)
-                    } else {
-                        Key::None
-                    }
-                }
-                other => other,
-            }
-        } else {
-            Key::from(event)
-        };
+        self.key = Key::from(event);
         self.active_input_key = if self.active_input_mode {
             match Key::from(event) {
                 Key::Char(c) => Key::Char(c),

@@ -3,7 +3,7 @@ use tui::layout::{Constraint, Direction, Layout, Rect};
 use crate::{
     app::{history::AppHistory, state::AppState},
     ui::{
-        components::help::HELP_ID,
+        components::search::algolia_help::ALGOLIA_HELP_ID,
         handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
     },
@@ -11,18 +11,16 @@ use crate::{
 
 use super::{Screen, ScreenComponentsRegistry, ScreenEventResponse};
 
-/// The Help screen of hncli.
 #[derive(Debug)]
-pub struct HelpScreen;
+pub struct SearchHelpScreen;
 
-impl HelpScreen {
+impl SearchHelpScreen {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-// TODO: when navigating to help screen through navbar, redirect back to home if needed
-impl Screen for HelpScreen {
+impl Screen for SearchHelpScreen {
     fn handle_inputs(
         &mut self,
         inputs: &InputsController,
@@ -30,7 +28,9 @@ impl Screen for HelpScreen {
         _state: &mut AppState,
         _history: &mut AppHistory,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
-        if inputs.is_active(&ApplicationAction::Back) {
+        if inputs.is_active(&ApplicationAction::Back)
+            || inputs.is_active(&ApplicationAction::ToggleHelp)
+        {
             router.pop_navigation_stack();
             (
                 ScreenEventResponse::Caught,
@@ -47,15 +47,12 @@ impl Screen for HelpScreen {
         components_registry: &mut ScreenComponentsRegistry,
         _state: &AppState,
     ) {
-        // main layout chunks
         let main_layout_chunks = Layout::default()
             .direction(Direction::Vertical)
             .margin(2)
             .constraints([Constraint::Length(1)].as_ref())
             .split(frame_size);
 
-        components_registry.insert(HELP_ID, main_layout_chunks[0]);
+        components_registry.insert(ALGOLIA_HELP_ID, main_layout_chunks[0]);
     }
 }
-
-unsafe impl Send for HelpScreen {}

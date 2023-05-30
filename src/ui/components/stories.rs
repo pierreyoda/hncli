@@ -3,18 +3,21 @@
 use std::convert::TryFrom;
 
 use async_trait::async_trait;
-use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 
 use tui::{
     layout::{Alignment, Rect},
-    style::{Color, Modifier, Style},
+    style::{Color, Style},
     text::Spans,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
 use unicode_width::UnicodeWidthStr;
 
 use crate::{
-    api::{types::HnItemIdScalar, HnClient, HnStoriesSections, HnStoriesSorting},
+    api::{
+        client::{HnStoriesSections, HnStoriesSorting},
+        types::HnItemIdScalar,
+        HnClient,
+    },
     app::AppContext,
     errors::Result,
     ui::{
@@ -37,14 +40,13 @@ pub struct StoriesPanel {
     loading: bool,
     loader: Loader,
     sorting_type_for_last_update: Option<HnStoriesSorting>,
-    search_for_last_update: Option<String>,
     list_cutoff: usize,
     list_state: CustomListState<HnItemIdScalar, DisplayableHackerNewsItem>,
 }
 
 // TODO: load from configuration
 const HOME_MAX_DISPLAYED_STORIES: usize = 50;
-const MEAN_TICKS_BETWEEN_UPDATES: UiTickScalar = 600; // approx. every minute
+const MEAN_TICKS_BETWEEN_UPDATES: UiTickScalar = 1800; // approx. every 3 minute
 
 impl Default for StoriesPanel {
     fn default() -> Self {
@@ -53,43 +55,9 @@ impl Default for StoriesPanel {
             loading: true,
             loader: Loader::default(),
             sorting_type_for_last_update: None,
-            search_for_last_update: None,
             list_cutoff: HOME_MAX_DISPLAYED_STORIES,
             list_state: CustomListState::with_items(vec![]),
         }
-    }
-}
-
-const FUZZY_MATCHING_SCORE_CUTOFF: i64 = 90;
-
-impl StoriesPanel {
-    fn filtered_items(
-        items: impl Iterator<Item = DisplayableHackerNewsItem>,
-        filter_query: String,
-        max_count: usize,
-    ) -> Vec<DisplayableHackerNewsItem> {
-        if filter_query.trim().is_empty() {
-            return items.take(max_count).collect();
-        }
-        let matcher = SkimMatcherV2::default();
-        let processed_filter_query = filter_query.to_lowercase();
-        items
-            .filter(move |i| {
-                if let Some(fuzzy_score) = matcher.fuzzy_match(
-                    i.title
-                        .clone()
-                        .unwrap_or_else(|| "".into())
-                        .to_lowercase()
-                        .as_str(),
-                    &processed_filter_query,
-                ) {
-                    fuzzy_score >= FUZZY_MATCHING_SCORE_CUTOFF
-                } else {
-                    false
-                }
-            })
-            .take(max_count)
-            .collect()
     }
 }
 
@@ -114,8 +82,7 @@ impl UiComponent for StoriesPanel {
                     last_sorting_type != ctx.get_state().get_main_stories_sorting()
                 }
                 None => true, // first fetch
-            }
-            || self.search_for_last_update.as_ref() != ctx.get_state().get_main_search_mode_query();
+            };
 
         self.loader.update();
 
@@ -129,37 +96,39 @@ impl UiComponent for StoriesPanel {
         ctx.get_state_mut().set_main_stories_loading(true);
 
         let sorting_type = *ctx.get_state().get_main_stories_sorting();
-        let search_query = ctx.get_state().get_main_search_mode_query();
 
         // Data fetching
+        let api = client.classic();
         let router = ctx.get_router();
-        let stories = if let Some(current_section) = router.get_current_route().get_home_section() {
-            if current_section == &HnStoriesSections::Home {
-                client.get_home_items(&sorting_type).await?
-            } else {
-                client.get_home_section_items(current_section).await?
-            }
-        } else {
-            client.get_home_items(&sorting_type).await?
+        let displayable_stories = {
+            // TODO: harden error handling here (should not crash)
+            let stories =
+                if let Some(current_section) = router.get_current_route().get_home_section() {
+                    if current_section == &HnStoriesSections::Home {
+                        api.get_home_items(&sorting_type).await?
+                    } else {
+                        api.get_home_section_items(current_section).await?
+                    }
+                } else {
+                    api.get_home_items(&sorting_type).await?
+                };
+            stories
+                .iter()
+                .take(self.list_cutoff)
+                .cloned()
+                .map(|raw_item| {
+                    DisplayableHackerNewsItem::try_from(raw_item)
+                        .expect("StoriesPanel.update: can map DisplayableHackerNewsItem")
+                })
+                .collect()
         };
-        let cut_stories_iter = stories.iter();
-        let displayable_stories = cut_stories_iter.cloned().map(|item| {
-            DisplayableHackerNewsItem::try_from(item).expect("can map DisplayableHackerNewsItem")
-        });
 
-        let filtered_stories = if let Some(filter_query) = search_query {
-            Self::filtered_items(displayable_stories, filter_query.clone(), self.list_cutoff)
-        } else {
-            displayable_stories.take(self.list_cutoff).collect()
-        };
-
-        self.list_state.replace_items(filtered_stories);
+        self.list_state.replace_items(displayable_stories);
         if self.list_state.selected().is_none() {
             self.list_state.select(Some(0));
         }
 
         self.sorting_type_for_last_update = Some(sorting_type);
-        self.search_for_last_update = search_query.cloned();
 
         ctx.get_state_mut().set_main_stories_loading(false);
 
@@ -248,6 +217,7 @@ impl UiComponent for StoriesPanel {
         let custom_list_stories = CustomList::new(
             &mut self.list_state,
             |rect, buf, item, is_selected| {
+                // selected color
                 let style = Style::default().fg(if is_selected {
                     Color::Yellow
                 } else {
@@ -279,14 +249,9 @@ impl UiComponent for StoriesPanel {
         )
         .block(block)
         .style(Style::default().fg(Color::White))
-        .highlight_style(
-            Style::default()
-                .bg(Color::Yellow)
-                .fg(Color::Black)
-                .add_modifier(Modifier::BOLD),
-        )
         .highlight_symbol(">> ")
         .highlight_style(Style::default().fg(Color::Yellow));
+
         f.render_widget(custom_list_stories, inside);
 
         Ok(())

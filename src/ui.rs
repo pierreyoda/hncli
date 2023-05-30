@@ -28,26 +28,32 @@ use crate::{
 
 use self::{
     components::{
+        help_search::AlgoliaHelp,
         item_comments::{CommentItemNestedComments, ItemTopLevelComments},
         item_details::ItemDetails,
         item_summary::ItemSummary,
-        search::Search,
+        search::{
+            algolia_input::AlgoliaInput, algolia_list::AlgoliaList, algolia_tags::AlgoliaTags,
+            Search,
+        },
         settings::Settings,
         user_profile::UserProfile,
     },
     handlers::ApplicationAction,
     helper::ContextualHelper,
+    screens::search::SearchScreenPart,
 };
 
 pub mod common;
 pub mod components;
+pub mod displayable_algolia_item;
 pub mod displayable_item;
 pub mod handlers;
 mod helper;
 mod panels;
 pub mod router;
 pub mod screens;
-mod utils;
+pub mod utils;
 
 type TerminalUi = Terminal<CrosstermBackend<Stdout>>;
 
@@ -134,6 +140,10 @@ impl UserInterface {
         self.register_component(ItemSummary::default());
         self.register_component(ItemTopLevelComments::default());
         self.register_component(CommentItemNestedComments::default());
+        self.register_component(AlgoliaTags::default());
+        self.register_component(AlgoliaInput::default());
+        self.register_component(AlgoliaList::default());
+        self.register_component(AlgoliaHelp::default());
         self.register_component(UserProfile::default());
         self.register_component(Options::default());
 
@@ -298,6 +308,10 @@ impl UserInterface {
 
     fn can_quit_via_shortcut(&mut self) -> bool {
         let app_context = self.app.get_context();
+        // In Algolia input mode?
+        if app_context.get_state().get_currently_used_algolia_part() == SearchScreenPart::Input {
+            return false;
+        }
         // Check configuration first
         if app_context
             .get_config()

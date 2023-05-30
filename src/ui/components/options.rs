@@ -9,7 +9,7 @@ use tui::{
 };
 
 use crate::{
-    api::{HnClient, HnStoriesSorting},
+    api::{client::HnStoriesSorting, HnClient},
     app::AppContext,
     errors::{HnCliError, Result},
     ui::{

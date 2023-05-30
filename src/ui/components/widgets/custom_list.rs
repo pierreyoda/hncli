@@ -67,9 +67,19 @@ where
         }
     }
 
+    /// Is the list empty?
+    pub fn is_empty(&self) -> bool {
+        self.items.is_empty()
+    }
+
     /// Get the stored items.
     pub fn get_items(&self) -> &Vec<T> {
         &self.items
+    }
+
+    /// CLear the stored items.
+    pub fn clear(&mut self) {
+        self.items.clear();
     }
 
     /// Replace the current items with the given ones.

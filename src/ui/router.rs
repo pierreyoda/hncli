@@ -1,12 +1,13 @@
 use std::fmt;
 
 use crate::{
-    api::HnStoriesSections,
+    api::client::HnStoriesSections,
     app::state::AppState,
     config::AppConfiguration,
     ui::screens::{
         help::HelpScreen, home::HomeScreen, nested_comments::NestedCommentsScreen,
-        settings::SettingsScreen, story::StoryDetailsScreen, user::UserDetailsScreen,
+        search::SearchScreen, search_help::SearchHelpScreen, settings::SettingsScreen,
+        story::StoryDetailsScreen, user::UserDetailsScreen,
     },
 };
 
@@ -23,6 +24,10 @@ pub enum AppRoute {
     ItemNestedComments(DisplayableHackerNewsItem),
     /// User profile screen. Only stores the user ID.
     UserProfile(String),
+    /// Algolia-based search screen.
+    Search,
+    /// Algolia-based search screen help.
+    SearchHelp,
     /// Settings screen.
     Settings,
     /// Help screen.
@@ -39,6 +44,14 @@ impl AppRoute {
 
     pub fn is_home(&self) -> bool {
         matches!(self, AppRoute::Home(_))
+    }
+
+    pub fn is_search_help(&self) -> bool {
+        matches!(self, AppRoute::SearchHelp)
+    }
+
+    pub fn is_in_search_mode(&self) -> bool {
+        matches!(self, AppRoute::Search | AppRoute::SearchHelp)
     }
 
     pub fn is_settings(&self) -> bool {
@@ -106,6 +119,8 @@ impl AppRouter {
         match route {
             Help => Box::new(HelpScreen::new()),
             Settings => Box::new(SettingsScreen::new()),
+            Search => Box::new(SearchScreen::new()),
+            SearchHelp => Box::new(SearchHelpScreen::new()),
             Home(section) => Box::new(HomeScreen::new(section)),
             ItemDetails(item) => Box::new(StoryDetailsScreen::new(item)),
             ItemNestedComments(parent_comment) => {

@@ -1,37 +1,37 @@
 use async_trait::async_trait;
-use tui::{
-    layout::{Alignment, Rect},
-    style::Style,
-    text::Spans,
-    widgets::{Block, BorderType, Borders, Paragraph},
-};
+use tui::layout::Rect;
 
 use crate::{
     api::HnClient,
     app::AppContext,
     errors::Result,
-    ui::{
-        common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
-        handlers::ApplicationAction,
-    },
+    ui::common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
 };
 
-use super::common::COMMON_BLOCK_NORMAL_COLOR;
+use super::widgets::text_input::{TextInputState, TextInputStateActionBridge, TextInputWidget};
+
+pub mod algolia_help;
+pub mod algolia_input;
+pub mod algolia_list;
+pub mod algolia_tags;
 
 /// Search input component, for filtering the stories list.
 #[derive(Debug)]
 pub struct Search {
-    query: String,
+    input_state: TextInputState,
 }
 
 impl Default for Search {
     fn default() -> Self {
-        Self { query: "".into() }
+        Self {
+            input_state: Default::default(),
+        }
     }
 }
 
-pub const SEARCH_ID: UiComponentId = "search";
+pub const SEARCH_ID: UiComponentId = "stories-search";
 
+// TODO: rename from Search to StoriesSearch or ItemsSearch
 #[async_trait]
 impl UiComponent for Search {
     fn id(&self) -> UiComponentId {
@@ -48,39 +48,26 @@ impl UiComponent for Search {
 
     fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
         let inputs = ctx.get_inputs();
-        Ok(if inputs.is_active(&ApplicationAction::InputDelete) {
-            self.query.pop();
-            ctx.get_state_mut()
-                .set_main_search_mode_query(Some(self.query.clone()));
-            true
-        } else if inputs.is_active(&ApplicationAction::InputClear) {
-            self.query.clear();
-            ctx.get_state_mut()
-                .set_main_search_mode_query(Some(self.query.clone()));
-            true
-        } else if inputs.is_active(&ApplicationAction::Back) {
-            ctx.get_state_mut().set_main_search_mode_query(None);
-            self.query.clear();
-            true
-        } else if let Some((_, input_key)) = inputs.get_active_input_key() {
-            self.query.push(input_key);
-            ctx.get_state_mut()
-                .set_main_search_mode_query(Some(self.query.clone()));
-            true
-        } else {
-            false
-        })
+        for input_available_action in self.input_state.available_actions() {
+            if inputs.is_active(&input_available_action) {
+                // ctx.get_state_mut()
+                //     .set_main_search_mode_query(Some(self.input_state.get_value().clone()));
+                return Ok(true);
+            }
+        }
+
+        Ok(false)
     }
 
     fn render(&mut self, f: &mut RenderFrame, inside: Rect, _ctx: &AppContext) -> Result<()> {
-        let block = Block::default()
-            .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
-            .borders(Borders::ALL)
-            .border_type(BorderType::Rounded)
-            .title("Search input");
-        let text = vec![Spans::from(self.query.as_str())];
-        let paragraph = Paragraph::new(text).block(block).alignment(Alignment::Left);
-        f.render_widget(paragraph, inside);
+        // let block = Block::default()
+        //     .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
+        //     .borders(Borders::ALL)
+        //     .border_type(BorderType::Rounded)
+        //     .title("Search input");
+
+        let input_widget = TextInputWidget::with_state(&self.input_state);
+        f.render_widget(input_widget, inside);
 
         Ok(())
     }

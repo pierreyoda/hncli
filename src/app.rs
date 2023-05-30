@@ -4,7 +4,7 @@ use crossterm::event::KeyEvent;
 use tui::layout::Rect;
 
 use crate::{
-    api::HnStoriesSections,
+    api::client::HnStoriesSections,
     config::AppConfiguration,
     ui::{
         common::UiComponentId,
@@ -79,7 +79,7 @@ impl<'a> AppContext<'a> {
         &mut self,
         route: AppRoute,
     ) -> Option<AppRoute> {
-        if route.is_settings() || route.is_help() {
+        if route.is_settings() || route.is_help() || route.is_search_help() {
             self.router.push_navigation_stack(route);
             self.update_screen();
             None
@@ -161,15 +161,17 @@ impl App {
     /// Handle inputs, at the application level. Returns true if
     /// the active event is to be captured (swallowed) and not passed down to screens.
     pub fn handle_inputs(&mut self) -> bool {
-        // global help page toggle
-        if self.inputs.is_active(&ApplicationAction::ToggleHelp) {
-            if self.router.get_current_route().is_help() {
-                self.get_context().router_pop_navigation_stack();
-            } else {
-                self.get_context()
-                    .router_push_navigation_stack(AppRoute::Help);
+        // global help page toggle (not in search)
+        if !self.router.get_current_route().is_in_search_mode() {
+            if self.inputs.is_active(&ApplicationAction::ToggleHelp) {
+                if self.router.get_current_route().is_help() {
+                    self.get_context().router_pop_navigation_stack();
+                } else {
+                    self.get_context()
+                        .router_push_navigation_stack(AppRoute::Help);
+                }
+                return true;
             }
-            return true;
         }
 
         // screen event handling

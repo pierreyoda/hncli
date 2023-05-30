@@ -66,6 +66,8 @@ impl ContextualHelper {
             }
             AppRoute::ItemNestedComments(_) => self.render_comments_page_help(f, inside),
             AppRoute::UserProfile(_) => self.render_user_page_help(f, inside),
+            AppRoute::SearchHelp => self.render_search_page_help(f, inside),
+            AppRoute::Search => self.render_search_page_help(f, inside),
             AppRoute::Settings => self.render_settings_page_help(f, inside),
             AppRoute::Help => self.render_help_page_help(f, inside),
         }
@@ -170,6 +172,11 @@ impl ContextualHelper {
         let widget_go_back = HelpWidget::KeyReminder('⬅', "go back".into(), Key::Escape);
 
         let widgets = vec![widget_open_profile_page, widget_go_back];
+        Self::render_widgets(f, inside, &widgets);
+    }
+
+    fn render_search_page_help(&self, f: &mut RenderFrame, inside: Rect) {
+        let widgets = vec![HelpWidget::Empty];
         Self::render_widgets(f, inside, &widgets);
     }
 

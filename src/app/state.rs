@@ -1,10 +1,15 @@
 use crate::{
-    api::{types::HnItemIdScalar, HnStoriesSections, HnStoriesSorting},
+    api::{
+        algolia_types::AlgoliaHnSearchTag,
+        client::{HnStoriesSections, HnStoriesSorting},
+        types::HnItemIdScalar,
+    },
     config::AppConfiguration,
     ui::{
         common::UiComponentId,
-        components::stories::STORIES_PANEL_ID,
+        components::{stories::STORIES_PANEL_ID, widgets::text_input::TextInputState},
         displayable_item::{DisplayableHackerNewsItem, DisplayableHackerNewsItemComments},
+        screens::search::SearchScreenPart,
     },
 };
 
@@ -21,8 +26,6 @@ pub struct AppState {
     main_stories_section: HnStoriesSections,
     /// Main screen(s): current stories sorting.
     main_stories_sorting: HnStoriesSorting,
-    /// Main screen(s): search query if in search mode.
-    main_search_mode_query: Option<String>,
     /// The currently viewed item (not a comment).
     currently_viewed_item: Option<DisplayableHackerNewsItem>,
     /// Has the currently viewed item (not a comment) changed recently?
@@ -37,6 +40,12 @@ pub struct AppState {
     item_page_display_comments_panel: bool,
     /// The currently viewed user ID.
     currently_viewed_user_id: Option<String>,
+    /// The current Hacker News Algolia search state.
+    current_algolia_query_state: TextInputState,
+    /// The currently used Hacker News Algolia Screen part.
+    currently_used_algolia_part: SearchScreenPart,
+    /// The currently searched Hacker News Algolia category.
+    currently_searched_algolia_category: Option<AlgoliaHnSearchTag>,
 }
 
 impl AppState {
@@ -46,7 +55,6 @@ impl AppState {
             main_stories_loading: true,
             main_stories_section: HnStoriesSections::Home,
             main_stories_sorting: HnStoriesSorting::Top,
-            main_search_mode_query: None,
             currently_viewed_item: None,
             currently_viewed_item_switched: false,
             currently_viewed_item_comments: None,
@@ -54,6 +62,9 @@ impl AppState {
             previously_viewed_comment_id: None,
             item_page_display_comments_panel: config.get_display_comments_panel_by_default(),
             currently_viewed_user_id: None,
+            current_algolia_query_state: TextInputState::default(),
+            currently_used_algolia_part: SearchScreenPart::Input,
+            currently_searched_algolia_category: None,
         }
     }
 }
@@ -92,16 +103,6 @@ impl AppState {
     /// Set the current stories section for the main screen.
     pub fn set_main_stories_section(&mut self, section: HnStoriesSections) {
         self.main_stories_section = section;
-    }
-
-    /// Get the main screens search mode query, if any.
-    pub fn get_main_search_mode_query(&self) -> Option<&String> {
-        self.main_search_mode_query.as_ref()
-    }
-
-    /// Set the main screens search mode query.
-    pub fn set_main_search_mode_query(&mut self, query: Option<String>) {
-        self.main_search_mode_query = query;
     }
 
     /// Get the currently viewed item.
@@ -239,5 +240,38 @@ impl AppState {
     /// Set the currently viewed user ID.
     pub fn set_currently_viewed_user_id(&mut self, viewed_id: Option<String>) {
         self.currently_viewed_user_id = viewed_id;
+    }
+
+    /// Get the current Hacker News Algolia query search state.
+    pub fn get_current_algolia_query_state(&self) -> &TextInputState {
+        &self.current_algolia_query_state
+    }
+
+    /// Mutably get the current Hacker News Algolia query search state.
+    pub fn get_current_algolia_query_state_mut(&mut self) -> &mut TextInputState {
+        &mut self.current_algolia_query_state
+    }
+
+    /// Get the currently used Hacker News Algolia Screen part.
+    pub fn get_currently_used_algolia_part(&self) -> SearchScreenPart {
+        self.currently_used_algolia_part
+    }
+
+    /// Set the currently used Hacker News Algolia Screen part.
+    pub fn set_currently_used_algolia_part(&mut self, part: SearchScreenPart) {
+        self.currently_used_algolia_part = part;
+    }
+
+    /// Get the currently searched Hacker News Algolia category.
+    pub fn get_currently_searched_algolia_category(&self) -> Option<&AlgoliaHnSearchTag> {
+        self.currently_searched_algolia_category.as_ref()
+    }
+
+    /// Set the currently searched Hacker News Algolia category.
+    pub fn set_currently_searched_algolia_category(
+        &mut self,
+        category: Option<AlgoliaHnSearchTag>,
+    ) {
+        self.currently_searched_algolia_category = category;
     }
 }
