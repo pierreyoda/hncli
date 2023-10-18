@@ -93,9 +93,14 @@ pub const UI_TICK_RATE_MS: u64 = 100;
 impl UserInterface {
     /// Create a new `UserInterface` instance and prepare the terminal for it.
     pub fn new(mut terminal: TerminalUi, client: HnClient) -> Result<Self> {
-        enable_raw_mode()?;
-        terminal.clear()?;
-        terminal.hide_cursor()?;
+        enable_raw_mode()
+            .map_err(|_| HnCliError::CrosstermError("enable_raw_mode error".into()))?;
+        terminal
+            .clear()
+            .map_err(|_| HnCliError::CrosstermError("clear error".into()))?;
+        terminal
+            .hide_cursor()
+            .map_err(|_| HnCliError::CrosstermError("hide_cursor error".into()))?;
 
         let config = AppConfiguration::from_file_or_defaults();
         Ok(Self {
@@ -158,7 +163,9 @@ impl UserInterface {
 
     /// Launch the main UI loop.
     pub async fn run(&mut self, rx: Receiver<UserInterfaceEvent>) -> Result<()> {
-        self.terminal.hide_cursor()?;
+        self.terminal
+            .hide_cursor()
+            .map_err(|_| HnCliError::CrosstermError("hide_cursor error".into()))?;
 
         let contextual_helper = ContextualHelper::new();
         'ui: loop {
@@ -239,15 +246,21 @@ impl UserInterface {
                 let inputs = app_context.get_inputs();
                 // TODO: errors on quit should be logged but not panic
                 if inputs.is_active(&ApplicationAction::Quit) {
-                    disable_raw_mode()?;
-                    self.terminal.show_cursor()?;
+                    disable_raw_mode()
+                        .map_err(|_| HnCliError::CrosstermError("disable_raw_mode error".into()))?;
+                    self.terminal
+                        .show_cursor()
+                        .map_err(|_| HnCliError::CrosstermError("show_cursor error".into()))?;
                     break 'ui;
                 }
                 if inputs.is_active(&ApplicationAction::QuitShortcut)
                     && self.can_quit_via_shortcut()
                 {
-                    disable_raw_mode()?;
-                    self.terminal.show_cursor()?;
+                    disable_raw_mode()
+                        .map_err(|_| HnCliError::CrosstermError("disable_raw_mode error".into()))?;
+                    self.terminal
+                        .show_cursor()
+                        .map_err(|_| HnCliError::CrosstermError("show_curor error".into()));
                     break 'ui;
                 }
                 if self.app.handle_inputs() && !self.handle_inputs()? {

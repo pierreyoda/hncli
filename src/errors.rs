@@ -1,6 +1,5 @@
 use std::{io, sync::mpsc::RecvError};
 
-use crossterm::ErrorKind;
 use thiserror::Error;
 use url::ParseError;
 
@@ -16,8 +15,8 @@ pub enum HnCliError {
     HttpError(#[from] reqwest::Error),
     #[error("Threading error")]
     ThreadingError(#[from] RecvError),
-    #[error("Crossterm error")]
-    CrosstermError(#[from] ErrorKind),
+    #[error("Crossterm error: {0}")]
+    CrosstermError(String),
     #[error("Config synchronization error: {0}")]
     ConfigSynchronizationError(String),
     #[error("History synchronization error: {0}")]
@@ -30,8 +29,6 @@ pub enum HnCliError {
     UserNotFound(String),
     #[error("The HN item with ID {0} could not be processed")]
     HnItemProcessingError(String),
-    #[error("hncli UI error: {0}")]
-    UiError(String),
 }
 
 /// A `Result` alias where the `Err` case is `HnCliError`.

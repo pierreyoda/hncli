@@ -22,7 +22,7 @@ async fn main() -> Result<(), HnCliError> {
     WriteLogger::init(
         log::LevelFilter::Info,
         Config::default(),
-        File::create("hncli_log.txt")?,
+        File::create("hncli_log.txt").map_err(HnCliError::IoError)?,
     )
     .expect("logging to file should be properly initialized");
 
