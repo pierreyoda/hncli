@@ -184,13 +184,10 @@ impl UserInterface {
                     };
                     let global_layout_chunks = Layout::default()
                         .direction(Direction::Vertical)
-                        .constraints(
-                            vec![
-                                Constraint::Percentage(main_size),
-                                Constraint::Percentage(helper_size),
-                            ]
-                            .as_ref(),
-                        )
+                        .constraints(vec![
+                            Constraint::Percentage(main_size),
+                            Constraint::Percentage(helper_size),
+                        ])
                         .split(frame.size());
 
                     // refresh application chunks

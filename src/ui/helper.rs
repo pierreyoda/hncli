@@ -206,7 +206,7 @@ impl ContextualHelper {
             .collect();
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints(constraints.as_ref())
+            .constraints(constraints)
             .split(inside);
 
         // widgets rendering

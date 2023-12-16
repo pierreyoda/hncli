@@ -59,7 +59,7 @@ impl SettingsControl {
     pub fn render(&self, f: &mut RenderFrame, inside: Rect, is_active: bool) {
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints(vec![Constraint::Percentage(75), Constraint::Percentage(25)].as_ref())
+            .constraints(vec![Constraint::Percentage(75), Constraint::Percentage(25)])
             .split(inside);
 
         let label_text = vec![
@@ -152,7 +152,7 @@ impl UiComponent for Settings {
             .collect();
         let controls_chunks = Layout::default()
             .direction(Direction::Vertical)
-            .constraints(controls_constraints.as_ref())
+            .constraints(controls_constraints)
             .split(chunks[1]);
         for (i, control) in self.controls.iter().enumerate() {
             control.render(f, controls_chunks[i], i == self.selected_control_index);
