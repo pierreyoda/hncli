@@ -26,10 +26,17 @@ use crate::{
     },
 };
 
+#[derive(Debug)]
+enum AlgoliaListStatus {
+    Unselected,
+    Selected,
+    Focused,
+}
+
 /// The Hacker News Algolia results list.
 #[derive(Debug)]
 pub struct AlgoliaList {
-    focused: bool,
+    status: AlgoliaListStatus,
     empty_input: bool,
     loading: bool,
     loader: Loader,
@@ -42,7 +49,7 @@ pub struct AlgoliaList {
 impl Default for AlgoliaList {
     fn default() -> Self {
         Self {
-            focused: false,
+            status: AlgoliaListStatus::Unselected,
             empty_input: false,
             loading: false,
             loader: Loader::default(),
@@ -83,10 +90,11 @@ impl UiComponent for AlgoliaList {
 
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
         self.loading = true;
-        self.focused = matches!(
-            ctx.get_state().get_currently_used_algolia_part(),
-            SearchScreenPart::Results
-        );
+        self.status = match ctx.get_state().get_currently_used_algolia_part() {
+            SearchScreenPart::Results(false) => AlgoliaListStatus::Selected,
+            SearchScreenPart::Results(true) => AlgoliaListStatus::Focused,
+            _ => AlgoliaListStatus::Unselected,
+        };
 
         let state = ctx.get_state();
         let (algolia_query, algolia_category) = (
@@ -145,7 +153,10 @@ impl UiComponent for AlgoliaList {
             };
             self.list_state.replace_items(displayable_algolia_items);
 
-            if self.focused && !self.list_state.is_empty() && self.list_state.selected().is_none() {
+            if matches!(self.status, AlgoliaListStatus::Focused)
+                && !self.list_state.is_empty()
+                && self.list_state.selected().is_none()
+            {
                 self.list_state.select(Some(0));
             }
 
@@ -156,7 +167,7 @@ impl UiComponent for AlgoliaList {
     }
 
     fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
-        if self.loading || !self.focused {
+        if self.loading || !matches!(self.status, AlgoliaListStatus::Focused) {
             return Ok(false);
         }
 
@@ -188,10 +199,10 @@ impl UiComponent for AlgoliaList {
     }
 
     fn render(&mut self, f: &mut RenderFrame, inside: Rect, _ctx: &AppContext) -> Result<()> {
-        let block_border_style = Style::default().fg(if self.focused {
-            Color::Yellow
-        } else {
-            Color::White
+        let block_border_style = Style::default().fg(match self.status {
+            AlgoliaListStatus::Unselected => Color::White,
+            AlgoliaListStatus::Selected => Color::Yellow,
+            AlgoliaListStatus::Focused => Color::Green,
         });
 
         // Empty input case

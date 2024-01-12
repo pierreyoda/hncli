@@ -1,4 +1,3 @@
-use log::info;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
@@ -23,7 +22,8 @@ use super::{Screen, ScreenComponentsRegistry, ScreenEventResponse};
 pub enum SearchScreenPart {
     Filters,
     Input,
-    Results,
+    /// The Results search screen part, where the stored boolean indicates focus.
+    Results(bool),
 }
 
 /// The Algolia-based search screen of hncli.
@@ -74,7 +74,6 @@ impl Screen for SearchScreen {
             }
             for available_action in state.get_current_algolia_query_state().available_actions() {
                 if inputs.is_active(&available_action) {
-                    info!("{:?}", available_action);
                     state
                         .get_current_algolia_query_state_mut()
                         .handle_event(inputs, &available_action);
@@ -83,12 +82,20 @@ impl Screen for SearchScreen {
             }
         }
 
-        if currently_used_algolia_part == SearchScreenPart::Results {
+        // results part (un)focusing
+        if currently_used_algolia_part == SearchScreenPart::Results(true) {
             if inputs.is_active(&ApplicationAction::Back) {
                 state.set_currently_used_algolia_part(SearchScreenPart::Input);
+                return (ScreenEventResponse::Caught, None);
             }
-            (ScreenEventResponse::Caught, None)
-        } else if inputs.is_active(&ApplicationAction::ToggleHelp) {
+        } else if currently_used_algolia_part == SearchScreenPart::Results(false) {
+            if inputs.is_active(&ApplicationAction::ToggleFocusResults) {
+                state.set_currently_used_algolia_part(SearchScreenPart::Results(true));
+                return (ScreenEventResponse::Caught, None);
+            }
+        }
+
+        if inputs.is_active(&ApplicationAction::ToggleHelp) {
             (ScreenEventResponse::Caught, Some(AppRoute::SearchHelp))
         } else if inputs.is_active(&ApplicationAction::Back) {
             router.pop_navigation_stack();
@@ -98,16 +105,18 @@ impl Screen for SearchScreen {
             )
         } else if inputs.is_active(&ApplicationAction::NavigateUp) {
             state.set_currently_used_algolia_part(match currently_used_algolia_part {
-                SearchScreenPart::Filters => SearchScreenPart::Results,
+                SearchScreenPart::Filters => SearchScreenPart::Results(false),
                 SearchScreenPart::Input => SearchScreenPart::Filters,
-                SearchScreenPart::Results => SearchScreenPart::Input,
+                SearchScreenPart::Results(false) => SearchScreenPart::Input,
+                SearchScreenPart::Results(true) => SearchScreenPart::Results(true),
             });
             (ScreenEventResponse::Caught, None)
         } else if inputs.is_active(&ApplicationAction::NavigateDown) {
             state.set_currently_used_algolia_part(match currently_used_algolia_part {
                 SearchScreenPart::Filters => SearchScreenPart::Input,
-                SearchScreenPart::Input => SearchScreenPart::Results,
-                SearchScreenPart::Results => SearchScreenPart::Filters,
+                SearchScreenPart::Input => SearchScreenPart::Results(false),
+                SearchScreenPart::Results(false) => SearchScreenPart::Filters,
+                SearchScreenPart::Results(true) => SearchScreenPart::Results(true),
             });
             (ScreenEventResponse::Caught, None)
         } else {
