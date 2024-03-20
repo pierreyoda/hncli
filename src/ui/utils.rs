@@ -16,9 +16,7 @@ pub trait ItemWithId<N: Copy + Num + Ord> {
 /// Creates a chrono `DateTime` from a Hacker News Unix timestamp.
 pub fn datetime_from_hn_time(time: HnItemDateScalar) -> Result<DateTime<Utc>> {
     let timestamp = time as i64;
-    let naive =
-        NaiveDateTime::from_timestamp_opt(timestamp, 0).ok_or(HnCliError::ChronoError(time))?;
-    Ok(DateTime::from_naive_utc_and_offset(naive, Utc))
+    DateTime::from_timestamp(timestamp, 0).ok_or(HnCliError::ChronoError(time))
 }
 
 /// Convert HTML to plain text, to be displayed in the terminal UI.
