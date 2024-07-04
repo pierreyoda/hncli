@@ -1,4 +1,4 @@
-use tui::layout::{Constraint, Direction, Layout, Rect};
+use tui::layout::{Direction, Layout, Rect};
 
 use crate::{
     api::client::HnStoriesSections,
@@ -8,6 +8,7 @@ use crate::{
         components::{navigation::NAVIGATION_ID, options::OPTIONS_ID, stories::STORIES_PANEL_ID},
         handlers::InputsController,
         router::{AppRoute, AppRouter},
+        utils::breakpoints::Breakpoints,
     },
 };
 
@@ -33,11 +34,17 @@ use super::{Screen, ScreenComponentsRegistry, ScreenEventResponse};
 #[derive(Debug)]
 pub struct HomeScreen {
     section: HnStoriesSections,
+    breakpoints: Breakpoints,
 }
 
 impl HomeScreen {
     pub fn new(section: HnStoriesSections) -> Self {
-        Self { section }
+        Self {
+            section,
+            breakpoints: Breakpoints::new("home_screen", &[20, 65, 15])
+                .breakpoint(25, &[15, 75, 10])
+                .breakpoint(45, &[7, 88, 5]),
+        }
     }
 }
 
@@ -48,9 +55,9 @@ impl Screen for HomeScreen {
 
     fn handle_inputs(
         &mut self,
-        inputs: &InputsController,
+        _inputs: &InputsController,
         _router: &mut AppRouter,
-        state: &mut AppState,
+        _state: &mut AppState,
         _history: &mut AppHistory,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
         (ScreenEventResponse::PassThrough, None)
@@ -60,22 +67,14 @@ impl Screen for HomeScreen {
         &self,
         frame_size: Rect,
         components_registry: &mut ScreenComponentsRegistry,
-        state: &AppState,
+        _state: &AppState,
     ) {
         // main layout chunks
         let main_layout_chunks = Layout::default()
             .direction(Direction::Vertical)
             .margin(2)
-            .constraints(
-                [
-                    Constraint::Percentage(6),
-                    Constraint::Percentage(89),
-                    Constraint::Percentage(5),
-                ]
-                .as_ref(),
-            )
+            .constraints(self.breakpoints.to_constraints(frame_size.height))
             .split(frame_size);
-
         components_registry.insert(NAVIGATION_ID, main_layout_chunks[0]);
         components_registry.insert(STORIES_PANEL_ID, main_layout_chunks[1]);
         components_registry.insert(OPTIONS_ID, main_layout_chunks[2]);

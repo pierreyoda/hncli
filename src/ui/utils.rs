@@ -1,4 +1,4 @@
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, Utc};
 use num_traits::Num;
 
 use crate::{
@@ -6,6 +6,7 @@ use crate::{
     errors::{HnCliError, Result},
 };
 
+pub mod breakpoints;
 pub mod debouncer;
 pub mod loader;
 
