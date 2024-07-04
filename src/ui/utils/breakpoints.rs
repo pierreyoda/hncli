@@ -4,6 +4,7 @@ use tui::layout::Constraint;
 
 pub type SectionSizes = Vec<u16>;
 
+/// Small utility for making Screens' layout responsive.
 #[derive(Debug)]
 pub struct Breakpoints {
     label: String,
@@ -40,33 +41,6 @@ impl Breakpoints {
         self.sections_breakpoints.insert(size, breakpoints.to_vec());
         self
     }
-
-    // pub fn get_breakpoint(&self, section_name: &str, size: u16) -> Constraint {
-    //     let mut default_breakpoint_size: Option<u16> = None;
-    //     if let Some(breakpoints) = self.sections_breakpoints.get(&section_name.to_string()) {
-    //         for breakpoint in breakpoints.iter() {
-    //             match breakpoint {
-    //                 SectionBreakpoint::Breakpoint(bp, bp_size) => {
-    //                     if size >= *bp {
-    //                         return Constraint::Length(*bp_size);
-    //                     }
-    //                 }
-    //                 SectionBreakpoint::DefaultBreakpoint(bp_size) => {
-    //                     default_breakpoint_size = Some(*bp_size);
-    //                 }
-    //             }
-    //         }
-    //     } else {
-    //         warn!("unknown section name '{}' in breakpoints", section_name);
-    //     }
-    //     Constraint::Length(match default_breakpoint_size {
-    //         Some(bp_size) => bp_size,
-    //         None => {
-    //             warn!("no default breakpoint in section '{}'", section_name);
-    //             0
-    //         }
-    //     })
-    // }
 
     pub fn to_constraints(&self, size: u16) -> Vec<Constraint> {
         let breakpoint_size =
