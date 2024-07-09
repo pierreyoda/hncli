@@ -8,7 +8,7 @@ use crate::{
         components::{navigation::NAVIGATION_ID, options::OPTIONS_ID, stories::STORIES_PANEL_ID},
         handlers::InputsController,
         router::{AppRoute, AppRouter},
-        utils::breakpoints::Breakpoints,
+        utils::breakpoints::{Breakpoints, BreakpointsDirection},
     },
 };
 
@@ -69,15 +69,12 @@ impl Screen for HomeScreen {
         components_registry: &mut ScreenComponentsRegistry,
         _state: &AppState,
     ) {
-        // main layout chunks
-        let main_layout_chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .margin(2)
-            .constraints(self.breakpoints.to_constraints(frame_size.height))
-            .split(frame_size);
-        components_registry.insert(NAVIGATION_ID, main_layout_chunks[0]);
-        components_registry.insert(STORIES_PANEL_ID, main_layout_chunks[1]);
-        components_registry.insert(OPTIONS_ID, main_layout_chunks[2]);
+        self.breakpoints.apply(
+            components_registry,
+            &[NAVIGATION_ID, STORIES_PANEL_ID, OPTIONS_ID],
+            frame_size,
+            BreakpointsDirection::Vertical,
+        );
     }
 }
 
