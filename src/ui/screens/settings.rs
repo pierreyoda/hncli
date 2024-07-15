@@ -1,4 +1,4 @@
-use tui::layout::{Constraint, Direction, Layout, Rect};
+use tui::layout::Rect;
 
 use crate::{
     app::{history::AppHistory, state::AppState},
@@ -6,6 +6,7 @@ use crate::{
         components::{navigation::NAVIGATION_ID, settings::SETTINGS_ID},
         handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
+        utils::breakpoints::{Breakpoints, BreakpointsDirection},
     },
 };
 
@@ -13,11 +14,18 @@ use super::{Screen, ScreenComponentsRegistry, ScreenEventResponse};
 
 /// The settings screen of hncli.
 #[derive(Debug)]
-pub struct SettingsScreen;
+pub struct SettingsScreen {
+    breakpoints: Breakpoints,
+}
 
 impl SettingsScreen {
     pub fn new() -> Self {
-        Self {}
+        Self {
+            breakpoints: Breakpoints::new("settings", &[20, 80])
+                .breakpoint(25, &[15, 85])
+                .breakpoint(35, &[10, 90])
+                .breakpoint(50, &[7, 93]),
+        }
     }
 }
 
@@ -46,15 +54,12 @@ impl Screen for SettingsScreen {
         components_registry: &mut ScreenComponentsRegistry,
         _state: &AppState,
     ) {
-        // main layout chunks
-        let main_layout_chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .margin(2)
-            .constraints([Constraint::Percentage(6), Constraint::Percentage(94)].as_ref())
-            .split(frame_size);
-
-        components_registry.insert(NAVIGATION_ID, main_layout_chunks[0]);
-        components_registry.insert(SETTINGS_ID, main_layout_chunks[1]);
+        self.breakpoints.apply(
+            components_registry,
+            &[NAVIGATION_ID, SETTINGS_ID],
+            frame_size,
+            BreakpointsDirection::Vertical,
+        );
     }
 }
 
