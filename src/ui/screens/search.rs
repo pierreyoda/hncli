@@ -9,7 +9,9 @@ use crate::{
                 algolia_list::ALGOLIA_LIST_ID,
                 algolia_tags::ALGOLIA_TAGS_ID,
             },
-            widgets::text_input::{TextInputStateAction, TextInputStateActionBridge},
+            widgets::text_input::{
+                TextInputStateAction, TextInputStateActionBridge, TEXT_INPUT_AVAILABLE_ACTIONS,
+            },
         },
         handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
@@ -37,6 +39,7 @@ impl SearchScreen {
 }
 
 impl Screen for SearchScreen {
+    // TODO: refresh search when changing filter
     fn handle_inputs(
         &mut self,
         inputs: &InputsController,
@@ -72,7 +75,7 @@ impl Screen for SearchScreen {
                     return (ScreenEventResponse::Caught, None);
                 }
             }
-            for available_action in state.get_current_algolia_query_state().available_actions() {
+            for available_action in TEXT_INPUT_AVAILABLE_ACTIONS {
                 if inputs.is_active(&available_action) {
                     state
                         .get_current_algolia_query_state_mut()
