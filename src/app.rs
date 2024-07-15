@@ -162,16 +162,16 @@ impl App {
     /// the active event is to be captured (swallowed) and not passed down to screens.
     pub fn handle_inputs(&mut self) -> bool {
         // global help page toggle (not in search)
-        if !self.router.get_current_route().is_in_search_mode() {
-            if self.inputs.is_active(&ApplicationAction::ToggleHelp) {
-                if self.router.get_current_route().is_help() {
-                    self.get_context().router_pop_navigation_stack();
-                } else {
-                    self.get_context()
-                        .router_push_navigation_stack(AppRoute::Help);
-                }
-                return true;
+        if !self.router.get_current_route().is_in_search_mode()
+            && self.inputs.is_active(&ApplicationAction::ToggleHelp)
+        {
+            if self.router.get_current_route().is_help() {
+                self.get_context().router_pop_navigation_stack();
+            } else {
+                self.get_context()
+                    .router_push_navigation_stack(AppRoute::Help);
             }
+            return true;
         }
 
         // screen event handling

@@ -19,7 +19,7 @@ use crate::{
         HnClient,
     },
     app::AppContext,
-    errors::{HnCliError, Result},
+    errors::Result,
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         displayable_item::DisplayableHackerNewsItem,

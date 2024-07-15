@@ -283,7 +283,8 @@ impl UserInterface {
                 {
                     disable_raw_mode()
                         .map_err(|_| HnCliError::CrosstermError("disable_raw_mode error".into()))?;
-                    self.terminal
+                    let _ = self
+                        .terminal
                         .show_cursor()
                         .map_err(|_| HnCliError::CrosstermError("show_curor error".into()));
                     break 'ui;

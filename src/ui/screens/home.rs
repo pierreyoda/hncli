@@ -1,4 +1,4 @@
-use tui::layout::{Direction, Layout, Rect};
+use tui::layout::Rect;
 
 use crate::{
     api::client::HnStoriesSections,

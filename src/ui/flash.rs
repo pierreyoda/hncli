@@ -12,8 +12,8 @@ use super::common::RenderFrame;
 pub struct FlashMessage {}
 
 impl FlashMessage {
-    pub fn render(&self, f: &mut RenderFrame, inside: Rect, message: &String) {
-        let text = vec![Spans::from(message.clone())];
+    pub fn render(&self, f: &mut RenderFrame, inside: Rect, message: &str) {
+        let text = vec![Spans::from(message.to_string())];
         let paragraph = Paragraph::new(text)
             .alignment(Alignment::Center)
             .style(Style::default().fg(Color::Yellow));

@@ -113,9 +113,9 @@ impl TextInputStateActionBridge for TextInputState {
 }
 
 impl TextInputState {
-    pub fn from_string(string: &String) -> Self {
+    pub fn from_string(string: &str) -> Self {
         Self {
-            value: string.clone(),
+            value: string.to_string(),
             cursor_index: string.chars().count(),
         }
     }
@@ -269,7 +269,7 @@ impl<'a> Widget for TextInputWidget<'a> {
         } else {
             &self.state.value
         };
-        buf.set_string(text_area.x, text_area.y, &rendered_value, self.style);
+        buf.set_string(text_area.x, text_area.y, rendered_value, self.style);
         if let Some(cursor_index) = cursor_position {
             buf.set_string(
                 area.x + cursor_index,
@@ -282,6 +282,6 @@ impl<'a> Widget for TextInputWidget<'a> {
 }
 
 #[cfg(tests)]
-mod tests {
+mod test {
     // TODO:
 }

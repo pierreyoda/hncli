@@ -107,13 +107,11 @@ impl Breakpoints {
         self.sections_breakpoints
             .get(&breakpoint_size)
             .unwrap_or(&self.default_breakpoints)
-            .iter()
-            .map(|percentage| *percentage)
-            .collect()
+            .to_vec()
     }
 
     fn check_section_sizes(sizes: &[u16]) -> bool {
-        sizes.iter().fold(0, |acc, size| acc + size) == 100
+        sizes.iter().sum::<u16>() == 100
     }
 }
 

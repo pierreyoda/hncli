@@ -33,10 +33,7 @@ impl FlashMessageState {
 
     pub fn update(&mut self, elapsed_ticks: UiTickScalar) {
         if let Some(remaining) = &mut self.remaining_ticks {
-            *remaining = match remaining.checked_sub(elapsed_ticks) {
-                Some(remaining) => remaining,
-                None => 0,
-            };
+            *remaining = remaining.checked_sub(elapsed_ticks).unwrap_or(0);
         }
     }
 }

@@ -91,11 +91,11 @@ impl Screen for SearchScreen {
                 state.set_currently_used_algolia_part(SearchScreenPart::Input);
                 return (ScreenEventResponse::Caught, None);
             }
-        } else if currently_used_algolia_part == SearchScreenPart::Results(false) {
-            if inputs.is_active(&ApplicationAction::ToggleFocusResults) {
-                state.set_currently_used_algolia_part(SearchScreenPart::Results(true));
-                return (ScreenEventResponse::Caught, None);
-            }
+        } else if currently_used_algolia_part == SearchScreenPart::Results(false)
+            && inputs.is_active(&ApplicationAction::ToggleFocusResults)
+        {
+            state.set_currently_used_algolia_part(SearchScreenPart::Results(true));
+            return (ScreenEventResponse::Caught, None);
         }
 
         if inputs.is_active(&ApplicationAction::ToggleHelp) {
