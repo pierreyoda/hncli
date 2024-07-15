@@ -8,7 +8,7 @@ use crate::{
     ui::common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
 };
 
-use super::widgets::text_input::{TextInputState, TextInputStateActionBridge, TextInputWidget};
+use super::widgets::text_input::TextInputWidget;
 
 pub mod algolia_help;
 pub mod algolia_input;
@@ -16,18 +16,8 @@ pub mod algolia_list;
 pub mod algolia_tags;
 
 /// Search input component, for filtering the stories list.
-#[derive(Debug)]
-pub struct Search {
-    input_state: TextInputState,
-}
-
-impl Default for Search {
-    fn default() -> Self {
-        Self {
-            input_state: Default::default(),
-        }
-    }
-}
+#[derive(Debug, Default)]
+pub struct Search {}
 
 pub const SEARCH_ID: UiComponentId = "stories-search";
 
@@ -46,27 +36,13 @@ impl UiComponent for Search {
         Ok(())
     }
 
-    fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
-        let inputs = ctx.get_inputs();
-        for input_available_action in self.input_state.available_actions() {
-            if inputs.is_active(&input_available_action) {
-                // ctx.get_state_mut()
-                //     .set_main_search_mode_query(Some(self.input_state.get_value().clone()));
-                return Ok(true);
-            }
-        }
-
+    fn handle_inputs(&mut self, _ctx: &mut AppContext) -> Result<bool> {
         Ok(false)
     }
 
-    fn render(&mut self, f: &mut RenderFrame, inside: Rect, _ctx: &AppContext) -> Result<()> {
-        // let block = Block::default()
-        //     .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
-        //     .borders(Borders::ALL)
-        //     .border_type(BorderType::Rounded)
-        //     .title("Search input");
-
-        let input_widget = TextInputWidget::with_state(&self.input_state);
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
+        let input_widget =
+            TextInputWidget::with_state(ctx.get_state().get_current_algolia_query_state());
         f.render_widget(input_widget, inside);
 
         Ok(())

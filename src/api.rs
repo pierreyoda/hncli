@@ -5,6 +5,7 @@ use self::{algolia_client::AlgoliaHnClient, client::ClassicHnClient};
 pub mod algolia_client;
 pub mod algolia_types;
 pub mod client;
+pub mod cookies;
 pub mod types;
 
 /// The exposed Hacker News API client, wrapping two sources: official API and Algolia-based API.

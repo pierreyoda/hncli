@@ -111,6 +111,8 @@ pub enum ApplicationAction {
     ItemToggleComments,
     ItemExpandFocusedComment,
     FocusedCommentViewUserProfile,
+    ItemUpvote,
+    ItemDownvote,
     // user profile screen
     OpenHackerNewsProfile,
     // search screen
@@ -163,6 +165,8 @@ impl ApplicationAction {
             ItemToggleComments => inputs.key == Key::Tab,
             ItemExpandFocusedComment => inputs.key == Key::Enter,
             FocusedCommentViewUserProfile => inputs.key == Key::Char('p'),
+            ItemUpvote => inputs.key == Key::Char('u'),
+            ItemDownvote => inputs.key == Key::Char('d'),
             // user profile screen
             OpenHackerNewsProfile => inputs.key == Key::Char('o'),
             // search screen

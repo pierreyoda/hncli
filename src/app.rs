@@ -182,6 +182,8 @@ impl App {
             &mut self.history,
         );
         if let Some(route) = new_route {
+            // screen unmount hook
+            self.current_screen.before_unmount(&mut self.state);
             // update the current screen if the route changed
             self.current_screen = AppRouter::build_screen_from_route(route);
             self.current_screen
@@ -200,7 +202,7 @@ impl App {
     /// `layout_components` hash are not rendered. This is done for simplicity purposes.
     ///
     /// Returns the previously mounted components, and the newly mounted ones.
-    pub fn update_layout(&mut self, frame_size: Rect) -> (Vec<&str>, Vec<&str>) {
+    pub fn update_layout(&mut self, frame_size: Rect) -> (Vec<UiComponentId>, Vec<UiComponentId>) {
         let old_layout_components_ids = self.layout_components.keys().copied().collect();
         self.layout_components.clear();
         self.current_screen

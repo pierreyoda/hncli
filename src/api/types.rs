@@ -1,9 +1,17 @@
 //! See https://github.com/HackerNews/API for official documentation.
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 pub type HnItemIdScalar = u32;
 pub type HnItemDateScalar = u64;
+
+#[derive(Debug, Serialize)]
+pub struct HnSignInPayload<'a> {
+    /// Username.
+    pub(super) acct: &'a str,
+    /// Password.
+    pub(super) pw: &'a str,
+}
 
 /// An `Item` in the HackerNews API covers everything except `User`s.
 ///

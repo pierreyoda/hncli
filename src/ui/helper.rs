@@ -43,13 +43,10 @@ impl HelpWidget {
 
 /// Global contextual block displaying controls help and other widgets
 /// relevant to the current route.
+#[derive(Default)]
 pub struct ContextualHelper {}
 
 impl ContextualHelper {
-    pub fn new() -> Self {
-        Self {}
-    }
-
     /// Renderer.
     pub fn render(
         &self,

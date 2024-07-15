@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use log::info;
 use tui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
@@ -13,6 +14,7 @@ use crate::{
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         handlers::ApplicationAction,
+        utils::breakpoints::Breakpoints,
     },
 };
 
@@ -89,10 +91,23 @@ impl SettingsControl {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Settings {
     controls: Vec<SettingsControl>,
     selected_control_index: usize,
+    breakpoints: Breakpoints,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            controls: vec![],
+            selected_control_index: 0,
+            breakpoints: Breakpoints::new("settings_component", &[0, 100])
+                .breakpoint(25, &[10, 90])
+                .breakpoint(40, &[7, 93]),
+        }
+    }
 }
 
 pub const SETTINGS_ID: UiComponentId = "settings";
@@ -134,15 +149,18 @@ impl UiComponent for Settings {
     fn render(&mut self, f: &mut RenderFrame, inside: Rect, _ctx: &AppContext) -> Result<()> {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Percentage(7), Constraint::Percentage(93)].as_ref())
+            .constraints(self.breakpoints.to_constraints(inside.height))
             .split(inside);
 
         // header block
-        let header_text = vec![Spans::from("Settings")];
-        let header_paragraph = Paragraph::new(header_text)
-            .block(Self::get_common_block())
-            .alignment(Alignment::Center);
-        f.render_widget(header_paragraph, chunks[0]);
+        // FIXME:
+        if chunks[0].height > 0 {
+            let header_text = vec![Spans::from("Settings")];
+            let header_paragraph = Paragraph::new(header_text)
+                .block(Self::get_common_block())
+                .alignment(Alignment::Center);
+            f.render_widget(header_paragraph, chunks[0]);
+        }
 
         // controls block
         assert!(!self.controls.is_empty());

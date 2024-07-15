@@ -10,14 +10,22 @@ use crossterm::{
     event::{self, Event, KeyEvent},
     terminal::{disable_raw_mode, enable_raw_mode},
 };
+use flash::FlashMessage;
 use tui::{
     backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout},
+    layout::{Direction, Layout},
     Terminal,
 };
 
 use common::{UiComponent, UiComponentId, UiTickScalar};
-use components::{help::Help, navigation::Navigation, options::Options, stories::StoriesPanel};
+use components::{
+    help::Help,
+    login::Login,
+    navigation::Navigation,
+    options::{Options, OPTIONS_ID},
+    stories::StoriesPanel,
+};
+use utils::breakpoints::Breakpoints;
 
 use crate::{
     api::HnClient,
@@ -48,6 +56,7 @@ pub mod common;
 pub mod components;
 pub mod displayable_algolia_item;
 pub mod displayable_item;
+mod flash;
 pub mod handlers;
 mod helper;
 mod panels;
@@ -150,6 +159,7 @@ impl UserInterface {
         self.register_component(AlgoliaList::default());
         self.register_component(AlgoliaHelp::default());
         self.register_component(UserProfile::default());
+        self.register_component(Login::default());
         self.register_component(Options::default());
 
         for component_wrapper in self.components.values_mut() {
@@ -167,28 +177,37 @@ impl UserInterface {
             .hide_cursor()
             .map_err(|_| HnCliError::CrosstermError("hide_cursor error".into()))?;
 
-        let contextual_helper = ContextualHelper::new();
+        // UI setup
+        let flash_message = FlashMessage::default();
+        let mut had_flash_message = false;
+        let mut flash_message_elapsed_ticks: UiTickScalar = 0;
+        let contextual_helper = ContextualHelper::default();
+        let breakpoints_default = Breakpoints::new("ui_default", &[100, 0]);
+        let breakpoints_helper = Breakpoints::new("ui_helper", &[90, 10]).breakpoint(30, &[97, 3]);
+        let breakpoints_flash = Breakpoints::new("ui_flash", &[85, 15])
+            .breakpoint(30, &[90, 10])
+            .breakpoint(40, &[95, 5]);
+
         'ui: loop {
             let app = &mut self.app;
             let components = &mut self.components;
             self.terminal
                 .draw(|frame| {
+                    let has_flash_message = app.get_context().get_state().has_flash_message();
                     let show_contextual_help =
                         app.get_context().get_config().get_show_contextual_help();
 
                     // global layout
-                    let (main_size, helper_size) = if show_contextual_help {
-                        (97, 3)
-                    } else {
-                        (100, 0)
+                    let breakpoints = match (show_contextual_help, has_flash_message) {
+                        (true, _) => &breakpoints_helper,
+                        (false, true) => &breakpoints_flash,
+                        _ => &breakpoints_default,
                     };
+                    let frame_size = frame.size();
                     let global_layout_chunks = Layout::default()
                         .direction(Direction::Vertical)
-                        .constraints(vec![
-                            Constraint::Percentage(main_size),
-                            Constraint::Percentage(helper_size),
-                        ])
-                        .split(frame.size());
+                        .constraints(breakpoints.to_constraints(frame_size.height))
+                        .split(frame_size);
 
                     // refresh application chunks
                     let (previous_components_ids, current_components_ids) =
@@ -222,6 +241,23 @@ impl UserInterface {
                         }
                     }
 
+                    // render flash message
+                    if has_flash_message {
+                        if !had_flash_message {
+                            flash_message_elapsed_ticks = 0;
+                        }
+                        let mut app_context = app.get_context();
+                        if let Some(state) = app_context.get_state_mut().get_flash_message_mut() {
+                            state.update(flash_message_elapsed_ticks);
+                            if let Some(message) = state.get_message() {
+                                flash_message.render(frame, global_layout_chunks[1], message);
+                            }
+                            had_flash_message = true;
+                        } else {
+                            had_flash_message = false;
+                        }
+                        flash_message_elapsed_ticks = 0;
+                    }
                     // render contextual helper
                     if show_contextual_help {
                         let app_context = app.get_context();
@@ -264,6 +300,7 @@ impl UserInterface {
                     self.app.update_latest_interacted_with_component(None);
                 }
             } else {
+                flash_message_elapsed_ticks += 1;
                 self.update().await?;
             }
         }

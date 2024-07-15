@@ -61,8 +61,6 @@ pub enum TextInputStateAction {
 pub trait TextInputStateActionBridge {
     type ApplicationEvent;
 
-    fn available_actions(&self) -> Vec<Self::ApplicationEvent>;
-
     fn handle_event(&mut self, inputs: &InputsController, event: &Self::ApplicationEvent);
 }
 
@@ -73,24 +71,20 @@ pub struct TextInputState {
     cursor_index: usize,
 }
 
+pub const TEXT_INPUT_AVAILABLE_ACTIONS: [ApplicationAction; 9] = [
+    ApplicationAction::InputSetCursor,
+    ApplicationAction::InputInsertCharacter,
+    ApplicationAction::InputGoToPreviousCharacter,
+    ApplicationAction::InputGoToNextCharacter,
+    ApplicationAction::InputGoToStart,
+    ApplicationAction::InputGoToEnd,
+    ApplicationAction::InputDeletePreviousCharacter,
+    ApplicationAction::InputDeleteBeforeCursor,
+    ApplicationAction::InputDeleteAfterCursor,
+];
+
 impl TextInputStateActionBridge for TextInputState {
     type ApplicationEvent = ApplicationAction;
-
-    fn available_actions(&self) -> Vec<Self::ApplicationEvent> {
-        use ApplicationAction::*;
-
-        vec![
-            InputSetCursor,
-            InputInsertCharacter,
-            InputGoToPreviousCharacter,
-            InputGoToNextCharacter,
-            InputGoToStart,
-            InputGoToEnd,
-            InputDeletePreviousCharacter,
-            InputDeleteBeforeCursor,
-            InputDeleteAfterCursor,
-        ]
-    }
 
     fn handle_event(&mut self, inputs: &InputsController, event: &Self::ApplicationEvent) {
         use TextInputStateAction::*;
@@ -217,6 +211,8 @@ pub struct TextInputWidget<'a> {
     style: Style,
     /// (Optional) Wrapping `tui-rs` Block widget.
     block: Option<Block<'a>>,
+    /// If true, hide the characters.
+    password_mode: bool,
 }
 
 impl<'a> TextInputWidget<'a> {
@@ -225,6 +221,7 @@ impl<'a> TextInputWidget<'a> {
             state,
             style: Style::default(),
             block: None,
+            password_mode: false,
         }
     }
 
@@ -235,6 +232,11 @@ impl<'a> TextInputWidget<'a> {
 
     pub fn style(mut self, style: Style) -> Self {
         self.style = style;
+        self
+    }
+
+    pub fn password(mut self, enabled: bool) -> Self {
+        self.password_mode = enabled;
         self
     }
 }
@@ -258,7 +260,16 @@ impl<'a> Widget for TextInputWidget<'a> {
             .find(|(i, _)| *i == self.state.cursor_index)
             .map(|(index, _)| index as u16);
 
-        buf.set_string(text_area.x, text_area.y, &self.state.value, self.style);
+        buf.set_string(
+            text_area.x,
+            text_area.y,
+            if self.password_mode {
+                &[0..self.state.value.len()].iter().map(|_| "•").collect()
+            } else {
+                &self.state.value
+            },
+            self.style,
+        );
         if let Some(cursor_index) = cursor_position {
             buf.set_string(
                 area.x + cursor_index,

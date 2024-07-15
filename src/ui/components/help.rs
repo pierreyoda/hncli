@@ -90,6 +90,8 @@ impl Help {
             Spans::from(""),
             Spans::from("Navigate comments with the up and down arrow keys, and focus a comment with the 'enter' key."),
             Spans::from(""),
+            Spans::from("Upvote and downvote comments and stories respectively with the 'u' or 'd' keys."),
+            Spans::from(""),
             Spans::from(""),
             Spans::from(""),
             Spans::from("--- On a comment ---"),

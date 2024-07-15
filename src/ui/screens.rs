@@ -16,6 +16,7 @@ use super::{
 pub mod help;
 pub mod help_search;
 pub mod home;
+pub mod login;
 pub mod nested_comments;
 pub mod search;
 pub mod search_help;
@@ -40,6 +41,9 @@ pub enum ScreenEventResponse {
 pub trait Screen: Debug + Send {
     /// Called after instantiation and before mounting the screen.
     fn before_mount(&mut self, _state: &mut AppState, _config: &AppConfiguration) {}
+
+    /// Called before unmounting the screen.
+    fn before_unmount(&mut self, _state: &mut AppState) {}
 
     /// Handle an incoming key event, at the application level.
     ///

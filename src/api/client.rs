@@ -3,11 +3,13 @@ use std::{collections::HashMap, time::Duration};
 use async_recursion::async_recursion;
 use futures::future::join_all;
 use reqwest::Client;
+use serde::Serialize;
 
 use crate::errors::{HnCliError, Result};
 
-use super::types::{HnDead, HnDeleted, HnItem, HnItemIdScalar, HnUser};
+use super::types::{HnDead, HnDeleted, HnItem, HnItemIdScalar, HnSignInPayload, HnUser};
 
+const HACKER_NEWS_WEBSITE_URL: &str = "https://news.ycombinator.com";
 const HACKER_NEWS_API_BASE_URL: &str = "https://hacker-news.firebaseio.com/v0";
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -78,8 +80,26 @@ impl ClassicHnClient {
         Ok(Self {
             base_url: HACKER_NEWS_API_BASE_URL,
             // TODO: duration from CLI args and/or local configuration
-            client: Client::builder().timeout(Duration::from_secs(10)).build()?,
+            client: Client::builder()
+                .timeout(Duration::from_secs(10))
+                .cookie_store(true)
+                .build()?,
         })
+    }
+
+    /// Sign in a user from its credentials to retrieve a valid user token.
+    pub async fn sign_in_user(&self, username: &str, password: &str) {
+        let payload = HnSignInPayload {
+            acct: username,
+            pw: password,
+        };
+        let response = self
+            .client
+            .post(&format!("{}/login", HACKER_NEWS_WEBSITE_URL))
+            .json(&payload)
+            .send()
+            .await
+            .map_err(HnCliError::HttpError);
     }
 
     /// Try to fetch user data from its **case-sensitive** ID (the username).
