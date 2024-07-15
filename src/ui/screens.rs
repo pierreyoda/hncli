@@ -41,6 +41,9 @@ pub trait Screen: Debug + Send {
     /// Called after instantiation and before mounting the screen.
     fn before_mount(&mut self, _state: &mut AppState, _config: &AppConfiguration) {}
 
+    /// Called before unmounting the screen.
+    fn before_unmount(&mut self, _state: &mut AppState) {}
+
     /// Handle an incoming key event, at the application level.
     ///
     /// Returns the (event_response, new_route_if_navigated) tuple.

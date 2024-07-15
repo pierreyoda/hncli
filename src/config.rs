@@ -215,8 +215,7 @@ impl AppConfiguration {
     }
 
     fn get_config_file_path() -> Result<PathBuf> {
-        let project_os_directory = get_project_os_directory()?;
-        Ok(project_os_directory.join("hncli.toml"))
+        get_project_os_directory().map(|directory| directory.join("hncli.toml"))
     }
 }
 
