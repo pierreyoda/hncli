@@ -57,5 +57,3 @@ impl Screen for HelpScreen {
         components_registry.insert(HELP_ID, main_layout_chunks[0]);
     }
 }
-
-unsafe impl Send for HelpScreen {}

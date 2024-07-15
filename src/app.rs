@@ -97,8 +97,6 @@ impl<'a> AppContext<'a> {
     }
 }
 
-unsafe impl<'a> Send for AppContext<'a> {}
-
 /// Global application.
 #[derive(Debug)]
 pub struct App {
@@ -223,5 +221,3 @@ impl App {
         self.layout_components.get(id)
     }
 }
-
-unsafe impl Send for App {}

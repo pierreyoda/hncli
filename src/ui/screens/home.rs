@@ -77,5 +77,3 @@ impl Screen for HomeScreen {
         );
     }
 }
-
-unsafe impl Send for HomeScreen {}

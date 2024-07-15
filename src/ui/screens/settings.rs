@@ -62,5 +62,3 @@ impl Screen for SettingsScreen {
         );
     }
 }
-
-unsafe impl Send for SettingsScreen {}

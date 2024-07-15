@@ -145,5 +145,3 @@ impl Screen for StoryDetailsScreen {
         }
     }
 }
-
-unsafe impl Send for StoryDetailsScreen {}

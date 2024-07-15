@@ -151,5 +151,3 @@ impl Screen for SearchScreen {
         components_registry.insert(ALGOLIA_LIST_ID, main_layout_chunks[2]);
     }
 }
-
-unsafe impl Send for SearchScreen {}

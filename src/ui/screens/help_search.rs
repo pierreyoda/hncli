@@ -56,5 +56,3 @@ impl Screen for AlgoliaSearchScreenHelp {
         components_registry.insert(ALGOLIA_HELP_ID, main_layout_chunks[0]);
     }
 }
-
-unsafe impl Send for AlgoliaSearchScreenHelp {}

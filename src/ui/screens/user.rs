@@ -71,5 +71,3 @@ impl Screen for UserDetailsScreen {
         components_registry.insert(USER_PROFILE_ID, main_layout_chunks[0]);
     }
 }
-
-unsafe impl Send for UserDetailsScreen {}
