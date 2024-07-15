@@ -6,12 +6,40 @@ use crate::{
     },
     config::AppConfiguration,
     ui::{
-        common::UiComponentId,
+        common::{UiComponentId, UiTickScalar},
         components::{stories::STORIES_PANEL_ID, widgets::text_input::TextInputState},
         displayable_item::{DisplayableHackerNewsItem, DisplayableHackerNewsItemComments},
         screens::search::SearchScreenPart,
     },
 };
+
+#[derive(Debug)]
+pub struct FlashMessageState {
+    message: String,
+    /// None if indefinite.
+    remaining_ticks: Option<UiTickScalar>,
+}
+
+impl FlashMessageState {
+    pub fn get_message(&self) -> Option<&String> {
+        if let Some(remaining) = &self.remaining_ticks {
+            if *remaining > 0 {
+                return Some(&self.message);
+            }
+            return None;
+        }
+        Some(&self.message)
+    }
+
+    pub fn update(&mut self, elapsed_ticks: UiTickScalar) {
+        if let Some(remaining) = &mut self.remaining_ticks {
+            *remaining = match remaining.checked_sub(elapsed_ticks) {
+                Some(remaining) => remaining,
+                None => 0,
+            };
+        }
+    }
+}
 
 /// Global application state.
 /// TODO: avoid some cloning if not too inconvenient (current item viewed / current user from Screens)
@@ -46,6 +74,8 @@ pub struct AppState {
     currently_used_algolia_part: SearchScreenPart,
     /// The currently searched Hacker News Algolia category.
     currently_searched_algolia_category: Option<AlgoliaHnSearchTag>,
+    /// Flash message to display globally. Automatically clears after the configured duration.
+    flash_message: Option<FlashMessageState>,
 }
 
 impl AppState {
@@ -65,6 +95,7 @@ impl AppState {
             current_algolia_query_state: TextInputState::default(),
             currently_used_algolia_part: SearchScreenPart::Input,
             currently_searched_algolia_category: None,
+            flash_message: None,
         }
     }
 }
@@ -273,5 +304,36 @@ impl AppState {
         category: Option<AlgoliaHnSearchTag>,
     ) {
         self.currently_searched_algolia_category = category;
+    }
+
+    /// Is a flash message currently to be displayed?
+    pub fn has_flash_message(&self) -> bool {
+        if let Some(flash_state) = &self.flash_message {
+            flash_state.get_message().is_some()
+        } else {
+            false
+        }
+    }
+
+    /// Get the currently active flash message, if any.
+    pub fn get_flash_message_mut(&mut self) -> Option<&mut FlashMessageState> {
+        self.flash_message.as_mut()
+    }
+
+    /// Clear the currently active flash message.
+    pub fn clear_flash_message(&mut self) {
+        self.flash_message = None;
+    }
+
+    /// Set up a flash message to be displayed globally across the application.
+    pub fn set_flash_message<S: Into<String>>(
+        &mut self,
+        message: S,
+        duration: Option<UiTickScalar>,
+    ) {
+        self.flash_message = Some(FlashMessageState {
+            message: message.into(),
+            remaining_ticks: duration,
+        });
     }
 }

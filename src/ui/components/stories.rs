@@ -19,7 +19,7 @@ use crate::{
         HnClient,
     },
     app::AppContext,
-    errors::Result,
+    errors::{HnCliError, Result},
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         displayable_item::DisplayableHackerNewsItem,
@@ -101,26 +101,31 @@ impl UiComponent for StoriesPanel {
         let api = client.classic();
         let router = ctx.get_router();
         let displayable_stories = {
-            // TODO: harden error handling here (should not crash)
-            let stories =
+            let fetched_stories =
                 if let Some(current_section) = router.get_current_route().get_home_section() {
                     if current_section == &HnStoriesSections::Home {
-                        api.get_home_items(&sorting_type).await?
+                        api.get_home_items(&sorting_type).await
                     } else {
-                        api.get_home_section_items(current_section).await?
+                        api.get_home_section_items(current_section).await
                     }
                 } else {
-                    api.get_home_items(&sorting_type).await?
+                    api.get_home_items(&sorting_type).await
                 };
-            stories
-                .iter()
-                .take(self.list_cutoff)
-                .cloned()
-                .map(|raw_item| {
-                    DisplayableHackerNewsItem::try_from(raw_item)
-                        .expect("StoriesPanel.update: can map DisplayableHackerNewsItem")
-                })
-                .collect()
+            if let Ok(stories) = fetched_stories {
+                stories
+                    .iter()
+                    .take(self.list_cutoff)
+                    .cloned()
+                    .map(|raw_item| {
+                        DisplayableHackerNewsItem::try_from(raw_item)
+                            .expect("StoriesPanel.update: can map DisplayableHackerNewsItem")
+                    })
+                    .collect()
+            } else {
+                ctx.get_state_mut()
+                    .set_flash_message("Could not fetch HackerNews stories.", Some(50));
+                vec![]
+            }
         };
 
         self.list_state.replace_items(displayable_stories);
