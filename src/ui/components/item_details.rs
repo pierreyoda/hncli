@@ -1,8 +1,8 @@
 use async_trait::async_trait;
-use tui::{
+use ratatui::{
     layout::{Alignment, Rect},
     style::Style,
-    text::Spans,
+    text::Line,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
 
@@ -84,19 +84,19 @@ impl UiComponent for ItemDetails {
             .get_currently_viewed_item_comments()
             .map(|comments| comments.len());
         let text_base = vec![
-            Spans::from(item_title),
-            Spans::from(viewed_item.url_hostname.clone().unwrap_or_default()),
-            Spans::from(format!(
+            Line::from(item_title),
+            Line::from(viewed_item.url_hostname.clone().unwrap_or_default()),
+            Line::from(format!(
                 "{} points by {} {}",
                 viewed_item.score, viewed_item.by_username, viewed_item.posted_since
             )),
-            Spans::from(if let Some(count) = comments_count {
+            Line::from(if let Some(count) = comments_count {
                 format!("{} comments", count)
             } else {
                 "".into()
             }),
         ];
-        let text_corpus = Self::build_item_text_spans(self, inside, ctx);
+        let text_corpus = Self::build_item_text_Line(self, inside, ctx);
 
         let paragraph = Paragraph::new([text_base, text_corpus].concat())
             .block(block)
@@ -108,7 +108,7 @@ impl UiComponent for ItemDetails {
 }
 
 impl ItemDetails {
-    fn build_item_text_spans(&self, inside: Rect, ctx: &AppContext) -> Vec<Spans> {
+    fn build_item_text_Line(&self, inside: Rect, ctx: &AppContext) -> Vec<Line> {
         if let Some(ref corpus) = self.text {
             if ctx
                 .get_state()
@@ -117,11 +117,11 @@ impl ItemDetails {
                 vec![]
             } else {
                 let rendered = html_to_plain_text(corpus.as_str(), inside.width as usize);
-                let spans = rendered
+                let Line = rendered
                     .lines()
-                    .map(|line| Spans::from(line.to_string()))
+                    .map(|line| Line::from(line.to_string()))
                     .collect();
-                [vec![Spans::from(""), Spans::from("")], spans].concat()
+                [vec![Line::from(""), Line::from("")], Line].concat()
             }
         } else {
             vec![]

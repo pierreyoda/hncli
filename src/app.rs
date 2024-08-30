@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crossterm::event::KeyEvent;
-use tui::layout::Rect;
+use ratatui::layout::Rect;
 
 use crate::{
     api::client::HnStoriesSections,

@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use log::warn;
-use tui::layout::Rect;
+use ratatui::layout::Rect;
 
 use crate::{
     api::{types::HnItemIdScalar, HnClient},

@@ -1,5 +1,5 @@
 use log::warn;
-use tui::{
+use ratatui::{
     buffer::Buffer,
     layout::{Margin, Rect},
     style::{Color, Style},
@@ -198,7 +198,7 @@ impl<'a> Widget for ItemCommentsWidget<'a> {
         // Comment rendering
         let focused_comment_widget = CommentWidget::with_comment(focused_comment);
         focused_comment_widget.render(
-            area.inner(&Margin {
+            area.inner(Margin {
                 vertical: PADDING,
                 horizontal: PADDING,
             }),

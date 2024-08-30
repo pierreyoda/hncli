@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use tui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::ui::{common::UiComponentId, screens::ScreenComponentsRegistry};
 
@@ -117,7 +117,7 @@ impl Breakpoints {
 
 #[cfg(test)]
 mod tests {
-    use tui::layout::{Constraint, Rect};
+    use ratatui::layout::{Constraint, Rect};
 
     use crate::ui::{screens::ScreenComponentsRegistry, utils::breakpoints::Breakpoints};
 

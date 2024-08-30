@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 
-use tui::{
+use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
-    text::{Span, Spans},
+    text::{Line, Span},
     widgets::{Block, BorderType, Borders, Tabs},
 };
 
@@ -121,11 +121,11 @@ impl UiComponent for Navigation {
             _ => usize::MAX,
         };
         let selected_title = TABS_TITLES[current_tab_index];
-        let tabs_titles: Vec<Spans> = self
+        let tabs_titles: Vec<Line> = self
             .titles
             .iter()
             .map(|title| {
-                Spans::from(vec![Span::styled(
+                Line::from(vec![Span::styled(
                     *title,
                     Style::default()
                         .fg(Color::White)

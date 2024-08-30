@@ -1,8 +1,8 @@
 use async_trait::async_trait;
 
-use tui::{
+use ratatui::{
     layout::{Alignment::Center, Constraint, Direction, Layout, Rect},
-    text::Spans,
+    text::Line,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
 
@@ -54,21 +54,21 @@ impl AlgoliaHelp {
     fn render_help_block(f: &mut RenderFrame, inside: Rect) {
         // TODO: adapt text
         let text = vec![
-            Spans::from(""),
-            Spans::from("Press 'h' to toggle help."),
-            Spans::from(""),
-            Spans::from(""),
-            Spans::from("Navigate with the up/down arrows."),
-            Spans::from(""),
-            Spans::from(""),
-            Spans::from("Press 'escape' to navigate from the results list."),
-            Spans::from(""),
-            Spans::from(""),
-            Spans::from(
+            Line::from(""),
+            Line::from("Press 'h' to toggle help."),
+            Line::from(""),
+            Line::from(""),
+            Line::from("Navigate with the up/down arrows."),
+            Line::from(""),
+            Line::from(""),
+            Line::from("Press 'escape' to navigate from the results list."),
+            Line::from(""),
+            Line::from(""),
+            Line::from(
                 "For any result, open a tab in your browser for the selected story with 'o'.",
             ),
-            Spans::from(""),
-            Spans::from(""),
+            Line::from(""),
+            Line::from(""),
         ];
         let paragraph = Paragraph::new(text)
             .block(Self::get_common_block())

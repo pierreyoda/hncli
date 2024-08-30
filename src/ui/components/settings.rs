@@ -1,8 +1,8 @@
 use async_trait::async_trait;
-use tui::{
+use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
-    text::{Span, Spans},
+    text::{Line, Span},
     widgets::{Block, BorderType, Borders, Paragraph},
 };
 
@@ -64,10 +64,10 @@ impl SettingsControl {
             .split(inside);
 
         let label_text = vec![
-            Spans::from(""),
-            Spans::from(""),
-            Spans::from(""),
-            Spans::from(Span::styled(
+            Line::from(""),
+            Line::from(""),
+            Line::from(""),
+            Line::from(Span::styled(
                 self.label.as_str(),
                 Style::default().fg(if is_active {
                     Color::Yellow
@@ -80,10 +80,10 @@ impl SettingsControl {
         f.render_widget(label_paragraph, chunks[0]);
 
         let value_text = vec![
-            Spans::from(""),
-            Spans::from(""),
-            Spans::from(""),
-            Spans::from(self.option.get_representation()),
+            Line::from(""),
+            Line::from(""),
+            Line::from(""),
+            Line::from(self.option.get_representation()),
         ];
         let value_paragraph = Paragraph::new(value_text).alignment(Alignment::Right);
         f.render_widget(value_paragraph, chunks[1]);
@@ -151,7 +151,7 @@ impl UiComponent for Settings {
 
         // header block
         if chunks[0].height > 0 {
-            let header_text = vec![Spans::from("Settings")];
+            let header_text = vec![Line::from("Settings")];
             let header_paragraph = Paragraph::new(header_text)
                 .block(Self::get_common_block())
                 .alignment(Alignment::Center);

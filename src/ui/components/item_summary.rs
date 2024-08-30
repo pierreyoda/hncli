@@ -1,8 +1,8 @@
 use async_trait::async_trait;
-use tui::{
+use ratatui::{
     layout::{Alignment, Rect},
     style::Style,
-    text::Spans,
+    text::Line,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
 
@@ -74,8 +74,8 @@ impl UiComponent for ItemSummary {
             .border_type(BorderType::Rounded);
 
         let text_base = vec![
-            Spans::from(format!("Parent comment by: {}", parent_comment.by_username)),
-            Spans::from(format!(
+            Line::from(format!("Parent comment by: {}", parent_comment.by_username)),
+            Line::from(format!(
                 "Sub-comment level: {}",
                 ctx.get_state()
                     .get_currently_viewed_item_comments_chain()

@@ -1,7 +1,7 @@
 use async_trait::async_trait;
-use tui::{
+use ratatui::{
     layout::{Alignment::Center, Constraint, Direction, Layout, Rect},
-    text::Spans,
+    text::Line,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
 
@@ -51,21 +51,21 @@ impl UiComponent for AlgoliaHelp {
 impl AlgoliaHelp {
     fn render_help_block(f: &mut RenderFrame, inside: Rect) {
         let text = vec![
-            Spans::from("=== Algolia Search Help ==="),
-            Spans::from(""),
-            Spans::from("Press 'h' to toggle help."),
-            Spans::from(""),
-            Spans::from("Press 'Escape' to return to the search screen."),
-            Spans::from(""),
-            Spans::from("Navigate the sections with the up and down arrow keys."),
-            Spans::from(""),
-            Spans::from("--- Results sections ---"),
-            Spans::from(""),
-            Spans::from("Press 'Enter' to focus, and 'Escape' to unfocus."),
-            Spans::from(""),
-            Spans::from("Navigate the results with the up and down arrow keys."),
-            Spans::from(""),
-            Spans::from("On a result entry, press 'o' to visit the link, and 'l' for the Hacker News comments."),
+            Line::from("=== Algolia Search Help ==="),
+            Line::from(""),
+            Line::from("Press 'h' to toggle help."),
+            Line::from(""),
+            Line::from("Press 'Escape' to return to the search screen."),
+            Line::from(""),
+            Line::from("Navigate the sections with the up and down arrow keys."),
+            Line::from(""),
+            Line::from("--- Results sections ---"),
+            Line::from(""),
+            Line::from("Press 'Enter' to focus, and 'Escape' to unfocus."),
+            Line::from(""),
+            Line::from("Navigate the results with the up and down arrow keys."),
+            Line::from(""),
+            Line::from("On a result entry, press 'o' to visit the link, and 'l' for the Hacker News comments."),
         ];
         let paragraph = Paragraph::new(text)
             .block(Self::get_common_block())

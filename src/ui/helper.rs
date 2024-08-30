@@ -1,6 +1,6 @@
-use tui::{
+use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    text::Spans,
+    text::Line,
     widgets::Paragraph,
 };
 
@@ -34,7 +34,7 @@ impl HelpWidget {
                 format!("{} - {} to {}", icon, key.get_representation(), text)
             }
         };
-        let text = vec![Spans::from(widget_text)];
+        let text = vec![Line::from(widget_text)];
         let paragraph = Paragraph::new(text).alignment(Alignment::Center);
 
         f.render_widget(paragraph, inside);

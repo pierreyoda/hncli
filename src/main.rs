@@ -7,7 +7,7 @@ use simplelog::{Config, WriteLogger};
 
 use api::HnClient;
 use errors::HnCliError;
-use tui::{backend::CrosstermBackend, Terminal};
+use ratatui::{backend::CrosstermBackend, Terminal};
 use ui::UserInterface;
 
 mod api;

@@ -11,7 +11,7 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode},
 };
 use flash::FlashMessage;
-use tui::{
+use ratatui::{
     backend::CrosstermBackend,
     layout::{Direction, Layout},
     Terminal,

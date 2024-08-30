@@ -1,7 +1,5 @@
-use std::io::Stdout;
-
 use async_trait::async_trait;
-use tui::{backend::CrosstermBackend, layout::Rect, Frame};
+use ratatui::{layout::Rect, Frame};
 
 use crate::{api::HnClient, app::AppContext, errors::Result};
 
@@ -11,7 +9,7 @@ pub type UiTickScalar = u64;
 /// A hashable type for application-unique component IDs.
 pub type UiComponentId = &'static str;
 
-pub type RenderFrame<'a> = Frame<'a, CrosstermBackend<Stdout>>;
+pub type RenderFrame<'a> = Frame<'a>;
 
 /// A `Component` in this Terminal UI context is a self-contained
 /// widget or group of widgets with each their own updating,

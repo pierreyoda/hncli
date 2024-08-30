@@ -1,8 +1,8 @@
 use async_trait::async_trait;
-use tui::{
+use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
-    text::{Span, Spans},
+    text::{Line, Span},
     widgets::{Block, BorderType, Borders, Tabs},
 };
 
@@ -114,12 +114,12 @@ impl UiComponent for AlgoliaTags {
     }
 
     fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
-        let tabs_titles = self
+        let tabs_titles: Vec<Line> = self
             .titles
             .iter()
             .enumerate()
             .map(|(i, title)| {
-                Spans::from(vec![Span::styled(
+                Line::from(vec![Span::styled(
                     *title,
                     Style::default().fg(Color::White).add_modifier(
                         if Some(i) == self.selected_index {
