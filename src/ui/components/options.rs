@@ -1,10 +1,10 @@
 use std::convert::TryInto;
 
 use async_trait::async_trait;
-use tui::{
+use ratatui::{
     layout::Rect,
     style::{Color, Style},
-    text::{Span, Spans},
+    text::{Line, Span},
     widgets::{Block, BorderType, Borders, Tabs},
 };
 
@@ -123,11 +123,11 @@ impl UiComponent for Options {
             .borders(Borders::ALL)
             .title("Options (S to toggle sorting)");
 
-        let tabs_titles: Vec<Spans> = SORTING_OPTIONS_LIST
+        let tabs_titles: Vec<Line> = SORTING_OPTIONS_LIST
             .iter()
             .enumerate()
             .map(|(i, sorting_option)| {
-                Spans::from(Span::styled(
+                Line::from(Span::styled(
                     sorting_option.get_label(),
                     Style::default().fg(if i == self.selected_sorting_index {
                         Color::Yellow

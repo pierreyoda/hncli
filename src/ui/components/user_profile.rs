@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 use log::warn;
-use tui::{
+use ratatui::{
     layout::{Alignment, Rect},
     style::Style,
-    text::Spans,
+    text::Line,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
 
@@ -144,9 +144,9 @@ impl UiComponent for UserProfile {
             .border_type(BorderType::Rounded);
 
         let text_base = vec![
-            Spans::from(viewed_user.id.to_string()),
-            Spans::from(format!("Created: {}", viewed_user.created_at_formatted)),
-            Spans::from(format!("Karma: {}", viewed_user.karma)),
+            Line::from(viewed_user.id.to_string()),
+            Line::from(format!("Created: {}", viewed_user.created_at_formatted)),
+            Line::from(format!("Karma: {}", viewed_user.karma)),
         ];
         let about_corpus = self.build_user_about_spans(inside, &viewed_user.about);
 
@@ -160,15 +160,15 @@ impl UiComponent for UserProfile {
 }
 
 impl UserProfile {
-    fn build_user_about_spans(&self, inside: Rect, about: &Option<String>) -> Vec<Spans> {
+    fn build_user_about_spans(&self, inside: Rect, about: &Option<String>) -> Vec<Line> {
         if let Some(corpus) = about {
             let rendered = html_to_plain_text(corpus.as_str(), inside.width as usize);
             let spans = rendered
                 .lines()
-                .map(|line| Spans::from(line.to_string()))
+                .map(|line| Line::from(line.to_string()))
                 .collect();
             [
-                vec![Spans::from(""), Spans::from(""), Spans::from("About:")],
+                vec![Line::from(""), Line::from(""), Line::from("About:")],
                 spans,
             ]
             .concat()

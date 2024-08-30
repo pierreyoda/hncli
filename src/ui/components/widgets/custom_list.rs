@@ -28,11 +28,11 @@ use std::{collections::HashMap, hash::Hash};
 use unicode_width::UnicodeWidthStr;
 
 use num_traits::Num;
-use tui::{
+use ratatui::{
     buffer::Buffer,
-    layout::{Corner, Rect},
+    layout::Rect,
     style::Style,
-    widgets::{Block, Widget},
+    widgets::{Block, ListDirection, Widget},
 };
 
 use crate::ui::utils::ItemWithId;
@@ -157,7 +157,8 @@ where
     block: Option<Block<'a>>,
     /// Style used as a base style for the widget.
     style: Style,
-    start_corner: Corner,
+    /// List display direction.
+    direction: ListDirection,
     /// Style used to render selected item.
     highlight_style: Style,
     /// Symbol in front of the selected item (shift all items to the right)?
@@ -183,7 +184,7 @@ where
         Self {
             block: None,
             style: Style::default(),
-            start_corner: Corner::TopLeft,
+            direction: ListDirection::default(),
             highlight_style: Style::default(),
             highlight_symbol: None,
             state,
@@ -321,17 +322,15 @@ where
             .take(end - start)
         {
             let item_height = access_item_height(item);
-            let (x, y) = match self.start_corner {
-                Corner::BottomLeft => {
-                    current_height += item_height as u16;
-                    (list_area.left(), list_area.bottom() - current_height)
-                }
-                _ => {
-                    let pos = (list_area.left(), list_area.top() + current_height);
-                    current_height += item_height as u16;
-                    pos
-                }
+            let (x, y) = if self.direction == ListDirection::BottomToTop {
+                current_height += item_height as u16;
+                (list_area.left(), list_area.bottom() - current_height)
+            } else {
+                let pos = (list_area.left(), list_area.top() + current_height);
+                current_height += item_height as u16;
+                pos
             };
+
             let area = Rect {
                 x,
                 y,

@@ -4,10 +4,10 @@ use std::convert::TryFrom;
 
 use async_trait::async_trait;
 
-use tui::{
+use ratatui::{
     layout::{Alignment, Rect},
     style::{Color, Style},
-    text::Spans,
+    text::Line,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
 use unicode_width::UnicodeWidthStr;
@@ -196,7 +196,7 @@ impl UiComponent for StoriesPanel {
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded);
 
-            let text = vec![Spans::from(""), Spans::from(self.loader.text())];
+            let text = vec![Line::from(""), Line::from(self.loader.text())];
             let paragraph = Paragraph::new(text)
                 .block(block)
                 .alignment(Alignment::Center);

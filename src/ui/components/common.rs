@@ -1,7 +1,7 @@
-use tui::{
+use ratatui::{
     layout::{Alignment, Rect},
     style::{Color, Style},
-    text::Spans,
+    text::Line,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
 
@@ -15,7 +15,7 @@ pub fn render_text_message(f: &mut RenderFrame, inside: Rect, message: &str) {
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded);
 
-    let text = vec![Spans::from(""), Spans::from(message.to_string())];
+    let text = vec![Line::from(""), Line::from(message.to_string())];
     let paragraph = Paragraph::new(text)
         .block(block)
         .alignment(Alignment::Center);

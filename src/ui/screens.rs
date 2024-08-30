@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::Debug};
 
-use tui::layout::Rect;
+use ratatui::layout::Rect;
 
 use crate::{
     app::{history::AppHistory, state::AppState},

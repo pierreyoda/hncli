@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use tui::layout::Rect;
+use ratatui::layout::Rect;
 
 use crate::{
     api::HnClient,

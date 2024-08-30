@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use tui::{
+use ratatui::{
     layout::Rect,
     style::{Color, Style},
     widgets::{Block, BorderType, Borders},

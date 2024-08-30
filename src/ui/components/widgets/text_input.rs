@@ -26,10 +26,10 @@
 
 // TODO: make a separate crate?
 
-use tui::{
+use ratatui::{
     buffer::Buffer,
     layout::Rect,
-    style::Style,
+    style::{Color, Style},
     widgets::{Block, Widget},
 };
 
@@ -275,7 +275,7 @@ impl<'a> Widget for TextInputWidget<'a> {
                 area.x + cursor_index,
                 area.y,
                 " ",
-                Style::default().bg(tui::style::Color::LightYellow),
+                Style::default().bg(Color::LightYellow),
             );
         }
     }
