@@ -9,12 +9,12 @@
   <div class="website-container">
     <div class="lg:grid lg:grid-cols-12 lg:gap-x-8 lg:gap-y-20">
       <div class="relative z-10 mx-auto mx-w-2xl lg:col-span-7 lg:max-w-none lg:pt-6 xl:col-span-6">
-        <h1 class="text-4xl font-medium tracking-tight text-gray-900">Read Hacker News in your terminal</h1>
+        <h2 class="text-4xl font-medium tracking-tight text-gray-900">Read Hacker News in your terminal</h2>
         <p class="mt-6 text-lg text-gray-600">
           A convenient - and discreet - way to browse Y Combinator's Hacker News right inside your terminal.
         </p>
         <div class="mt-8 flex">
-          <Button variant="solid" color="cyan" href="https://news.ycombinator.com" externalLink>Hacker News</Button>
+          <Button variant="solid" color="red" href="https://news.ycombinator.com" externalLink>Hacker News</Button>
         </div>
       </div>
       <div class="relative mt-10 sm:mt-20 lg:col-span-5 lg:row-span-2 lg:mt-0 xl:col-span-6">

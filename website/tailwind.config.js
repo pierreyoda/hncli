@@ -2,7 +2,13 @@
 export default {
   content: ["./src/**/*.{html,js,svelte,ts}"],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        hncli: {
+          "dark-red": "#5e1914",
+        },
+      },
+    },
   },
   plugins: [],
 };
