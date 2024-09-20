@@ -6,7 +6,7 @@
   <div class="website-container">
     <div class="flex flex-col md:flex-row items-center justify-between">
       <div class="half-section">
-        <h2 class="text-white text-4xl font-medium tracking-tight">An issue? Wanting to contribute?</h2>
+        <h2 class="text-white text-4xl font-medium tracking-tight">Any issue? Wanting to contribute?</h2>
       </div>
       <div class="half-section mt-12 md:mt-0 text-4xl">
         <Button
