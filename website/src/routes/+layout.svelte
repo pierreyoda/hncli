@@ -1,6 +1,5 @@
 <script lang="ts">
   import "../app.css";
-  import "../../node_modules/asciinema-player/dist/bundle/asciinema-player.css";
 
   import Header from "$lib/Header.svelte";
   import Footer from "$lib/Footer.svelte";
