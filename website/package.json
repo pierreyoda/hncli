@@ -16,7 +16,6 @@
         "@sveltejs/kit": "2.5.27",
         "@sveltejs/vite-plugin-svelte": "3.1.2",
         "@types/eslint": "9.6.1",
-        "asciinema-player": "3.8.0",
         "autoprefixer": "10.4.20",
         "eslint-config-prettier": "9.1.0",
         "eslint-plugin-svelte": "2.44.0",
