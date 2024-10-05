@@ -25,6 +25,6 @@
 
 <style lang="postcss">
   .half-section {
-    @apply flex w-1/2 flex-col items-center justify-start;
+    @apply flex w-1/2 flex-col items-center justify-start text-center md:text-left;
   }
 </style>

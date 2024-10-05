@@ -8,8 +8,8 @@
 </script>
 
 <div class="feature">
-  <div class="flex items-center" class:flex-row-reverse={reversed}>
-    <div class="flex flex-col items-start">
+  <div class="flex flex-col lg:flex-row items-center" class:reversed>
+    <div class="flex flex-col items-center lg:items-start">
       <h2 class="title">{title}</h2>
       <p class="description">{description}</p>
     </div>
@@ -19,7 +19,11 @@
 
 <style lang="postcss">
   .feature {
-    @apply bg-gray-900 py-12 sm:py-20;
+    @apply bg-gray-900 py-6 text-center md:py-20 lg:text-left;
+
+    .reversed {
+      @apply lg:flex-row-reverse;
+    }
 
     .title {
       @apply text-3xl font-medium tracking-tight text-white;
