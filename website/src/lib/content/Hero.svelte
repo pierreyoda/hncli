@@ -4,7 +4,7 @@
   import HnCliDemoVideo from "$lib/assets/hncli-demo.mp4";
 </script>
 
-<section aria-label="Hero section" class="overflow-hidden pb-4">
+<section id="hero" aria-label="Hero section" class="overflow-hidden pb-4">
   <div class="website-container flex flex-col mx-auto mx-w-2xl">
     <div class="text-center mx-auto pb-6">
       <h2 class="text-4xl font-semibold tracking-tight text-gray-900">Read Hacker News in your terminal</h2>

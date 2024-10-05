@@ -1,12 +1,6 @@
 <script lang="ts">
   import GitHubLogo from "$lib/assets/github.svg";
   import HnCliTextLogo from "$lib/assets/hncli-logo-text.png";
-
-  type NavbarLink = {
-    label: string;
-    href: string;
-  };
-  const navbarLinks: readonly NavbarLink[] = [{ label: "Features", href: "/#features" }];
 </script>
 
 <header class="website-container flex items-center justify-between">

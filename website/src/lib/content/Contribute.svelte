@@ -2,7 +2,7 @@
   import Button from "$lib/Button.svelte";
 </script>
 
-<section aria-label="Contribute to hncli" class="bg-gray-900 py-20 sm:py-32 mt-12">
+<section id="contribute" aria-label="Contribute to hncli" class="bg-gray-900 py-20 sm:py-32 mt-12">
   <div class="website-container">
     <div class="flex flex-col md:flex-row items-center justify-between">
       <div class="half-section">
