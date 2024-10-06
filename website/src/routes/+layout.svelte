@@ -5,6 +5,11 @@
   import Footer from "$lib/Footer.svelte";
 </script>
 
+<svelte:head>
+  <title>hncli</title>
+  <meta name="description" content="hncli, a modern TUI for browsing Hacker News" />
+</svelte:head>
+
 <div class="w-full">
   <Header />
   <main class="flex-auto">
