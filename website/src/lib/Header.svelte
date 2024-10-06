@@ -3,9 +3,9 @@
   import HnCliTextLogo from "$lib/assets/hncli-logo-text.png";
 </script>
 
-<header class="website-container flex items-center justify-between">
+<header class="website-container">
   <div />
-  <nav>
+  <nav class="mr-12 md:mr-0">
     <a href="/" aria-label="Home" class="flex items-center">
       <img alt="Wrench icon" src={HnCliTextLogo} class="max-w-40 h-auto" />
       <h1 class="hidden">hncli</h1>
@@ -18,7 +18,7 @@
 
 <style lang="postcss">
   header {
-    @apply py-8;
+    @apply mx-0 flex items-center py-8 md:justify-between;
   }
 
   nav {
