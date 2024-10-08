@@ -1,9 +1,9 @@
 <script lang="ts">
   import FeatureFocus from "./FeatureFocus.svelte";
 
-  import CommentsScreenshot from "$lib/assets/hncli-comments.png";
-  import SettingsScreenshot from "$lib/assets/hncli-settings.png";
-  import ContextualHelpScreenshot from "$lib/assets/hncli-contextual-help.png";
+  import CommentsScreenshot from "$lib/assets/hncli-comments.webp";
+  import SettingsScreenshot from "$lib/assets/hncli-settings.webp";
+  import ContextualHelpScreenshot from "$lib/assets/hncli-contextual-help.webp";
 </script>
 
 <section id="screenshots" aria-label="hncli screenshots" class="features-container">
