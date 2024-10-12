@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 
 use crate::{
     api::{
-        client::HnItemComments,
+        client::{HnItemComments, HnStoredItemCommentsIds},
         types::{HnItem, HnItemIdScalar},
     },
     errors::{HnCliError, Result},
@@ -16,6 +16,20 @@ use super::utils::{datetime_from_hn_time, ItemWithId};
 
 /// Flat storage structure for a displayable comments thread.
 pub type DisplayableHackerNewsItemComments = HashMap<HnItemIdScalar, DisplayableHackerNewsItem>;
+
+pub trait CachedHackerNewsItemCommentsIds {
+    fn to_cached_ids(&self) -> HnStoredItemCommentsIds;
+}
+
+impl CachedHackerNewsItemCommentsIds for DisplayableHackerNewsItemComments {
+    fn to_cached_ids(&self) -> HnStoredItemCommentsIds {
+        let mut cached = HnStoredItemCommentsIds::with_capacity(self.len());
+        for displayable_comment_id in self.keys() {
+            cached.insert(*displayable_comment_id, true);
+        }
+        cached
+    }
+}
 
 /// A display-ready Hacker News story, comment, job or poll posting.
 #[derive(Clone, Debug, PartialEq, Eq)]
