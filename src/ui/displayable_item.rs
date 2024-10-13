@@ -25,7 +25,7 @@ impl CachedHackerNewsItemCommentsIds for DisplayableHackerNewsItemComments {
     fn to_cached_ids(&self) -> HnStoredItemCommentsIds {
         let mut cached = HnStoredItemCommentsIds::with_capacity(self.len());
         for displayable_comment_id in self.keys() {
-            cached.insert(*displayable_comment_id, true);
+            cached.insert(*displayable_comment_id, ());
         }
         cached
     }

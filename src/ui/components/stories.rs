@@ -142,6 +142,7 @@ impl UiComponent for StoriesPanel {
         Ok(())
     }
 
+    // TODO: when entering then leaving item details, cannot re-enter without moving in the items list
     fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
         if ctx.get_state().get_main_stories_loading() {
             return Ok(false);

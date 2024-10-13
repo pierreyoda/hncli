@@ -29,8 +29,6 @@ pub struct ItemTopLevelComments {
     common: ItemCommentsCommon,
 }
 
-// TODO: fix behavior when stuck (ALL inputs not working) in top/nested comments (probably due to update's awaits)...
-// TODO: ...maybe perform updates in another thread?
 #[async_trait]
 impl UiComponent for ItemTopLevelComments {
     fn id(&self) -> UiComponentId {

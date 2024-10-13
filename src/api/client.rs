@@ -73,7 +73,7 @@ pub struct ClassicHnClient {
 pub type HnItemComments = HashMap<HnItemIdScalar, HnItem>;
 
 /// Flat storage structure for O(1) check of already fetched comments.
-pub type HnStoredItemCommentsIds = HashMap<HnItemIdScalar, bool>;
+pub type HnStoredItemCommentsIds = HashMap<HnItemIdScalar, ()>;
 
 // TODO: timeouts should be logged and not panic in every case except first ever request (how to track?)
 impl ClassicHnClient {
@@ -175,6 +175,7 @@ impl ClassicHnClient {
     pub async fn get_item_comments(
         &self,
         descendants_ids: &[HnItemIdScalar],
+        // TODO: each cached comment should have a timestamp for auto-refresh
         cached_comments_ids: &HnStoredItemCommentsIds,
         hard_refresh: bool,
     ) -> Result<HnItemComments> {
