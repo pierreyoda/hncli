@@ -72,6 +72,9 @@ pub struct ClassicHnClient {
 /// Flat storage structure for a comments thread.
 pub type HnItemComments = HashMap<HnItemIdScalar, HnItem>;
 
+/// Flat storage structure for O(1) check of already fetched comments.
+pub type HnStoredItemCommentsIds = HashMap<HnItemIdScalar, ()>;
+
 // TODO: timeouts should be logged and not panic in every case except first ever request (how to track?)
 impl ClassicHnClient {
     pub fn new() -> Result<Self> {
@@ -172,36 +175,56 @@ impl ClassicHnClient {
     pub async fn get_item_comments(
         &self,
         descendants_ids: &[HnItemIdScalar],
+        // TODO: each cached comment should have a timestamp for auto-refresh
+        cached_comments_ids: &HnStoredItemCommentsIds,
+        hard_refresh: bool,
     ) -> Result<HnItemComments> {
-        let main_descendants = self.get_items(descendants_ids).await?;
+        let filter_comment_id = |id: &HnItemIdScalar| {
+            if hard_refresh {
+                true
+            } else {
+                !cached_comments_ids.contains_key(id)
+            }
+        };
 
-        let descendants = join_all(
-            main_descendants
-                .iter()
-                .map(|descendant| self.get_item_comments(descendant.get_kids().unwrap_or(&[]))),
-        )
-        .await;
+        let main_descendants_ids: Vec<HnItemIdScalar> = descendants_ids
+            .iter()
+            .filter(|id| filter_comment_id(id))
+            .copied()
+            .collect();
+        let main_descendants = self.get_items(&main_descendants_ids).await?;
+
+        let descendants_ids: Vec<HnItemIdScalar> = main_descendants
+            .iter()
+            .fold(vec![], |mut acc: Vec<HnItemIdScalar>, descendant| {
+                let descendant_kids_ids = descendant.get_kids().unwrap_or(&[]);
+                acc.extend(
+                    descendant_kids_ids
+                        .iter()
+                        .filter(|id| filter_comment_id(id)),
+                );
+                acc
+            })
+            .iter()
+            .copied()
+            .collect();
+        let descendants = if descendants_ids.is_empty() {
+            HnItemComments::new()
+        } else {
+            self.get_item_comments(&descendants_ids, cached_comments_ids, hard_refresh)
+                .await?
+        };
 
         // TODO: this could probably be faster
-        let mut error = None;
         let mut item_comments = HnItemComments::new();
         for main_descendant in main_descendants {
             item_comments.insert(main_descendant.get_id(), main_descendant);
         }
-        descendants
-            .into_iter()
-            .for_each(|comments_branch_result| match comments_branch_result {
-                Ok(comments_branch) => {
-                    for (comment_id, comment) in comments_branch {
-                        item_comments.insert(comment_id, comment);
-                    }
-                }
-                Err(why) => error = Some(why),
-            });
-        match error {
-            Some(why) => Err(why),
-            None => Ok(item_comments),
+        for (descendant_id, descendant_item) in descendants {
+            item_comments.insert(descendant_id, descendant_item);
         }
+
+        Ok(item_comments)
     }
 
     /// Try to fetch the `HnItem` by its given ID.

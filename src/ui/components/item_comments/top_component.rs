@@ -8,7 +8,10 @@ use crate::{
     errors::Result,
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
-        displayable_item::DisplayableHackerNewsItem,
+        displayable_item::{
+            CachedHackerNewsItemCommentsIds, DisplayableHackerNewsItem,
+            DisplayableHackerNewsItemComments,
+        },
         handlers::ApplicationAction,
         router::AppRoute,
     },
@@ -26,8 +29,6 @@ pub struct ItemTopLevelComments {
     common: ItemCommentsCommon,
 }
 
-// TODO: fix behavior when stuck (ALL inputs not working) in top/nested comments (probably due to update's awaits)...
-// TODO: ...maybe perform updates in another thread?
 #[async_trait]
 impl UiComponent for ItemTopLevelComments {
     fn id(&self) -> UiComponentId {
@@ -112,9 +113,14 @@ impl UiComponent for ItemTopLevelComments {
             .map_or(vec![], |kids| kids.to_vec()); // TODO: can we avoid the Vec here?
 
         // Comments fetching
+        let cached_comments_ids = ctx
+            .get_state()
+            .get_currently_viewed_item_comments()
+            .unwrap_or(&DisplayableHackerNewsItemComments::new())
+            .to_cached_ids();
         let comments_raw = client
             .classic()
-            .get_item_comments(parent_item_kids.as_slice())
+            .get_item_comments(parent_item_kids.as_slice(), &cached_comments_ids, false)
             .await?;
         let comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
         ctx.get_state_mut()

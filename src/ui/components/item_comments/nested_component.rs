@@ -1,5 +1,7 @@
+use std::collections::HashMap;
+
 use async_trait::async_trait;
-use log::warn;
+use log::{info, warn};
 use ratatui::layout::Rect;
 
 use crate::{
@@ -8,7 +10,10 @@ use crate::{
     errors::Result,
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
-        displayable_item::DisplayableHackerNewsItem,
+        displayable_item::{
+            CachedHackerNewsItemCommentsIds, DisplayableHackerNewsItem,
+            DisplayableHackerNewsItemComments,
+        },
         handlers::ApplicationAction,
         router::AppRoute,
     },
@@ -67,9 +72,14 @@ impl UiComponent for CommentItemNestedComments {
         };
 
         // Comments fetching
+        let cached_comments_ids = ctx
+            .get_state()
+            .get_currently_viewed_item_comments()
+            .unwrap_or(&DisplayableHackerNewsItemComments::new())
+            .to_cached_ids();
         let comments_raw = client
             .classic()
-            .get_item_comments(parent_comment_kids.as_slice())
+            .get_item_comments(parent_comment_kids.as_slice(), &cached_comments_ids, false)
             .await?;
         let comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
         ctx.get_state_mut()

@@ -159,8 +159,6 @@ impl AppState {
         &mut self,
         comments: Option<DisplayableHackerNewsItemComments>,
     ) {
-        self.update_currently_viewed_item_kids_from_fetched_comments(&comments);
-
         // Different item: replace the comments
         if self.currently_viewed_item_switched {
             self.currently_viewed_item_comments = comments;
@@ -178,23 +176,6 @@ impl AppState {
             // else: when no further children comments are found, we preserve our current comments cache for this item
         } else {
             self.currently_viewed_item_comments = comments;
-        }
-    }
-
-    /// Ensure that there are no invalid (*i.e.*, from our point of view, unfetchable) comment kids in our currently viewed item.
-    fn update_currently_viewed_item_kids_from_fetched_comments(
-        &mut self,
-        comments: &Option<DisplayableHackerNewsItemComments>,
-    ) {
-        if let Some(viewed_item) = &mut self.currently_viewed_item {
-            if let Some(cached_comments) = comments {
-                viewed_item.kids = viewed_item.kids.as_ref().map(|kids| {
-                    kids.iter()
-                        .filter(|kid_id| cached_comments.contains_key(*kid_id))
-                        .cloned()
-                        .collect()
-                });
-            }
         }
     }
 
