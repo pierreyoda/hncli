@@ -51,7 +51,7 @@ impl Screen for HelpScreen {
         let main_layout_chunks = Layout::default()
             .direction(Direction::Vertical)
             .margin(2)
-            .constraints([Constraint::Length(1)].as_ref())
+            .constraints([Constraint::Percentage(100)].as_ref())
             .split(frame_size);
 
         components_registry.insert(HELP_ID, main_layout_chunks[0]);
