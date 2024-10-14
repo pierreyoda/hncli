@@ -20,9 +20,7 @@ use crate::{
 
 use super::common::COMMON_BLOCK_NORMAL_COLOR;
 
-const TABS_TITLES: [&str; 7] = [
-    "Home", "Ask HN", "Show HN", "Jobs", "Search", "Settings", "Help",
-];
+const TABS_TITLES: [&str; 6] = ["Home", "Ask HN", "Show HN", "Jobs", "Settings", "Help"];
 
 /// The Navigation bar provides a convenient way to switch between screens
 /// by either pressing the hotkey associated with the title, or by
@@ -61,9 +59,8 @@ impl Navigation {
             1 => AppRoute::Home(HnStoriesSections::Ask),
             2 => AppRoute::Home(HnStoriesSections::Show),
             3 => AppRoute::Home(HnStoriesSections::Jobs),
-            4 => AppRoute::Search,
-            5 => AppRoute::Settings,
-            6 => AppRoute::Help,
+            4 => AppRoute::Settings,
+            5 => AppRoute::Help,
             _ => unreachable!(),
         };
         ctx.get_state_mut().set_main_stories_loading(true);
@@ -115,9 +112,8 @@ impl UiComponent for Navigation {
                 HnStoriesSections::Show => 2,
                 HnStoriesSections::Jobs => 3,
             },
-            AppRoute::Search => 4,
-            AppRoute::Settings => 5,
-            AppRoute::Help => 6,
+            AppRoute::Settings => 4,
+            AppRoute::Help => 5,
             _ => usize::MAX,
         };
         let selected_title = TABS_TITLES[current_tab_index];
@@ -174,12 +170,11 @@ mod tests {
         navigation.next();
         navigation.next();
         navigation.next();
-        navigation.next();
         assert_eq!(navigation.selected_index, 0);
 
         navigation.previous();
-        assert_eq!(navigation.selected_index, 6);
-        navigation.previous();
         assert_eq!(navigation.selected_index, 5);
+        navigation.previous();
+        assert_eq!(navigation.selected_index, 4);
     }
 }

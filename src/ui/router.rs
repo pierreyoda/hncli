@@ -6,8 +6,8 @@ use crate::{
     config::AppConfiguration,
     ui::screens::{
         help::HelpScreen, home::HomeScreen, nested_comments::NestedCommentsScreen,
-        search::SearchScreen, search_help::SearchHelpScreen, settings::SettingsScreen,
-        story::StoryDetailsScreen, user::UserDetailsScreen,
+        search_help::SearchHelpScreen, settings::SettingsScreen, story::StoryDetailsScreen,
+        user::UserDetailsScreen,
     },
 };
 
@@ -25,7 +25,7 @@ pub enum AppRoute {
     /// User profile screen. Only stores the user ID.
     UserProfile(String),
     /// Algolia-based search screen.
-    Search,
+    // Search, // NB: disabled due to unofficial Algolia HN API becoming very limited
     /// Algolia-based search screen help.
     SearchHelp,
     /// Settings screen.
@@ -51,7 +51,8 @@ impl AppRoute {
     }
 
     pub fn is_in_search_mode(&self) -> bool {
-        matches!(self, AppRoute::Search | AppRoute::SearchHelp)
+        false
+        // matches!(self, AppRoute::Search | AppRoute::SearchHelp)
     }
 
     pub fn is_settings(&self) -> bool {
@@ -119,7 +120,6 @@ impl AppRouter {
         match route {
             Help => Box::new(HelpScreen::new()),
             Settings => Box::new(SettingsScreen::new()),
-            Search => Box::new(SearchScreen::new()),
             SearchHelp => Box::new(SearchHelpScreen::new()),
             Home(section) => Box::new(HomeScreen::new(section)),
             ItemDetails(item) => Box::new(StoryDetailsScreen::new(item)),
