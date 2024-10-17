@@ -17,6 +17,8 @@ pub enum HnCliError {
     ThreadingError(#[from] RecvError),
     #[error("Crossterm error: {0}")]
     CrosstermError(String),
+    #[error("html2text error: {0}")]
+    Html2TextError(#[source] html2text::Error),
     #[error("Config synchronization error: {0}")]
     ConfigSynchronizationError(String),
     #[error("History synchronization error: {0}")]

@@ -23,8 +23,8 @@ pub fn datetime_from_hn_time(time: HnItemDateScalar) -> Result<DateTime<Utc>> {
 /// Convert HTML to plain text, to be displayed in the terminal UI.
 ///
 /// NB: we need the width here, so components cannot really cache this operation.
-pub fn html_to_plain_text(html: &str, width: usize) -> String {
-    html2text::from_read(html.as_bytes(), width)
+pub fn html_to_plain_text(html: &str, width: usize) -> Result<String> {
+    html2text::from_read(html.as_bytes(), width).map_err(HnCliError::Html2TextError)
 }
 
 /// Open a link in a new browser tab.

@@ -47,7 +47,7 @@ impl<'a> Widget for CommentWidget<'a> {
         } else {
             ""
         };
-        let corpus = html_to_plain_text(corpus_str, area.width as usize);
+        let corpus = html_to_plain_text(corpus_str, area.width as usize).unwrap();
         let corpus_lines = corpus.lines();
 
         let corpus_area = Rect::new(

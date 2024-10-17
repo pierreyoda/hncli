@@ -148,7 +148,7 @@ impl UiComponent for UserProfile {
             Line::from(format!("Created: {}", viewed_user.created_at_formatted)),
             Line::from(format!("Karma: {}", viewed_user.karma)),
         ];
-        let about_corpus = self.build_user_about_spans(inside, &viewed_user.about);
+        let about_corpus = self.build_user_about_spans(inside, &viewed_user.about)?;
 
         let paragraph = Paragraph::new([text_base, about_corpus].concat())
             .block(block)
@@ -160,9 +160,9 @@ impl UiComponent for UserProfile {
 }
 
 impl UserProfile {
-    fn build_user_about_spans(&self, inside: Rect, about: &Option<String>) -> Vec<Line> {
-        if let Some(corpus) = about {
-            let rendered = html_to_plain_text(corpus.as_str(), inside.width as usize);
+    fn build_user_about_spans(&self, inside: Rect, about: &Option<String>) -> Result<Vec<Line>> {
+        Ok(if let Some(corpus) = about {
+            let rendered = html_to_plain_text(corpus.as_str(), inside.width as usize)?;
             let spans = rendered
                 .lines()
                 .map(|line| Line::from(line.to_string()))
@@ -174,6 +174,6 @@ impl UserProfile {
             .concat()
         } else {
             vec![]
-        }
+        })
     }
 }

@@ -96,7 +96,7 @@ impl UiComponent for ItemDetails {
                 "".into()
             }),
         ];
-        let text_corpus = Self::build_item_text_Line(self, inside, ctx);
+        let text_corpus = Self::build_item_text_line(self, inside, ctx)?;
 
         let paragraph = Paragraph::new([text_base, text_corpus].concat())
             .block(block)
@@ -108,23 +108,23 @@ impl UiComponent for ItemDetails {
 }
 
 impl ItemDetails {
-    fn build_item_text_Line(&self, inside: Rect, ctx: &AppContext) -> Vec<Line> {
-        if let Some(ref corpus) = self.text {
+    fn build_item_text_line(&self, inside: Rect, ctx: &AppContext) -> Result<Vec<Line>> {
+        Ok(if let Some(ref corpus) = self.text {
             if ctx
                 .get_state()
                 .get_item_page_should_display_comments_panel()
             {
                 vec![]
             } else {
-                let rendered = html_to_plain_text(corpus.as_str(), inside.width as usize);
-                let Line = rendered
+                let rendered = html_to_plain_text(corpus.as_str(), inside.width as usize)?;
+                let line = rendered
                     .lines()
                     .map(|line| Line::from(line.to_string()))
                     .collect();
-                [vec![Line::from(""), Line::from("")], Line].concat()
+                [vec![Line::from(""), Line::from("")], line].concat()
             }
         } else {
             vec![]
-        }
+        })
     }
 }
