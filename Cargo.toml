@@ -3,6 +3,11 @@ name = "hncli"
 version = "0.1.0"
 authors = ["pierreyoda <pierreyoda@users.noreply.github.com>"]
 edition = "2021"
+categories = ["command-line-utilities"]
+description = "A modern TUI for browsing Hacker News."
+homepage = "https://www.hncli.newstackwhodis.com/"
+license = "MIT"
+repository = "https://github.com/pierreyoda/hncli"
 
 [profile.release]
 strip = true    # strip symbols from binary
