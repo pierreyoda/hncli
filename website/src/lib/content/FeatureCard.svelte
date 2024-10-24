@@ -1,28 +1,48 @@
 <script lang="ts">
-  export let eyebrow: string;
-  export let title: string;
-  export let description: string = "";
-  export let extraClass: string = "";
-  export let fadeTop: boolean = false;
-  export let fadeBottom: boolean = false;
-  export let small = false;
+  import type { Snippet } from "svelte";
 
-  $: containerClass = [
-    extraClass ?? "",
-    small ? "grid-rows-1" : "lg:grid-rows-2",
-    "group relative flex flex-col overflow-hidden rounded-lg",
-    "bg-white shadow-sm ring-1 ring-black/5",
-  ].join(" ");
+  interface FeatureCardProps {
+    eyebrow: string;
+    title: string;
+    textDescription?: string;
+    extraClass?: string;
+    fadeTop?: boolean;
+    fadeBottom?: boolean;
+    small?: boolean;
+    image: Snippet;
+    description?: Snippet;
+  }
+
+  const {
+    eyebrow,
+    title,
+    textDescription,
+    extraClass = "",
+    fadeTop = false,
+    fadeBottom = false,
+    small = false,
+    image: imageSlot,
+    description,
+  }: FeatureCardProps = $props();
+
+  const containerClass = $derived<string>(
+    [
+      extraClass ?? "",
+      small ? "grid-rows-1" : "lg:grid-rows-2",
+      "group relative flex flex-col overflow-hidden rounded-lg",
+      "bg-white shadow-sm ring-1 ring-black/5",
+    ].join(" "),
+  );
 </script>
 
 <div class={containerClass}>
   <div class="image-container" class:large={!small}>
-    <slot name="image" />
+    {@render imageSlot()}
     {#if fadeTop}
-      <div class="absolute inset-0 bg-gradient-to-b from-white to-50%" />
+      <div class="absolute inset-0 bg-gradient-to-b from-white to-50%"></div>
     {/if}
     {#if fadeBottom}
-      <div class="absolute inset-0 bg-gradient-to-t from-white to-50%" />
+      <div class="absolute inset-0 bg-gradient-to-t from-white to-50%"></div>
     {/if}
   </div>
   <div class="relative p-10">
@@ -33,10 +53,10 @@
       {title}
     </p>
     <p class="description">
-      {#if description}
-        {description}
+      {#if textDescription}
+        {textDescription}
       {:else}
-        <slot name="description" />
+        {@render description?.()}
       {/if}
     </p>
   </div>

@@ -15,7 +15,7 @@
         <Button variant="solid" color="red" href="https://news.ycombinator.com" externalLink>Hacker News</Button>
       </div>
       <div class="mt-8 w-full relative">
-        <video src={HnCliDemoVideo} autoplay muted playsinline loop class="demo-video" />
+        <video src={HnCliDemoVideo} autoplay muted playsinline loop class="demo-video"></video>
       </div>
     </div>
   </div>

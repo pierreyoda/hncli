@@ -1,10 +1,20 @@
 <script lang="ts">
-  export let href: string;
-  export let extraClass = "";
-  export let underline = true;
+  import type { Snippet } from "svelte";
+
+  interface ExternalLinkProps {
+    href: string;
+    extraClass: string;
+    /** True by default; */
+    underline?: boolean;
+    children: Snippet;
+  }
+
+  const { href, extraClass, underline = true, children }: ExternalLinkProps = $props();
 </script>
 
-<a class={extraClass} class:underline {href} target="_blank" rel="noreferrer noopener"><slot /></a>
+<a class={extraClass} class:underline {href} target="_blank" rel="noreferrer noopener">
+  {@render children()}
+</a>
 
 <style lang="postcss">
   a {

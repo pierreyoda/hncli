@@ -1,10 +1,14 @@
 <script lang="ts">
-  export let title: string;
-  export let description: string;
-  export let imageSrc: string;
-  export let imageAlt: string;
-  /** Reversed order of text and screenshot. Text on left by default. */
-  export let reversed = false;
+  interface FeatureFocusProps {
+    title: string;
+    description: string;
+    imageSrc: string;
+    imageAlt: string;
+    /** Reversed order of text and screenshot. Text on left by default. */
+    reversed?: boolean;
+  }
+
+  const { title, description, imageSrc, imageAlt, reversed = false }: FeatureFocusProps = $props();
 </script>
 
 <div class="feature">

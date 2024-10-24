@@ -1,4 +1,6 @@
 <script lang="ts">
+  import type { Snippet } from "svelte";
+
   type ButtonVariant = "solid" | "outline";
   type ButtonColor = "red" | "white" | "gray";
 
@@ -21,14 +23,28 @@
     },
   };
 
-  export let variant: ButtonVariant = "solid";
-  export let color: ButtonColor | undefined;
-  export let externalLink: boolean | undefined;
-  export let href: string | undefined;
-  export let extraClass = "";
+  type ButtonProps = ({
+    extraClass?: string;
+    children: Snippet;
+  } & {
+    externalLink: boolean;
+    href: string;
+  }) &
+    (
+      | {
+          variant: "solid";
+          color: "red" | "white" | "gray";
+        }
+      | {
+          variant: "outline";
+          color: "gray";
+        }
+    );
 
-  $: buttonColor = variant === "outline" ? "gray" : (color ?? "gray");
-  $: buttonClass = `${baseStyles[variant]} ${variantStyles[variant][buttonColor]} ${extraClass}`;
+  const { variant, color, externalLink, href, extraClass, children }: ButtonProps = $props();
+
+  const buttonColor = $derived<ButtonColor>(variant === "outline" ? "gray" : (color ?? "gray"));
+  const buttonClass = $derived<string>(`${baseStyles[variant]} ${variantStyles[variant][buttonColor]} ${extraClass}`);
 </script>
 
 {#if href}
@@ -38,10 +54,10 @@
     target={externalLink ? "_blank" : undefined}
     rel={externalLink ? "noopener noreferrer" : undefined}
   >
-    <slot />
+    {@render children()}
   </a>
 {:else}
   <button class={buttonClass}>
-    <slot />
+    {@render children()}
   </button>
 {/if}
