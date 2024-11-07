@@ -24,13 +24,22 @@
     },
   };
 
-  type ButtonProps = ({
+  type ButtonProps = {
+    title?: string;
+    ariaLabel?: string;
     extraClass?: string;
     children: Snippet;
-  } & {
-    externalLink: boolean;
-    href: string;
-  }) &
+  } & (
+    | {
+        type: "link";
+        externalLink: boolean;
+        href: string;
+      }
+    | {
+        type: "action";
+        onclick: () => void;
+      }
+  ) &
     (
       | {
           variant: "solid";
@@ -42,23 +51,25 @@
         }
     );
 
-  const { variant, color, externalLink, href, extraClass, children }: ButtonProps = $props();
+  const { variant, color, title, ariaLabel, extraClass, children, ...propsRest }: ButtonProps = $props();
 
   const buttonColor = $derived<ButtonColor>(variant === "outline" ? "gray" : (color ?? "gray"));
   const buttonClass = $derived<string>(`${baseStyles[variant]} ${variantStyles[variant][buttonColor]} ${extraClass}`);
 </script>
 
-{#if href}
+{#if propsRest.type === "link"}
   <a
-    {href}
+    href={propsRest.href}
     class={buttonClass}
-    target={externalLink ? "_blank" : undefined}
-    rel={externalLink ? "noopener noreferrer" : undefined}
+    target={propsRest.externalLink ? "_blank" : undefined}
+    rel={propsRest.externalLink ? "noopener noreferrer" : undefined}
+    {title}
+    aria-label={ariaLabel}
   >
     {@render children()}
   </a>
 {:else}
-  <button class={buttonClass}>
+  <button class={buttonClass} aria-label={ariaLabel} onclick={propsRest.onclick} {title}>
     {@render children()}
   </button>
 {/if}
