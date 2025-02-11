@@ -16,23 +16,23 @@ lto = true      # enable Link Time Optimization
 
 [dependencies]
 async-recursion = "1.1.1"
-async-trait = "0.1.83"
-chrono = { version = "0.4.38", features = ["serde"] }
+async-trait = "0.1.86"
+chrono = { version = "0.4.39", features = ["serde"] }
 crossterm = "0.28.1"
-directories = "5.0.1"
+directories = "6.0.0"
 futures = "0.3.31"
 fuzzy-matcher = "0.3.7"
-html2text = "0.13.2"
-log = "0.4.22"
+html2text = "0.13.6"
+log = "0.4.25"
 num-traits = "0.2.19"
 ratatui = "0.29.0"
-reqwest = { version = "0.12.9", features = ["json"] }
-serde = { version = "1.0.214", features = ["derive"] }
-serde_json = "1.0.132"
+reqwest = { version = "0.12.12", features = ["json"] }
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.138"
 simplelog = "0.12.2"
 thiserror = "2.0.0"
-tokio = { version = "1.41.0", features = ["full"] }
-toml = "0.8.19"
+tokio = { version = "1.43.0", features = ["full"] }
+toml = "0.8.20"
 unicode-width = "0.2.0"
-url = "2.5.3"
-webbrowser = "1.0.2"
+url = "2.5.4"
+webbrowser = "1.0.3"
