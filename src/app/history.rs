@@ -46,7 +46,7 @@ impl SynchronizedHistoryItem {
     /// Update the stored ID corresponding to the saved navigation state.
     fn set_value(&mut self, id: HnItemIdScalar) {
         match self {
-            Self::TopLevelComment(ref mut data) => {
+            Self::TopLevelComment(data) => {
                 data.datetime = Utc::now();
                 data.top_level_comment_id = id;
             }

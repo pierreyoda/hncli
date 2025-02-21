@@ -111,7 +111,7 @@ impl UiComponent for StoriesPanel {
                 } else {
                     api.get_home_items(&sorting_type).await
                 };
-            if let Ok(stories) = fetched_stories {
+            match fetched_stories { Ok(stories) => {
                 stories
                     .iter()
                     .take(self.list_cutoff)
@@ -121,11 +121,11 @@ impl UiComponent for StoriesPanel {
                             .expect("StoriesPanel.update: can map DisplayableHackerNewsItem")
                     })
                     .collect()
-            } else {
+            } _ => {
                 ctx.get_state_mut()
                     .set_flash_message("Could not fetch HackerNews stories.", Some(50));
                 vec![]
-            }
+            }}
         };
 
         self.list_state.replace_items(displayable_stories);

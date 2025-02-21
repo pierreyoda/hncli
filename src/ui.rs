@@ -265,7 +265,7 @@ impl UserInterface {
                 })
                 .map_err(HnCliError::IoError)?;
 
-            if let UserInterfaceEvent::KeyEvent(event) = rx.recv()? {
+            match rx.recv()? { UserInterfaceEvent::KeyEvent(event) => {
                 app.pump_event(event);
                 let app_context = app.get_context();
                 let inputs = app_context.get_inputs();
@@ -292,10 +292,10 @@ impl UserInterface {
                 if self.app.handle_inputs() && !self.handle_inputs()? {
                     self.app.update_latest_interacted_with_component(None);
                 }
-            } else {
+            } _ => {
                 flash_message_elapsed_ticks += 1;
                 self.update().await?;
-            }
+            }}
         }
 
         Ok(())
