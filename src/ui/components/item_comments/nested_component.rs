@@ -5,8 +5,8 @@ use log::{info, warn};
 use ratatui::layout::Rect;
 
 use crate::{
-    api::{types::HnItemIdScalar, HnClient},
-    app::{state::AppState, AppContext},
+    api::{HnClient, types::HnItemIdScalar},
+    app::{AppContext, state::AppState},
     errors::Result,
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},

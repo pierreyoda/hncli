@@ -3,7 +3,7 @@ use log::warn;
 use ratatui::layout::Rect;
 
 use crate::{
-    api::{types::HnItemIdScalar, HnClient},
+    api::{HnClient, types::HnItemIdScalar},
     app::AppContext,
     errors::Result,
     ui::{

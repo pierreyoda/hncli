@@ -12,9 +12,9 @@ use crossterm::{
 };
 use flash::FlashMessage;
 use ratatui::{
+    Terminal,
     backend::CrosstermBackend,
     layout::{Direction, Layout},
-    Terminal,
 };
 
 use common::{UiComponent, UiComponentId, UiTickScalar};
@@ -35,8 +35,8 @@ use self::{
         item_details::ItemDetails,
         item_summary::ItemSummary,
         search::{
-            algolia_input::AlgoliaInput, algolia_list::AlgoliaList, algolia_tags::AlgoliaTags,
-            Search,
+            Search, algolia_input::AlgoliaInput, algolia_list::AlgoliaList,
+            algolia_tags::AlgoliaTags,
         },
         settings::Settings,
         user_profile::UserProfile,
@@ -265,37 +265,42 @@ impl UserInterface {
                 })
                 .map_err(HnCliError::IoError)?;
 
-            match rx.recv()? { UserInterfaceEvent::KeyEvent(event) => {
-                app.pump_event(event);
-                let app_context = app.get_context();
-                let inputs = app_context.get_inputs();
-                // TODO: errors on quit should be logged but not panic
-                if inputs.is_active(&ApplicationAction::Quit) {
-                    disable_raw_mode()
-                        .map_err(|_| HnCliError::CrosstermError("disable_raw_mode error".into()))?;
-                    self.terminal
-                        .show_cursor()
-                        .map_err(|_| HnCliError::CrosstermError("show_cursor error".into()))?;
-                    break 'ui;
+            match rx.recv()? {
+                UserInterfaceEvent::KeyEvent(event) => {
+                    app.pump_event(event);
+                    let app_context = app.get_context();
+                    let inputs = app_context.get_inputs();
+                    // TODO: errors on quit should be logged but not panic
+                    if inputs.is_active(&ApplicationAction::Quit) {
+                        disable_raw_mode().map_err(|_| {
+                            HnCliError::CrosstermError("disable_raw_mode error".into())
+                        })?;
+                        self.terminal
+                            .show_cursor()
+                            .map_err(|_| HnCliError::CrosstermError("show_cursor error".into()))?;
+                        break 'ui;
+                    }
+                    if inputs.is_active(&ApplicationAction::QuitShortcut)
+                        && self.can_quit_via_shortcut()
+                    {
+                        disable_raw_mode().map_err(|_| {
+                            HnCliError::CrosstermError("disable_raw_mode error".into())
+                        })?;
+                        let _ = self
+                            .terminal
+                            .show_cursor()
+                            .map_err(|_| HnCliError::CrosstermError("show_curor error".into()));
+                        break 'ui;
+                    }
+                    if self.app.handle_inputs() && !self.handle_inputs()? {
+                        self.app.update_latest_interacted_with_component(None);
+                    }
                 }
-                if inputs.is_active(&ApplicationAction::QuitShortcut)
-                    && self.can_quit_via_shortcut()
-                {
-                    disable_raw_mode()
-                        .map_err(|_| HnCliError::CrosstermError("disable_raw_mode error".into()))?;
-                    let _ = self
-                        .terminal
-                        .show_cursor()
-                        .map_err(|_| HnCliError::CrosstermError("show_curor error".into()));
-                    break 'ui;
+                _ => {
+                    flash_message_elapsed_ticks += 1;
+                    self.update().await?;
                 }
-                if self.app.handle_inputs() && !self.handle_inputs()? {
-                    self.app.update_latest_interacted_with_component(None);
-                }
-            } _ => {
-                flash_message_elapsed_ticks += 1;
-                self.update().await?;
-            }}
+            }
         }
 
         Ok(())

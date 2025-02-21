@@ -4,7 +4,7 @@ use std::{
     path::PathBuf,
 };
 
-use chrono::{serde::ts_seconds, DateTime, Utc};
+use chrono::{DateTime, Utc, serde::ts_seconds};
 use log::warn;
 use serde::{Deserialize, Serialize};
 

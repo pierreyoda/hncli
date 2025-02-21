@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use ratatui::{layout::Rect, Frame};
+use ratatui::{Frame, layout::Rect};
 
 use crate::{api::HnClient, app::AppContext, errors::Result};
 

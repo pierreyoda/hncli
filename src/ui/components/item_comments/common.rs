@@ -1,7 +1,7 @@
 use ratatui::layout::Rect;
 
 use crate::{
-    app::{state::AppState, AppContext},
+    app::{AppContext, state::AppState},
     errors::Result,
     ui::{
         common::{RenderFrame, UiTickScalar},

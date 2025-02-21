@@ -18,7 +18,7 @@ use crate::{
     },
 };
 
-use super::common::{render_text_message, COMMON_BLOCK_NORMAL_COLOR};
+use super::common::{COMMON_BLOCK_NORMAL_COLOR, render_text_message};
 
 /// User profile component.
 ///

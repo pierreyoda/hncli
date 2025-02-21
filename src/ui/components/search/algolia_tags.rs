@@ -7,7 +7,7 @@ use ratatui::{
 };
 
 use crate::{
-    api::{algolia_types::AlgoliaHnSearchTag, HnClient},
+    api::{HnClient, algolia_types::AlgoliaHnSearchTag},
     app::AppContext,
     errors::Result,
     ui::{

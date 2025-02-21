@@ -8,13 +8,13 @@ use ratatui::{
 use unicode_width::UnicodeWidthStr;
 
 use crate::{
-    api::{algolia_types::AlgoliaHnSearchTag, HnClient},
+    api::{HnClient, algolia_types::AlgoliaHnSearchTag},
     app::AppContext,
     errors::Result,
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         components::{
-            common::{render_text_message, COMMON_BLOCK_NORMAL_COLOR},
+            common::{COMMON_BLOCK_NORMAL_COLOR, render_text_message},
             widgets::custom_list::{CustomList, CustomListState},
         },
         displayable_algolia_item::{

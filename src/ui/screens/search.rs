@@ -10,7 +10,7 @@ use crate::{
                 algolia_tags::ALGOLIA_TAGS_ID,
             },
             widgets::text_input::{
-                TextInputStateAction, TextInputStateActionBridge, TEXT_INPUT_AVAILABLE_ACTIONS,
+                TEXT_INPUT_AVAILABLE_ACTIONS, TextInputStateAction, TextInputStateActionBridge,
             },
         },
         handlers::{ApplicationAction, InputsController},

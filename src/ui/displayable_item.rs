@@ -12,7 +12,7 @@ use crate::{
 
 pub mod user;
 
-use super::utils::{datetime_from_hn_time, ItemWithId};
+use super::utils::{ItemWithId, datetime_from_hn_time};
 
 /// Flat storage structure for a displayable comments thread.
 pub type DisplayableHackerNewsItemComments = HashMap<HnItemIdScalar, DisplayableHackerNewsItem>;

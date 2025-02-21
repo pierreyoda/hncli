@@ -9,7 +9,7 @@ use ratatui::{
 };
 
 use crate::{
-    api::{client::HnStoriesSorting, HnClient},
+    api::{HnClient, client::HnStoriesSorting},
     app::AppContext,
     errors::{HnCliError, Result},
     ui::{

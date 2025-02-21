@@ -58,7 +58,9 @@ impl Help {
         let text = vec![
             Line::from(format!("hncli {}", HNCLI_VERSION)),
             Line::from("https://github.com/pierreyoda/hncli"),
-            Line::from("A Terminal User Interface-based application for browsing Hacker News, written in 🦀 Rust. "),
+            Line::from(
+                "A Terminal User Interface-based application for browsing Hacker News, written in 🦀 Rust. ",
+            ),
         ];
         let paragraph = Paragraph::new(text)
             .block(Self::get_common_block())
@@ -75,20 +77,28 @@ impl Help {
             Line::from(""),
             Line::from("Go back with 'escape'."),
             Line::from(""),
-            Line::from("Navigate between screens with the left and right arrow keys, or 'j' and 'l'."),
+            Line::from(
+                "Navigate between screens with the left and right arrow keys, or 'j' and 'l'.",
+            ),
             Line::from(""),
             Line::from("Navigate between stories with the up and down arrow keys, or 'i' and 'k'."),
             Line::from(""),
-            Line::from("Open a tab in your browser for the selected story with 'o'. Open the selected story page with 'enter'."),
+            Line::from(
+                "Open a tab in your browser for the selected story with 'o'. Open the selected story page with 'enter'.",
+            ),
             Line::from(""),
             Line::from(""),
             Line::from("--- On a story page ---"),
             Line::from(""),
-            Line::from("Open a tab in your browser for the selected story (or its source) with 'o'."),
+            Line::from(
+                "Open a tab in your browser for the selected story (or its source) with 'o'.",
+            ),
             Line::from(""),
             Line::from("Toggle comments with 'tab'."),
             Line::from(""),
-            Line::from("Navigate comments with the up and down arrow keys, and focus a comment with the 'enter' key."),
+            Line::from(
+                "Navigate comments with the up and down arrow keys, and focus a comment with the 'enter' key.",
+            ),
             Line::from(""),
             Line::from(""),
             Line::from(""),
@@ -99,7 +109,9 @@ impl Help {
             Line::from(""),
             Line::from("--- On the settings page ---"),
             Line::from(""),
-            Line::from("Navigate between settings with the up and down arrow keys, or 'i' and 'k'."),
+            Line::from(
+                "Navigate between settings with the up and down arrow keys, or 'i' and 'k'.",
+            ),
             Line::from(""),
             Line::from("Toggle a setting with 'tab'."),
             Line::from(""),

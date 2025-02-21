@@ -14,9 +14,9 @@ use unicode_width::UnicodeWidthStr;
 
 use crate::{
     api::{
+        HnClient,
         client::{HnStoriesSections, HnStoriesSorting},
         types::HnItemIdScalar,
-        HnClient,
     },
     app::AppContext,
     errors::Result,
@@ -111,8 +111,8 @@ impl UiComponent for StoriesPanel {
                 } else {
                     api.get_home_items(&sorting_type).await
                 };
-            match fetched_stories { Ok(stories) => {
-                stories
+            match fetched_stories {
+                Ok(stories) => stories
                     .iter()
                     .take(self.list_cutoff)
                     .cloned()
@@ -120,12 +120,13 @@ impl UiComponent for StoriesPanel {
                         DisplayableHackerNewsItem::try_from(raw_item)
                             .expect("StoriesPanel.update: can map DisplayableHackerNewsItem")
                     })
-                    .collect()
-            } _ => {
-                ctx.get_state_mut()
-                    .set_flash_message("Could not fetch HackerNews stories.", Some(50));
-                vec![]
-            }}
+                    .collect(),
+                _ => {
+                    ctx.get_state_mut()
+                        .set_flash_message("Could not fetch HackerNews stories.", Some(50));
+                    vec![]
+                }
+            }
         };
 
         self.list_state.replace_items(displayable_stories);

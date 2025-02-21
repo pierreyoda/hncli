@@ -65,7 +65,9 @@ impl AlgoliaHelp {
             Line::from(""),
             Line::from("Navigate the results with the up and down arrow keys."),
             Line::from(""),
-            Line::from("On a result entry, press 'o' to visit the link, and 'l' for the Hacker News comments."),
+            Line::from(
+                "On a result entry, press 'o' to visit the link, and 'l' for the Hacker News comments.",
+            ),
         ];
         let paragraph = Paragraph::new(text)
             .block(Self::get_common_block())

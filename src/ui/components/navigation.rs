@@ -8,7 +8,7 @@ use ratatui::{
 };
 
 use crate::{
-    api::{client::HnStoriesSections, HnClient},
+    api::{HnClient, client::HnStoriesSections},
     app::AppContext,
     errors::Result,
     ui::{

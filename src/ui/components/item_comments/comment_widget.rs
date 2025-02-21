@@ -118,7 +118,10 @@ impl ItemCommentsWidgetState {
             if comments.contains_key(&history_focused_comment_id) {
                 self.focused_comment_id = Some(history_focused_comment_id);
             } else {
-                warn!("ItemCommentsWidgetState.reconciliate_focused_comment: could not find comment ID: {}", history_focused_comment_id);
+                warn!(
+                    "ItemCommentsWidgetState.reconciliate_focused_comment: could not find comment ID: {}",
+                    history_focused_comment_id
+                );
             }
             self.history_should_focus_comment_id = None;
         }

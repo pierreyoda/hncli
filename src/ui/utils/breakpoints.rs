@@ -100,10 +100,10 @@ impl Breakpoints {
     }
 
     fn to_percentages(&self, size: u16) -> Vec<u16> {
-        let breakpoint_size =
-            self.sections_breakpoints
-                .keys()
-                .fold(0, |acc, &bp| if bp <= size { bp } else { acc });
+        let breakpoint_size = self
+            .sections_breakpoints
+            .keys()
+            .fold(0, |acc, &bp| if bp <= size { bp } else { acc });
         self.sections_breakpoints
             .get(&breakpoint_size)
             .unwrap_or(&self.default_breakpoints)
