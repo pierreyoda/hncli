@@ -14,7 +14,7 @@
           color="red"
           href="https://github.com/pierreyoda/hncli/issues/new"
           externalLink
-          extraClass="!text-xl"
+          extraClass="text-xl!"
         >
           Open a new issue in GitHub</Button
         >
