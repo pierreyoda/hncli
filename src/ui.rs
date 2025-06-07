@@ -26,6 +26,7 @@ use crate::{
     app::App,
     config::AppConfiguration,
     errors::{HnCliError, Result},
+    ui::flash::FlashMessageType,
 };
 
 use self::{
@@ -170,14 +171,16 @@ impl UserInterface {
             .hide_cursor()
             .map_err(|_| HnCliError::CrosstermError("hide_cursor error".into()))?;
 
-        // UI setup
-        let flash_message = FlashMessage::default();
+        // Flash message setup
+        // TODO: adapt to other colors when needed
+        let flash_message = FlashMessage::from_type(FlashMessageType::Warning);
         let mut had_flash_message = false;
         let mut flash_message_elapsed_ticks: UiTickScalar = 0;
+
+        // Contextual help setup
         let contextual_helper = ContextualHelper::default();
         let breakpoints_default = Breakpoints::new("ui_default", &[100, 0]);
         let breakpoints_helper = Breakpoints::new("ui_helper", &[90, 10]).breakpoint(30, &[97, 3]);
-        // TODO: margin 2 for flash message
         let breakpoints_flash = Breakpoints::new("ui_flash", &[80, 20]).breakpoint(40, &[80, 20]);
 
         'ui: loop {
