@@ -1,6 +1,7 @@
 <script lang="ts">
   import Button from "$lib/Button.svelte";
 
+  // TODO: better MP4 compression if possible
   import HnCliDemoVideo from "$lib/assets/hncli-demo.mp4";
 </script>
 
@@ -9,7 +10,7 @@
     <div class="text-center mx-auto pb-6">
       <h2 class="text-4xl font-semibold tracking-tight text-gray-900">Read Hacker News in your terminal</h2>
       <p class="mt-6 text-lg text-gray-600 font-medium">
-        A convenient - and discreet - way to browse Y Combinator's Hacker News right inside your terminal.
+        A convenient - and discreet - way of browsing Y Combinator's Hacker News right inside your terminal.
       </p>
       <div class="mt-8 mx-auto">
         <Button variant="solid" color="red" href="https://news.ycombinator.com" externalLink>Hacker News</Button>
