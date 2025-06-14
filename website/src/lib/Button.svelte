@@ -4,6 +4,7 @@
   type ButtonVariant = "solid" | "outline";
   type ButtonColor = "red" | "white" | "gray";
 
+  // TODO: refactor and shorten when tailwindcss@v4 migration is done
   const baseStyles: Record<ButtonVariant, string> = {
     solid:
       "inline-flex justify-center rounded-lg py-2 px-3 text-sm font-semibold outline-2 outline-offset-2 transition-colors",

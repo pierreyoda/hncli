@@ -1,6 +1,7 @@
 <script lang="ts">
   import Button from "$lib/Button.svelte";
 
+  // TODO: better MP4 compression if possible
   import HnCliDemoVideo from "$lib/assets/hncli-demo.mp4";
 </script>
 

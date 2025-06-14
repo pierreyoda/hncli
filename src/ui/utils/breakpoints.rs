@@ -14,8 +14,13 @@ pub type SectionSizes = Vec<u16>;
 /// Small utility for making Screens' layout responsive.
 #[derive(Debug)]
 pub struct Breakpoints {
+    /// For error tracing purpose.
     label: String,
+    /// Default horizontal of vertical breakpoints.
     default_breakpoints: SectionSizes,
+    /// Internally used for storing computed breakpoint sizes.
+    ///
+    /// A BTreeMap is used to optimize reads, which can be very frequent.
     sections_breakpoints: BTreeMap<u16, SectionSizes>,
 }
 
