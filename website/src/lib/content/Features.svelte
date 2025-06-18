@@ -4,6 +4,7 @@
 
   import BookLogo from "$lib/assets/book.svg";
   import RustLangLogo from "$lib/assets/rust.svg";
+  import MagnifyingGlass from "$lib/assets/book.svg"; // FIXME: find adapted icon
 </script>
 
 <section id="features" class="website-container">
@@ -35,6 +36,16 @@
     >
       {#snippet image()}
         <img slot="image" class="screenshot w-24 h-auto" alt="book logo" src={BookLogo} />
+      {/snippet}
+    </FeatureCard>
+    <FeatureCard
+      small
+      eyebrow="Well deserved pause?"
+      title="Terminal only"
+      textDescription="hncli works in most terminals, and one of the initial goals was to make technological watch easier at a glance."
+    >
+      {#snippet image()}
+        <img slot="image" class="screenshot w-24 h-auto" alt="magnifying glass" src={MagnifyingGlass} />
       {/snippet}
     </FeatureCard>
   </div>
