@@ -1,7 +1,6 @@
 <script lang="ts">
   import Button from "$lib/Button.svelte";
 
-  // TODO: ExternalLink to HackerNews
   // TODO: better MP4 compression if possible
   import HnCliDemoVideo from "$lib/assets/hncli-demo.mp4";
 </script>
@@ -9,9 +8,6 @@
 <section id="hero" aria-label="Hero section" class="overflow-hidden pb-4">
   <div class="website-container flex flex-col mx-auto mx-w-2xl">
     <div class="text-center mx-auto pb-6">
-      <div class="mt-8 mx-auto">
-        <Button variant="solid" color="red" href="https://news.ycombinator.com" externalLink>Hacker News</Button>
-      </div>
       <div class="mt-8 w-full relative">
         <video src={HnCliDemoVideo} autoplay muted playsinline loop class="demo-video"></video>
       </div>
