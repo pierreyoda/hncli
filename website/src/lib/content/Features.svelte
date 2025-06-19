@@ -38,7 +38,7 @@
         <img slot="image" class="screenshot w-24 h-auto" alt="book logo" src={BookLogo} />
       {/snippet}
     </FeatureCard>
-    <FeatureCard small eyebrow="Well deserved pause?" title="Terminal only">
+    <FeatureCard small eyebrow="Well deserved pause?" title="Terminal only" extraClass="">
       {#snippet image()}
         <img slot="image" class="screenshot w-24 h-auto" alt="terminal only" src={CommandLineLogo} />
       {/snippet}
@@ -49,8 +49,8 @@
           <ExternalLink
             href="https://www.newstackwhodis.com/blog/hncli-1-concept#project-description"
             extraClass="font-semibold text-hncli-dark-red">first article</ExternalLink
-          >, refactoring for answering to topics or comments from hncli would be really difficult, even for me, both
-          terms of engineering and in UX.
+          >, refactoring for answering to topics or comments from hncli would be really difficult, - even for me - both
+          in terms of engineering and UX.
         </span>
       {/snippet}
     </FeatureCard>
@@ -59,7 +59,7 @@
 
 <style lang="postcss">
   .grid-container {
-    @apply mt-10 grid grid-cols-1 gap-4 sm:mt-16 lg:grid-cols-6;
+    @apply mt-10 grid grid-cols-1 gap-4 sm:mt-16 md:grid-cols-2;
   }
 
   .screenshot {

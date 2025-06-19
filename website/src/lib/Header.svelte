@@ -27,5 +27,6 @@
 <style lang="postcss">
   header {
     @apply flex items-center justify-between py-8 pl-10 md:pl-0;
+    @apply bg-red-400;
   }
 </style>
