@@ -59,6 +59,8 @@ pub mod router;
 pub mod screens;
 pub mod utils;
 
+const FLASH_MESSAGE_DURATION_MS: usize = 2000;
+
 type TerminalUi = Terminal<CrosstermBackend<Stdout>>;
 
 #[derive(Clone, Debug)]
@@ -173,7 +175,7 @@ impl UserInterface {
 
         // Flash message setup
         // TODO: adapt to other colors when needed
-        let flash_message = FlashMessage::from_type(FlashMessageType::Warning);
+        let flash_message = FlashMessage::new(FlashMessageType::Warning, FLASH_MESSAGE_DURATION_MS);
         let mut had_flash_message = false;
         let mut flash_message_elapsed_ticks: UiTickScalar = 0;
 

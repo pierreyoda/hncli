@@ -286,11 +286,7 @@ impl AppState {
 
     /// Is a flash message currently to be displayed?
     pub fn has_flash_message(&self) -> bool {
-        if let Some(flash_state) = &self.flash_message {
-            flash_state.get_message().is_some()
-        } else {
-            false
-        }
+        self.flash_message.is_some()
     }
 
     /// Get the currently active flash message, if any.
