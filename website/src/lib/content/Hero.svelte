@@ -13,7 +13,9 @@
         A convenient - and discreet - way to browse Y Combinator's Hacker News right inside your terminal.
       </p>
       <div class="mt-8 mx-auto">
-        <Button variant="solid" color="red" href="https://news.ycombinator.com" externalLink>Hacker News</Button>
+        <Button type="link" variant="solid" color="red" href="https://news.ycombinator.com" externalLink
+          >Hacker News</Button
+        >
       </div>
       <div class="mt-8 w-full relative">
         <video src={HnCliDemoVideo} autoplay muted playsinline loop class="demo-video"></video>
