@@ -39,7 +39,7 @@
     }
 
     .copy-icon {
-      @apply h-8 w-8;
+      @apply h-6 w-6;
     }
   }
 
