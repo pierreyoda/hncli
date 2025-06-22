@@ -10,6 +10,7 @@
       </div>
       <div class="half-section mt-12 md:mt-0 text-4xl">
         <Button
+          type="link"
           variant="solid"
           color="red"
           href="https://github.com/pierreyoda/hncli/issues/new"

@@ -32,6 +32,6 @@
 
 <style lang="postcss">
   .features-container {
-    @apply mx-auto mt-16 w-full bg-gray-900 lg:mt-20;
+    @apply mx-auto w-full bg-gray-900;
   }
 </style>
