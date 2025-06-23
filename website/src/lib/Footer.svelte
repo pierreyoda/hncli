@@ -12,7 +12,7 @@
 
 <style lang="postcss">
   footer {
-    @apply border-t-4 border-hncli-light-orange/50 bg-gray-500;
+    @apply border-t-4 border-hncli-light-orange/50 bg-gray-900;
   }
 
   .text-container {
