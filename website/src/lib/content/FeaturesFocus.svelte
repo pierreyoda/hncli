@@ -10,7 +10,7 @@
   <div class="website-container">
     <FeatureFocus
       title="Browse every comment, on any story"
-      description="An history feature will get you back to your latest viewed comment on any story item."
+      description="The history feature will get you back to your latest viewed comment on any story item."
       imageSrc={CommentsScreenshot}
       imageAlt="hncli sub-comment display"
     />

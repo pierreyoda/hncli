@@ -3,7 +3,7 @@
   import HnCliDemoVideo from "$lib/assets/hncli-demo.mp4";
 </script>
 
-<section id="hero" aria-label="Hero section" class="overflow-hidden pb-4">
+<section id="hero" aria-label="Hero section" class="overflow-hidden">
   <div class="website-container mx-w-2xl">
     <div class="text-center mx-auto pb-6">
       <div class="mt-8 w-full relative">
