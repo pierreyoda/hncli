@@ -3,7 +3,7 @@
   import HnCliDemoVideo from "$lib/assets/hncli-demo.mp4";
 </script>
 
-<section id="hero" aria-label="Hero section" class="overflow-hidden">
+<section id="hero" aria-label="Hero section">
   <div class="website-container mx-w-2xl">
     <div class="text-center mx-auto pb-6">
       <div class="mt-8 w-full relative">
@@ -14,8 +14,12 @@
 </section>
 
 <style lang="postcss">
+  #hero {
+    @apply overflow-hidden bg-gray-800;
+  }
+
   .website-container {
-    @apply mx-auto flex flex-col bg-gray-800;
+    @apply mx-auto flex flex-col;
   }
 
   .demo-video {
