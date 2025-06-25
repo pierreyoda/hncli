@@ -6,6 +6,7 @@
     lines: readonly string[];
   };
 
+  // tTODO: switch to grid when more options
   const options: readonly InstallationOption[] = [
     { title: "With Docker", lines: ["docker build -t hncli .  && docker run -it hncli"] },
     { title: "Compile with Rust (rustup recommended)", lines: ["cargo run --release"] },
@@ -14,7 +15,7 @@
   ];
 </script>
 
-<section id="install" aria-label="Install hncli" class="pt-12 pb-3">
+<section id="install" aria-label="Install hncli">
   <div class="website-container">
     <div class="text-center">
       <h2 class="title">How to use</h2>
@@ -32,6 +33,10 @@
 </section>
 
 <style lang="postcss">
+  #install {
+    @apply pb-3 pt-12;
+  }
+
   .title {
     @apply mb-1 text-4xl font-semibold text-hncli-dark-red;
   }

@@ -45,7 +45,7 @@
       <div class="absolute inset-0 bg-gradient-to-t from-white to-50%"></div>
     {/if}
   </div>
-  <div class="relative p-10">
+  <div class="relative p-10 pt-6">
     <h3 class="eyebrow">
       {eyebrow}
     </h3>
