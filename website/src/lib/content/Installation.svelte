@@ -25,7 +25,7 @@
       {#each options as { title, lines }}
         <div class="option-container">
           <h3 class="option-title">{title}:</h3>
-          <ClipboardCommandLines {lines} />
+          <ClipboardCommandLines {lines} extraClass="md:ml-24" />
         </div>
       {/each}
     </div>
@@ -45,9 +45,8 @@
   }
 
   .options-container {
-    @apply flex w-full flex-col py-6 md:flex-row;
+    @apply flex w-full flex-col py-6 md:flex-row md:justify-between;
   }
-
   .option-container {
     @apply flex flex-col items-center justify-around pt-2;
     .option-title {

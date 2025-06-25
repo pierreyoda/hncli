@@ -2,7 +2,7 @@
   import ExternalLink from "$lib/ExternalLink.svelte";
 </script>
 
-<section id="hero-title" aria-label="hero section title" class="section-container">
+<section id="hero-title" aria-label="hero section title">
   <h2 class="text-4xl font-semibold tracking-tight text-gray-800">
     Browse
     <ExternalLink href="https://news.ycombinator.com/" extraClass="no-underline">Hacker News</ExternalLink>&nbsp;from
@@ -14,8 +14,7 @@
 </section>
 
 <style lang="postcss">
-  .section-container {
-    @apply py-6 text-center;
-    @apply bg-hncli-light-orange/20;
+  #hero-title {
+    @apply bg-hncli-light-orange/20 py-6 text-center;
   }
 </style>
