@@ -26,7 +26,6 @@ use crate::{
     app::App,
     config::AppConfiguration,
     errors::{HnCliError, Result},
-    ui::flash::FlashMessageType,
 };
 
 use self::{
@@ -51,7 +50,7 @@ pub mod common;
 pub mod components;
 pub mod displayable_algolia_item;
 pub mod displayable_item;
-mod flash;
+pub mod flash;
 pub mod handlers;
 mod helper;
 mod panels;
@@ -59,7 +58,7 @@ pub mod router;
 pub mod screens;
 pub mod utils;
 
-const FLASH_MESSAGE_DURATION_MS: usize = 2000;
+const FLASH_MESSAGE_DURATION_MS: usize = 3000;
 
 type TerminalUi = Terminal<CrosstermBackend<Stdout>>;
 
@@ -142,6 +141,7 @@ impl UserInterface {
         });
 
         // Components registration
+        // TODO: macro
         self.register_component(Help::default());
         self.register_component(Settings::default());
         self.register_component(Navigation::default());
@@ -174,8 +174,7 @@ impl UserInterface {
             .map_err(|_| HnCliError::CrosstermError("hide_cursor error".into()))?;
 
         // Flash message setup
-        // TODO: adapt to other colors when needed
-        let flash_message = FlashMessage::new(FlashMessageType::Warning, FLASH_MESSAGE_DURATION_MS);
+        let flash_message = FlashMessage::empty();
         let mut had_flash_message = false;
         let mut flash_message_elapsed_ticks: UiTickScalar = 0;
 
