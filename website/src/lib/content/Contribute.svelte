@@ -2,13 +2,13 @@
   import Button from "$lib/Button.svelte";
 </script>
 
-<section id="contribute" aria-label="Contribute to hncli" class="bg-gray-900 py-20 sm:py-32 mt-12">
+<section id="contribute" aria-label="Contribute to hncli" class="bg-gray-900 py-20 sm:py-6 md:py-12 mt-12">
   <div class="website-container">
     <div class="flex flex-col md:flex-row items-center justify-between">
       <div class="half-section">
         <h2 class="text-white text-4xl font-medium tracking-tight">Any issue? Wanting to contribute?</h2>
       </div>
-      <div class="half-section mt-12 md:mt-0 text-4xl">
+      <div class="half-section mt-12 md:mt-0 text-4xl md:pb-0">
         <Button
           type="link"
           variant="solid"

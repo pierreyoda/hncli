@@ -6,6 +6,7 @@ export default {
       colors: {
         hncli: {
           "dark-red": "#5e1914",
+          "light-orange": "#ffc89a",
         },
       },
     },

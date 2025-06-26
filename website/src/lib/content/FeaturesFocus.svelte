@@ -9,8 +9,8 @@
 <section id="screenshots" aria-label="hncli screenshots" class="features-container">
   <div class="website-container">
     <FeatureFocus
-      title="Browse every comment, on any story"
-      description="An history feature will get you back to your latest viewed comment on any story item."
+      title="Browse every comment or sub-comment, on any story"
+      description="On the Home, Ask HN and Show HN (usernames erased here)."
       imageSrc={CommentsScreenshot}
       imageAlt="hncli sub-comment display"
     />
