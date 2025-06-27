@@ -67,13 +67,12 @@
         {/snippet}
         {#snippet description()}
           <span slot="description">
-            For now, you will be displayed - if possible i.e. not deleted - the latest comment on the topic(s) you have
-            read. read. <br /> <br />As described in the
+            For now, you will be displayed - if possible, i.e. not deleted - the latest comment on the topic(s) you have
+            read. <br /> <br />As described in the
             <ExternalLink
-              href="https://www.newstackwhodis.com/blog/hncli-2-architecture#navigation-history-persistence"
-              extraClass="font-semibold text-hncli-dark-red">second article</ExternalLink
-            >, refactoring for answering to topics or comments from hncli would be really difficult - even for me - both
-            in terms of engineering and UX.
+              href="https://www.newstackwhodis.com/blog/hncli-3-polishing#navigation-history-check-disk-storage"
+              extraClass="font-semibold text-hncli-dark-red">third article</ExternalLink
+            >, there is a hardcoded limit on the amount of entries stored;
           </span>
         {/snippet}
       </FeatureCard>
