@@ -9,7 +9,7 @@
   // tTODO: switch to grid when more options
   const options: readonly InstallationOption[] = [
     { title: "With Docker", lines: ["docker build -t hncli .  && docker run -it hncli"] },
-    { title: "Compile with Rust (rustup recommended)", lines: ["cargo run --release"] },
+    { title: "With Rust toolchain", lines: ["cargo run --release"] },
     // { title: "Build from Rust's crates.io", lines: ["cargo install hncli"] },
     // { title: "Install with Homebrew", lines: ["brew install hncli"] },
   ];
