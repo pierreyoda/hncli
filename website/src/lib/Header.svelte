@@ -14,7 +14,7 @@
   </nav>
   <div class="flex items-center pr-12">
     <ExternalLink
-      href="https://www.newstackwhodis.com/blog"
+      href="https://www.newstackwhodis.com/blog/?tag=Rust"
       underline={false}
       red={false}
       extraClass="mr-6 no-underline text-xl font-medium">Blog</ExternalLink
