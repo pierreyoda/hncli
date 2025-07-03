@@ -26,7 +26,7 @@ use crate::{
     app::App,
     config::AppConfiguration,
     errors::{HnCliError, Result},
-    ui::flash::FlashMessageType,
+    ui::flash::{FlashMessageDurationType, FlashMessageType},
 };
 
 use self::{
@@ -95,6 +95,7 @@ pub struct UserInterface {
 }
 
 pub const UI_TICK_RATE_MS: u64 = 100;
+pub const FLASH_MESSAGE_DEFAULT_DURATION_MS: FlashMessageDurationType = 3000;
 
 impl UserInterface {
     /// Create a new `UserInterface` instance and prepare the terminal for it.
@@ -175,7 +176,8 @@ impl UserInterface {
 
         // Flash message setup
         // TODO: adapt to other colors when needed
-        let flash_message = FlashMessage::new(FlashMessageType::Warning, FLASH_MESSAGE_DURATION_MS);
+        let flash_message =
+            FlashMessage::new(FlashMessageType::Warning, FLASH_MESSAGE_DEFAULT_DURATION_MS);
         let mut had_flash_message = false;
         let mut flash_message_elapsed_ticks: UiTickScalar = 0;
 

@@ -10,6 +10,8 @@ use ratatui::{
 
 use super::common::RenderFrame;
 
+pub type FlashMessageDurationType = u16;
+
 #[derive(Clone, Copy, Debug)]
 pub enum FlashMessageType {
     /// Info, to be displayed in blue.
@@ -32,18 +34,15 @@ impl FlashMessageType {
 }
 
 /// Global flash message renderer.
-///
-/// Not a Widget right now since it would require refactoring on some Screens and maybe in the Breakpoints module.
-/// TODO: this would require FlashMessageData in the global state.
 #[derive(Debug)]
 pub struct FlashMessage {
     color: Color,
-    duration: usize,
     message_type: FlashMessageType,
+    duration: FlashMessageDurationType,
 }
 
 impl FlashMessage {
-    pub fn new(message_type: FlashMessageType, duration: usize) -> Self {
+    pub fn new(message_type: FlashMessageType, duration: FlashMessageDurationType) -> Self {
         Self {
             color: message_type.to_color(),
             message_type,
