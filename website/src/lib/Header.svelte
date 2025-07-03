@@ -8,11 +8,11 @@
 <header>
   <nav>
     <a href="/" aria-label="Home" class="flex flex-col items-center">
-      <img alt="Wrench icon" src={HnCliTextLogo} class="max-w-40 h-auto" />
+      <img alt="hncli logo" src={HnCliTextLogo} class="max-w-40 h-auto" />
       <h1 class="hidden">hncli</h1>
     </a>
   </nav>
-  <div class="flex items-center pr-12">
+  <div class="flex items-center sm:pr-12 sm:justify-around pt-4 sm:pt-0">
     <ExternalLink
       href="https://www.newstackwhodis.com/blog/?tag=Rust"
       underline={false}
@@ -28,6 +28,6 @@
 <style lang="postcss">
   header {
     @apply bg-red-400;
-    @apply flex items-center justify-between px-12 py-8 pl-10 md:pl-12;
+    @apply flex flex-col items-center justify-between px-12 py-8 pl-10 sm:flex-row md:pl-12;
   }
 </style>
