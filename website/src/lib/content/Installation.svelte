@@ -22,8 +22,8 @@
       <p class="subtitle">(more ways to come)</p>
     </div>
     <div class="options-container">
-      {#each options as { title, lines }}
-        <div class="option-container">
+      {#each Object.entries(options) as [i, { title, lines }]}
+        <div class={"option-container" + (Number(i) % 2 === 0 ? " left" : "")}>
           <h3 class="option-title">{title}:</h3>
           <ClipboardCommandLines {lines} extraClass="md:ml-24" />
         </div>
@@ -45,10 +45,13 @@
   }
 
   .options-container {
-    @apply flex w-full flex-col pb-6 pt-3 md:flex-row md:justify-between;
+    @apply flex w-full flex-col pb-6 pt-3 md:flex-row md:justify-center;
   }
   .option-container {
-    @apply flex flex-col items-center justify-around pt-2;
+    @apply flex flex-col items-center justify-around pr-3 pt-2;
+    &.left {
+      @apply pl-3;
+    }
     .option-title {
       @apply pb-1 text-center text-lg font-medium text-gray-500;
     }
