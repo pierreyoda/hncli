@@ -9,8 +9,8 @@
 
 <div>
   <HeroTitle />
-  <Installation />
   <Hero />
+  <Installation />
   <FeaturesFocus />
   <Features />
   <Contribute />
