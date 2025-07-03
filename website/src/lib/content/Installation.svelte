@@ -23,7 +23,7 @@
     </div>
     <div class="options-container">
       {#each Object.entries(options) as [i, { title, lines }]}
-        <div class={"option-container" + (Number(i) % 2 === 0 ? " left" : "")}>
+        <div class="option-container">
           <h3 class="option-title">{title}:</h3>
           <ClipboardCommandLines {lines} extraClass="md:ml-24" />
         </div>
@@ -49,9 +49,6 @@
   }
   .option-container {
     @apply flex flex-col items-center justify-around pr-3 pt-2;
-    &.left {
-      @apply pl-3;
-    }
     .option-title {
       @apply pb-1 text-center text-lg font-medium text-gray-500;
     }
