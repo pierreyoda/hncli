@@ -45,7 +45,7 @@
   }
 
   .options-container {
-    @apply flex w-full flex-col py-6 md:flex-row md:justify-between;
+    @apply flex w-full flex-col pb-6 pt-3 md:flex-row md:justify-between;
   }
   .option-container {
     @apply flex flex-col items-center justify-around pt-2;
