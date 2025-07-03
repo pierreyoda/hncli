@@ -67,12 +67,12 @@
         {/snippet}
         {#snippet description()}
           <span slot="description">
-            For now, you will be displayed - if possible, i.e. not deleted - the latest comment on the topic(s) you have
-            read. <br /> <br />As described in the
+            For now, you will be displayed - if possible, i.e. not deleted - the latest top-level comment on the
+            topic(s) you have read before. <br /> <br />As described in the
             <ExternalLink
               href="https://www.newstackwhodis.com/blog/hncli-3-polishing#navigation-history-check-disk-storage"
               extraClass="font-semibold text-hncli-dark-red">third article</ExternalLink
-            >, there is a hardcoded limit on the amount of entries stored;
+            >, there is a hardcoded limit - pretty large - on the amount of entries stored.
           </span>
         {/snippet}
       </FeatureCard>
