@@ -4,7 +4,7 @@ use ratatui::{Frame, layout::Rect};
 use crate::{api::HnClient, app::AppContext, errors::Result};
 
 /// A `tick` is a UI update, in the order of the hundred milliseconds.
-pub type UiTickScalar = u64;
+pub type UiTickScalar = u16;
 
 /// A hashable type for application-unique component IDs.
 pub type UiComponentId = &'static str;

@@ -36,7 +36,7 @@ use super::{
 
 #[derive(Debug)]
 pub struct StoriesPanel {
-    ticks_since_last_update: u64,
+    ticks_since_last_update: UiTickScalar,
     loading: bool,
     loader: Loader,
     sorting_type_for_last_update: Option<HnStoriesSorting>,

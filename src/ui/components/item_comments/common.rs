@@ -16,7 +16,7 @@ use super::comment_widget::{ItemCommentsWidget, ItemCommentsWidgetState};
 /// Common (meta-)data between top and nested components.
 #[derive(Debug)]
 pub struct ItemCommentsCommon {
-    pub ticks_since_last_update: u64,
+    pub ticks_since_last_update: UiTickScalar,
     pub loader: Loader,
     pub inputs_debouncer: Debouncer,
     pub loading: bool,
