@@ -6,14 +6,19 @@
     imageAlt: string;
     /** Reversed order of text and screenshot. Text on left by default. */
     reversed?: boolean;
+    /** False by default. */
+    obsolete?: boolean;
   }
 
-  const { title, description, imageSrc, imageAlt, reversed = false }: FeatureFocusProps = $props();
+  const { title, description, imageSrc, imageAlt, reversed = false, obsolete = false }: FeatureFocusProps = $props();
 </script>
 
 <div class="feature">
-  <div class="flex flex-col lg:flex-row items-center" class:reversed>
+  <div class="flex flex-col lg:flex-row items-center" class:reversed class:obsolete>
     <div class="flex flex-col items-center lg:items-start">
+      {#if obsolete}
+        <span class="text-gray-300 mb-2 text-sm font-bold tracking-tighter">Obsolete</span>
+      {/if}
       <h2 class="title">{title}</h2>
       <p class="description">{description}</p>
     </div>
@@ -27,6 +32,9 @@
 
     .reversed {
       @apply lg:flex-row-reverse;
+    }
+    .obsolete {
+      @apply opacity-70;
     }
 
     .title {

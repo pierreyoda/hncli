@@ -3,6 +3,7 @@
 
   import CommentsScreenshot from "$lib/assets/hncli-comments.webp";
   import SettingsScreenshot from "$lib/assets/hncli-settings.webp";
+  import ObsoleteSearchScreenshot from "$lib/assets/hncli-limited-search.png";
   import ContextualHelpScreenshot from "$lib/assets/hncli-contextual-help.webp";
 </script>
 
@@ -26,6 +27,14 @@
       description="Persistent settings, stored in the OS-appropriate folder."
       imageSrc={SettingsScreenshot}
       imageAlt="hncli settings screen"
+    />
+    <FeatureFocus
+      title="Search throughout hncli (posts, comments, users)"
+      description="After heavy efforts on my part, hn.algolia unfortunately shut down almost all its returned data. Here is an example of what still works."
+      imageSrc={ObsoleteSearchScreenshot}
+      imageAlt="hncli search screen (limited by hn.algolia.com"
+      reversed
+      obsolete
     />
   </div>
 </section>
