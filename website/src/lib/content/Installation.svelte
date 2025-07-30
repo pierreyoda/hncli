@@ -22,7 +22,7 @@
       <p class="subtitle">More ways to come, at the very least homebrew.</p>
     </div>
     <div class="options-container">
-      {#each Object.entries(options) as [i, { title, lines }]}
+      {#each options as { title, lines } (title)}
         <div class="option-container">
           <h3 class="option-title">{title}:</h3>
           <ClipboardCommandLines {lines} extraClass="md:ml-24" />
