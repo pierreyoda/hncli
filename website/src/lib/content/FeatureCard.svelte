@@ -72,7 +72,7 @@
     }
   }
   .eyebrow {
-    @apply font-mono text-base font-semibold uppercase tracking-widest text-gray-500;
+    @apply font-mono text-base font-semibold tracking-widest text-gray-500 uppercase;
   }
   .title {
     @apply mt-1 text-3xl font-medium tracking-tight text-gray-950;

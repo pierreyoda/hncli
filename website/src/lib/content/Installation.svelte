@@ -36,21 +36,21 @@
   @reference "../../app.css";
 
   #install {
-    @apply pb-3 pt-12;
+    @apply pt-12 pb-3;
   }
 
   .title {
-    @apply mb-1 text-4xl font-semibold text-hncli-dark-red;
+    @apply text-hncli-dark-red mb-1 text-4xl font-semibold;
   }
   .subtitle {
-    @apply text-xs font-medium text-hncli-dark-red/60;
+    @apply text-hncli-dark-red/60 text-xs font-medium;
   }
 
   .options-container {
-    @apply flex w-full flex-col pb-6 pt-3 md:flex-row md:justify-center;
+    @apply flex w-full flex-col pt-3 pb-6 md:flex-row md:justify-center;
   }
   .option-container {
-    @apply flex flex-col items-center justify-around pr-3 pt-2;
+    @apply flex flex-col items-center justify-around pt-2 pr-3;
     .option-title {
       @apply pb-1 text-center text-lg font-medium text-gray-500;
     }

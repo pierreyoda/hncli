@@ -37,7 +37,7 @@
     @apply relative rounded-lg bg-gray-900;
 
     .lines {
-      @apply whitespace-pre-line p-6 text-xs text-gray-200 sm:text-sm md:text-base;
+      @apply p-6 text-xs whitespace-pre-line text-gray-200 sm:text-sm md:text-base;
     }
 
     .copy-icon {
