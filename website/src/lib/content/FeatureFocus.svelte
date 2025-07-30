@@ -27,6 +27,8 @@
 </div>
 
 <style lang="postcss">
+  @reference "tailwindcss";
+
   .feature {
     @apply bg-gray-900 py-6 text-center md:py-20 lg:text-left;
 

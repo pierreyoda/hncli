@@ -22,6 +22,8 @@
 </section>
 
 <style lang="postcss">
+  @reference "../../app.css";
+
   #hero-title {
     @apply bg-hncli-light-orange/20 py-6 text-center;
   }

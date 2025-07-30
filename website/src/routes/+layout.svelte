@@ -27,6 +27,8 @@
 </div>
 
 <style lang="postcss">
+  @reference "tailwindcss";
+
   :global(html, body) {
     @apply w-full max-w-full overflow-x-hidden;
   }

@@ -78,6 +78,8 @@
 </section>
 
 <style lang="postcss">
+  @reference "tailwindcss";
+
   .features-container {
     @apply flex flex-col;
   }

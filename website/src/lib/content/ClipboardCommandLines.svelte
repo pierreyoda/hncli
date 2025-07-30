@@ -31,6 +31,8 @@
 </div>
 
 <style lang="postcss">
+  @reference "tailwindcss";
+
   .container {
     @apply relative rounded-lg bg-gray-900;
 

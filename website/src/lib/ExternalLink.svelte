@@ -19,6 +19,8 @@
 </a>
 
 <style lang="postcss">
+  @reference "../app.css";
+
   a {
     @apply transition-colors duration-200;
     &.red {

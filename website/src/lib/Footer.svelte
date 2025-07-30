@@ -1,5 +1,6 @@
 <script lang="ts">
   const currentYear = new Date().getFullYear();
+  // TODO: sticky bottom footer
 </script>
 
 <footer>
@@ -11,13 +12,12 @@
 </footer>
 
 <style lang="postcss">
+  @reference "../app.css";
+
   footer {
-    @apply border-t-4 border-hncli-light-orange/50 bg-gray-900;
+    @apply border-hncli-light-orange/50 border-t-4 bg-gray-900;
   }
 
-  .text-container {
-    @apply flex h-full w-full flex-col items-center justify-center text-center;
-  }
   .text {
     @apply py-4 text-base font-medium tracking-tight text-white;
   }

@@ -40,6 +40,8 @@
 </section>
 
 <style lang="postcss">
+  @reference "tailwindcss";
+
   .features-container {
     @apply mx-auto w-full bg-gray-900;
   }

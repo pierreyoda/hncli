@@ -30,7 +30,7 @@
       extraClass ?? "",
       small ? "grid-rows-1" : "lg:grid-rows-2",
       "group relative flex flex-col overflow-hidden rounded-lg",
-      "bg-white shadow-sm ring-1 ring-black/5",
+      "bg-white shadow-xs ring-1 ring-black/5",
     ].join(" "),
   );
 </script>
@@ -39,10 +39,10 @@
   <div class="image-container" class:large={!small}>
     {@render imageSlot()}
     {#if fadeTop}
-      <div class="absolute inset-0 bg-gradient-to-b from-white to-50%"></div>
+      <div class="absolute inset-0 bg-linear-to-b from-white to-50%"></div>
     {/if}
     {#if fadeBottom}
-      <div class="absolute inset-0 bg-gradient-to-t from-white to-50%"></div>
+      <div class="absolute inset-0 bg-linear-to-t from-white to-50%"></div>
     {/if}
   </div>
   <div class="relative p-10 pt-6">
@@ -63,6 +63,8 @@
 </div>
 
 <style lang="postcss">
+  @reference "tailwindcss";
+
   .image-container {
     @apply relative flex h-40 shrink-0 items-center pl-10;
     &.large {

@@ -15,7 +15,7 @@
           color="red"
           href="https://github.com/pierreyoda/hncli/issues/new"
           externalLink
-          extraClass="!text-xl"
+          extraClass="text-xl!"
         >
           Open a new issue in GitHub</Button
         >
@@ -25,6 +25,8 @@
 </section>
 
 <style lang="postcss">
+  @reference "tailwindcss";
+
   .half-section {
     @apply flex w-1/2 flex-col items-center justify-start text-center md:text-left;
   }

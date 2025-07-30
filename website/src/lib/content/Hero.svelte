@@ -14,6 +14,8 @@
 </section>
 
 <style lang="postcss">
+  @reference "tailwindcss";
+
   #hero {
     @apply overflow-hidden bg-gray-800;
   }

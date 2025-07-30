@@ -33,6 +33,8 @@
 </section>
 
 <style lang="postcss">
+  @reference "../../app.css";
+
   #install {
     @apply pb-3 pt-12;
   }
