@@ -1,7 +1,5 @@
-use std::collections::HashMap;
-
 use async_trait::async_trait;
-use log::{info, warn};
+use log::warn;
 use ratatui::layout::Rect;
 
 use crate::{

@@ -264,7 +264,7 @@ impl<'a> Widget for TextInputWidget<'a> {
     }
 }
 
-#[cfg(tests)]
+#[cfg(test)]
 mod test {
     // TODO:
 }

@@ -202,7 +202,7 @@ impl UserInterface {
                         (false, true) => &breakpoints_flash,
                         _ => &breakpoints_default,
                     };
-                    let frame_size = frame.size();
+                    let frame_size = frame.area();
                     let global_layout_chunks = Layout::default()
                         .direction(Direction::Vertical)
                         .constraints(breakpoints.to_constraints(frame_size.height))
