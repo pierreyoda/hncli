@@ -21,7 +21,6 @@ chrono = { version = "0.4.42", features = ["serde"] }
 crossterm = "0.29.0"
 directories = "6.0.0"
 futures = "0.3.31"
-fuzzy-matcher = "0.3.7"
 html2text = "0.15.5"
 log = "0.4.28"
 num-traits = "0.2.19"
