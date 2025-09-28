@@ -78,8 +78,8 @@ impl AlgoliaHnFilter for AlgoliaHnSearchTag {
             Self::ShowHackerNews => "show_hn".into(),
             Self::AskHackerNews => "ask_hn".into(),
             Self::FrontPage => "front_page".into(),
-            Self::AuthorUsername(username) => format!("author_{}", username),
-            Self::StoryId(story_id) => format!("story_{}", story_id),
+            Self::AuthorUsername(username) => format!("author_{username}"),
+            Self::StoryId(story_id) => format!("story_{story_id}"),
         }
     }
 }

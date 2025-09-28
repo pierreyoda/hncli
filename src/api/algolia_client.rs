@@ -1,6 +1,5 @@
 use std::time::Duration;
 
-use log::warn;
 use reqwest::Client;
 
 use crate::{
@@ -58,10 +57,9 @@ impl AlgoliaHnClient {
             if tags.is_empty() {
                 "".into()
             } else {
-                format!("&tags={}", tags)
+                format!("&tags={tags}")
             }
         );
-        warn!("{}", url);
 
         // request
         let result: AlgoliaHnStoriesHits = self
@@ -85,8 +83,6 @@ impl AlgoliaHnClient {
             "{}/search?hitsPerPage={}&query={}=&tags=comment",
             self.base_url, ALGOLIA_HACKER_NEWS_API_MAX_HITS, query
         );
-
-        warn!("{}", url);
 
         let result: AlgoliaHnCommentsHits = self
             .client
@@ -112,7 +108,6 @@ impl AlgoliaHnClient {
             ALGOLIA_HACKER_NEWS_API_MAX_HITS,
             AlgoliaHnSearchTag::AuthorUsername(username.into()).to_query()
         );
-        warn!("{}", url);
 
         let result: AlgoliaHnStoriesHits = self
             .client

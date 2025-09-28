@@ -56,7 +56,7 @@ impl UiComponent for Help {
 impl Help {
     fn render_about_block(f: &mut RenderFrame, inside: Rect) {
         let text = vec![
-            Line::from(format!("hncli {}", HNCLI_VERSION)),
+            Line::from(format!("hncli {HNCLI_VERSION}")),
             Line::from("https://github.com/pierreyoda/hncli"),
             Line::from(
                 "A Terminal User Interface-based application for browsing Hacker News, written in 🦀 Rust. ",

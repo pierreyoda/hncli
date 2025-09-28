@@ -6,7 +6,7 @@ use crate::{
     },
     config::AppConfiguration,
     ui::{
-        common::{UiComponentId, UiTickScalar},
+        common::UiComponentId,
         components::{stories::STORIES_PANEL_ID, widgets::text_input::TextInputState},
         displayable_item::{DisplayableHackerNewsItem, DisplayableHackerNewsItemComments},
         flash::FlashMessage,
@@ -258,11 +258,6 @@ impl AppState {
         category: Option<AlgoliaHnSearchTag>,
     ) {
         self.currently_searched_algolia_category = category;
-    }
-
-    /// Is a flash message currently to be displayed?
-    pub fn has_flash_message(&self) -> bool {
-        self.flash_message.is_some()
     }
 
     /// Get the currently active flash message, if any, and as mutable.

@@ -57,7 +57,7 @@ impl AppConfiguration {
         match Self::from_file_or_environment() {
             Ok(config) => config,
             Err(why) => {
-                warn!("AppConfiguration loading error, using defaults. {}", why);
+                warn!("AppConfiguration loading error, using defaults. {why}");
                 Self::default()
             }
         }
@@ -113,7 +113,7 @@ impl AppConfiguration {
         })?;
 
         let config_raw = toml::to_string(self).map_err(|err| {
-            HnCliError::ConfigSynchronizationError(format!("cannot serialize config: {}", err))
+            HnCliError::ConfigSynchronizationError(format!("cannot serialize config: {err}"))
         })?;
 
         write(&config_filepath, config_raw).map_err(|err| {
@@ -129,7 +129,7 @@ impl AppConfiguration {
         match self.save_to_file() {
             Ok(()) => (),
             Err(why) => {
-                warn!("AppConfiguration saving error, skipping. {}", why);
+                warn!("AppConfiguration saving error, skipping. {why}");
             }
         }
     }
@@ -140,7 +140,7 @@ impl AppConfiguration {
         let load_defaults_and_save = || {
             let default_config = Self::default();
             if let Err(why) = default_config.save_to_file() {
-                warn!("{}", why);
+                warn!("{why}");
             }
             Ok(default_config)
         };
@@ -154,7 +154,7 @@ impl AppConfiguration {
             ))
         }) {
             Err(why) => {
-                warn!("{}", why);
+                warn!("{why}");
                 return load_defaults_and_save();
             }
             Ok(exists) => {
@@ -178,7 +178,7 @@ impl AppConfiguration {
         }) {
             Ok(raw) => raw,
             Err(why) => {
-                warn!("{}", why);
+                warn!("{why}");
                 return Ok(Self::default());
             }
         };
@@ -186,14 +186,11 @@ impl AppConfiguration {
         // Deserialize
         let deserializable_config: DeserializableAppConfiguration =
             match toml::from_str(&config_raw).map_err(|err| {
-                HnCliError::ConfigSynchronizationError(format!(
-                    "cannot deserialize config: {}",
-                    err
-                ))
+                HnCliError::ConfigSynchronizationError(format!("cannot deserialize config: {err}"))
             }) {
                 Ok(read_config) => read_config,
                 Err(why) => {
-                    warn!("{}", why);
+                    warn!("{why}");
                     return Ok(Self::default());
                 }
             };

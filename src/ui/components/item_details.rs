@@ -91,7 +91,7 @@ impl UiComponent for ItemDetails {
                 viewed_item.score, viewed_item.by_username, viewed_item.posted_since
             )),
             Line::from(if let Some(count) = comments_count {
-                format!("{} comments", count)
+                format!("{count} comments")
             } else {
                 "".into()
             }),

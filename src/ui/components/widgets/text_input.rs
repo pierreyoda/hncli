@@ -263,8 +263,3 @@ impl<'a> Widget for TextInputWidget<'a> {
         }
     }
 }
-
-#[cfg(test)]
-mod test {
-    // TODO:
-}

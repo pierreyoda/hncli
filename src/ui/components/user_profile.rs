@@ -81,7 +81,7 @@ impl UiComponent for UserProfile {
                     );
                 }
                 Err(why) => {
-                    warn!("{}", why);
+                    warn!("{why}");
                     self.error = true;
                     self.current_user = None;
                     ctx.router_pop_navigation_stack();
@@ -131,8 +131,7 @@ impl UiComponent for UserProfile {
                 f,
                 inside,
                 &format!(
-                    "The user data of '{}' cannot be loaded, please retry later.",
-                    viewed_user_id
+                    "The user data of '{viewed_user_id}' cannot be loaded, please retry later."
                 ),
             );
             return Ok(());

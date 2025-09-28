@@ -148,7 +148,7 @@ impl UiComponent for CommentItemNestedComments {
                 if focused_comment
                     .kids
                     .as_ref()
-                    .map_or(true, |kids| kids.is_empty())
+                    .is_none_or(|kids| kids.is_empty())
                 {
                     // a comment with no sub-comments cannot be focused
                     return Ok(false);
@@ -195,8 +195,7 @@ impl CommentItemNestedComments {
             comment
         } else {
             warn!(
-                "CommentItemNestedComments: cannot find parent comment with ID '{}'",
-                parent_comment_id
+                "CommentItemNestedComments: cannot find parent comment with ID '{parent_comment_id}'"
             );
             return None;
         };

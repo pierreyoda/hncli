@@ -28,7 +28,7 @@ pub enum FlashMessageType {
 }
 
 impl FlashMessageType {
-    fn to_color(&self) -> Color {
+    fn to_color(self) -> Color {
         use FlashMessageType::*;
         match self {
             Info => Blue,

@@ -96,9 +96,9 @@ impl DisplayableHackerNewsItem {
 
     fn pluralized(value: i64, word: &str) -> String {
         if value > 1 {
-            format!("{} {}s", value, word)
+            format!("{value} {word}s")
         } else {
-            format!("{} {}", value, word)
+            format!("{value} {word}")
         }
     }
 }

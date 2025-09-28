@@ -58,7 +58,7 @@ impl HnStoriesSections {
 
 /// Get the resource URL fragment corresponding to the given user ID.
 fn get_user_data_resource(id: &str) -> String {
-    format!("/user/{}", id)
+    format!("/user/{id}")
 }
 
 /// The internal Hacker News API client.
@@ -94,7 +94,7 @@ impl ClassicHnClient {
     pub async fn get_user_data(&self, username: &str) -> Result<HnUser> {
         let raw = self
             .client
-            .get(&format!(
+            .get(format!(
                 "{}/{}.json",
                 self.base_url,
                 get_user_data_resource(username)
@@ -109,10 +109,9 @@ impl ClassicHnClient {
             return Err(HnCliError::UserNotFound(username.into()));
         }
         // general case
-        let user: HnUser = serde_json::from_str(&raw).expect(&format!(
-            "api.get_user_data: deserialization should work for user with ID {}",
-            username
-        ));
+        let user: HnUser = serde_json::from_str(&raw).unwrap_or_else(|_| {
+            panic!("api.get_user_data: deserialization should work for user with ID: {username}")
+        });
         Ok(user)
     }
 
@@ -140,11 +139,7 @@ impl ClassicHnClient {
         sorting: &HnStoriesSorting,
     ) -> Result<Vec<HnItemIdScalar>> {
         self.client
-            .get(&format!(
-                "{}/{}.json",
-                self.base_url,
-                sorting.get_resource()
-            ))
+            .get(format!("{}/{}.json", self.base_url, sorting.get_resource()))
             .send()
             .await?
             .json()
@@ -158,11 +153,7 @@ impl ClassicHnClient {
         section: &HnStoriesSections,
     ) -> Result<Vec<HnItemIdScalar>> {
         self.client
-            .get(&format!(
-                "{}/{}.json",
-                self.base_url,
-                section.get_resource()
-            ))
+            .get(format!("{}/{}.json", self.base_url, section.get_resource()))
             .send()
             .await?
             .json()
@@ -205,9 +196,7 @@ impl ClassicHnClient {
                 );
                 acc
             })
-            .iter()
-            .copied()
-            .collect();
+            .to_vec();
         let descendants = if descendants_ids.is_empty() {
             HnItemComments::new()
         } else {
@@ -230,7 +219,7 @@ impl ClassicHnClient {
     /// Try to fetch the `HnItem` by its given ID.
     pub async fn get_item(&self, id: HnItemIdScalar) -> Result<HnItem> {
         self.client
-            .get(&format!("{}/item/{}.json", self.base_url, id))
+            .get(format!("{}/item/{}.json", self.base_url, id))
             .send()
             .await?
             .text()
@@ -249,10 +238,11 @@ impl ClassicHnClient {
                     return HnItem::Dead(dead);
                 }
                 // general case
-                serde_json::from_str(&raw).expect(&format!(
-                    "api.classic.get_item: deserialization should work for item with ID {}",
-                    id
-                ))
+                serde_json::from_str(&raw).unwrap_or_else(|_| {
+                    panic!(
+                        "api.classic.get_item: deserialization should work for item with ID: {id}"
+                    )
+                })
             })
             .map_err(HnCliError::HttpError)
     }
@@ -273,7 +263,7 @@ impl ClassicHnClient {
     /// Try to fetch the ID of the latest `HnItem` inserted into the Firebase store.
     pub async fn get_max_item_id(&self) -> Result<HnItemIdScalar> {
         self.client
-            .get(&format!("{}/maxitem.json", self.base_url))
+            .get(format!("{}/maxitem.json", self.base_url))
             .send()
             .await?
             .json()

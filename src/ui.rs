@@ -10,7 +10,6 @@ use crossterm::{
     event::{self, Event, KeyEvent},
     terminal::{disable_raw_mode, enable_raw_mode},
 };
-use flash::FlashMessage;
 use ratatui::{
     Terminal,
     backend::CrosstermBackend,
@@ -26,7 +25,6 @@ use crate::{
     app::App,
     config::AppConfiguration,
     errors::{HnCliError, Result},
-    ui::flash::{FLASH_MESSAGE_DEFAULT_DURATION_MS, FlashMessageType},
 };
 
 use self::{
@@ -189,7 +187,7 @@ impl UserInterface {
                         .get_context()
                         .get_state()
                         .get_flash_message()
-                        .map_or(false, |f| f.is_active());
+                        .is_some_and(|f| f.is_active());
                     let show_contextual_help =
                         app.get_context().get_config().get_show_contextual_help();
 
@@ -212,9 +210,8 @@ impl UserInterface {
                         if !current_components_ids.contains(&previous_component_id) {
                             components
                                 .get_mut(previous_component_id)
-                                .expect(&format!(
-                                    "main UI loop: no component found for: {}",
-                                    previous_component_id
+                                .unwrap_or_else(|| panic!(
+                                    "main UI loop: no component found for: {previous_component_id}"
                                 ))
                                 .component
                                 .as_mut()

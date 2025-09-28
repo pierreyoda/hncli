@@ -85,7 +85,7 @@ impl SynchronizedHistory {
             ))
         }) {
             Err(why) => {
-                warn!("{}", why);
+                warn!("{why}");
                 return Self::empty();
             }
             Ok(exists) => {
@@ -109,18 +109,18 @@ impl SynchronizedHistory {
         }) {
             Ok(raw) => raw,
             Err(why) => {
-                warn!("{}", why);
+                warn!("{why}");
                 return Self::empty();
             }
         };
 
         // Deserialize
         let synchronized_history: Self = match serde_json::from_str(&history_raw).map_err(|err| {
-            HnCliError::HistorySynchronizationError(format!("cannot deserialize history: {}", err))
+            HnCliError::HistorySynchronizationError(format!("cannot deserialize history: {err}"))
         }) {
             Ok(read_history) => read_history,
             Err(why) => {
-                warn!("{}", why);
+                warn!("{why}");
                 return Self::empty();
             }
         };
@@ -155,7 +155,7 @@ impl SynchronizedHistory {
         };
 
         let history_raw = serde_json::to_string(&limited_synchronized_history).map_err(|err| {
-            HnCliError::HistorySynchronizationError(format!("cannot serialize history: {}", err))
+            HnCliError::HistorySynchronizationError(format!("cannot serialize history: {err}"))
         })?;
 
         write(&history_filepath, history_raw).map_err(|err| {
@@ -205,8 +205,7 @@ impl AppHistory {
             },
             Err(why) => {
                 warn!(
-                    "History: cannot retrieve OS filepath for history.json (reading history): {}",
-                    why
+                    "History: cannot retrieve OS filepath for history.json (reading history): {why}"
                 );
                 Self {
                     synchronized: SynchronizedHistory::empty(),
@@ -223,13 +222,12 @@ impl AppHistory {
             Ok(history_filepath) => match self.synchronized.write_to_json_file(history_filepath) {
                 Ok(()) => (),
                 Err(why) => {
-                    warn!("History.persist error: {}", why);
+                    warn!("History.persist error: {why}");
                 }
             },
             Err(why) => {
                 warn!(
-                    "History: cannot retrieve OS filepath for history.json (writing history): {}",
-                    why
+                    "History: cannot retrieve OS filepath for history.json (writing history): {why}"
                 );
             }
         }

@@ -16,6 +16,7 @@ mod config;
 mod errors;
 mod ui;
 
+// TODO: set terminal title (dynamically if possible)
 #[tokio::main]
 async fn main() -> Result<(), HnCliError> {
     // File logger setup (mainly used for development purposes)

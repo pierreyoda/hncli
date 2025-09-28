@@ -46,7 +46,7 @@ impl Key {
             Down => "⬇️ (down)".into(),
             Left => "⬅️ (left)".into(),
             Right => "➡️ (right)".into(),
-            Char(char) => format!("'{}'", char),
+            Char(char) => format!("'{char}'"),
             Other => unreachable!(),
             None => unreachable!(),
         }

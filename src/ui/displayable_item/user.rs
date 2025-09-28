@@ -31,7 +31,7 @@ impl DisplayableHackerNewsUser {
     }
 
     pub fn build_hacker_news_link(user_id: &str) -> String {
-        format!("https://news.ycombinator.com/user?id={}", user_id)
+        format!("https://news.ycombinator.com/user?id={user_id}")
     }
 }
 

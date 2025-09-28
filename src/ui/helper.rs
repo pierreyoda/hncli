@@ -102,7 +102,7 @@ impl ContextualHelper {
         let has_widget_toggle_comments = !app_state
             .get_currently_viewed_item()
             .as_ref()
-            .map_or(false, |item| item.is_job);
+            .is_some_and(|item| item.is_job);
         let display_comments_panel = app_state.get_item_page_should_display_comments_panel();
 
         let mut widgets = vec![];
@@ -112,7 +112,7 @@ impl ContextualHelper {
             widgets.push(if app_inputs.has_shift_modifier() {
                 widget_open_hn_link
             } else {
-                HelpWidget::KeyReminder('🌐', format!("open {}", hostname), Key::Char('o'))
+                HelpWidget::KeyReminder('🌐', format!("open {hostname}"), Key::Char('o'))
             });
         } else {
             widgets.push(widget_open_hn_link);

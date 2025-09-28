@@ -184,7 +184,7 @@ impl UiComponent for ItemTopLevelComments {
                 if focused_comment
                     .kids
                     .as_ref()
-                    .map_or(true, |kids| kids.is_empty())
+                    .is_none_or(|kids| kids.is_empty())
                 {
                     // a comment with no sub-comments cannot be focused
                     return Ok(false);

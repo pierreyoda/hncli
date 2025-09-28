@@ -52,7 +52,7 @@ impl Screen for StoryDetailsScreen {
         if state
             .get_currently_viewed_item()
             .as_ref()
-            .map_or(false, |item| item.is_job)
+            .is_some_and(|item| item.is_job)
         {
             state.set_item_page_should_display_comments_panel(false);
         } else {
@@ -91,7 +91,7 @@ impl Screen for StoryDetailsScreen {
             && !state
                 .get_currently_viewed_item()
                 .as_ref()
-                .map_or(false, |item| item.is_job)
+                .is_some_and(|item| item.is_job)
         {
             state.set_item_page_should_display_comments_panel(
                 !state.get_item_page_should_display_comments_panel(),
