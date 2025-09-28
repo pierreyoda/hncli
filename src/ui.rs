@@ -26,7 +26,7 @@ use crate::{
     app::App,
     config::AppConfiguration,
     errors::{HnCliError, Result},
-    ui::flash::{FlashMessageDurationType, FlashMessageType},
+    ui::flash::{FLASH_MESSAGE_DEFAULT_DURATION_MS, FlashMessageType},
 };
 
 use self::{
@@ -51,15 +51,13 @@ pub mod common;
 pub mod components;
 pub mod displayable_algolia_item;
 pub mod displayable_item;
-mod flash;
+pub mod flash;
 pub mod handlers;
 mod helper;
 mod panels;
 pub mod router;
 pub mod screens;
 pub mod utils;
-
-const FLASH_MESSAGE_DURATION_MS: usize = 2000;
 
 type TerminalUi = Terminal<CrosstermBackend<Stdout>>;
 
@@ -95,7 +93,6 @@ pub struct UserInterface {
 }
 
 pub const UI_TICK_RATE_MS: u64 = 100;
-pub const FLASH_MESSAGE_DEFAULT_DURATION_MS: FlashMessageDurationType = 3000;
 
 impl UserInterface {
     /// Create a new `UserInterface` instance and prepare the terminal for it.
@@ -175,34 +172,34 @@ impl UserInterface {
             .map_err(|_| HnCliError::CrosstermError("hide_cursor error".into()))?;
 
         // Flash message setup
-        // TODO: adapt to other colors when needed
-        let flash_message =
-            FlashMessage::new(FlashMessageType::Warning, FLASH_MESSAGE_DEFAULT_DURATION_MS);
-        let mut had_flash_message = false;
         let mut flash_message_elapsed_ticks: UiTickScalar = 0;
 
         // Contextual help setup
         let contextual_helper = ContextualHelper::default();
         let breakpoints_default = Breakpoints::new("ui_default", &[100, 0]);
-        let breakpoints_helper = Breakpoints::new("ui_helper", &[90, 10]).breakpoint(30, &[97, 3]);
-        let breakpoints_flash = Breakpoints::new("ui_flash", &[80, 20]).breakpoint(40, &[80, 20]);
+        let breakpoints_helper_or_flash =
+            Breakpoints::new("ui_helper", &[90, 10]).breakpoint(30, &[95, 5]);
 
         'ui: loop {
             let app = &mut self.app;
             let components = &mut self.components;
             self.terminal
                 .draw(|frame| {
-                    let has_flash_message = app.get_context().get_state().has_flash_message();
+                    let has_flash_message = app
+                        .get_context()
+                        .get_state()
+                        .get_flash_message()
+                        .map_or(false, |f| f.is_active());
                     let show_contextual_help =
                         app.get_context().get_config().get_show_contextual_help();
 
                     // global layout
                     let breakpoints = match (show_contextual_help, has_flash_message) {
-                        (true, _) => &breakpoints_helper,
-                        (false, true) => &breakpoints_flash,
+                        (true, true) => &breakpoints_helper_or_flash,
+                        (false, true) => &breakpoints_helper_or_flash,
                         _ => &breakpoints_default,
                     };
-                    let frame_size = frame.size();
+                    let frame_size = frame.area();
                     let global_layout_chunks = Layout::default()
                         .direction(Direction::Vertical)
                         .constraints(breakpoints.to_constraints(frame_size.height))
@@ -241,24 +238,16 @@ impl UserInterface {
                     }
 
                     // render flash message
-                    if has_flash_message {
-                        if !had_flash_message {
-                            flash_message_elapsed_ticks = 0;
-                        }
-                        let mut app_context = app.get_context();
-                        if let Some(state) = app_context.get_state_mut().get_flash_message_mut() {
-                            state.update(flash_message_elapsed_ticks);
-                            flash_message_elapsed_ticks = 0;
-                            if let Some(message) = state.get_message() {
-                                flash_message.render(frame, global_layout_chunks[1], message);
-                            }
-                            had_flash_message = true;
+                    let mut clear_flash = false;
+                    if let Some(flash) = app.get_context().get_state_mut().get_flash_message_mut() {
+                        flash.update(flash_message_elapsed_ticks);
+                        flash_message_elapsed_ticks = 0;
+                        if flash.is_active() {
+                            flash.render(frame, global_layout_chunks[1]);
                         } else {
-                            had_flash_message = false;
+                            clear_flash = true;
                         }
-                    }
-                    // render contextual helper
-                    else if show_contextual_help {
+                    } else if show_contextual_help {
                         let app_context = app.get_context();
                         let current_route = app_context.get_router().get_current_route();
                         contextual_helper.render(
@@ -268,6 +257,10 @@ impl UserInterface {
                             app_context.get_state(),
                             app_context.get_inputs(),
                         );
+                    }
+
+                    if clear_flash {
+                        app.get_context().get_state_mut().clear_flash_message();
                     }
                 })
                 .map_err(HnCliError::IoError)?;
