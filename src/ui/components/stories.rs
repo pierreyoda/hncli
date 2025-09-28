@@ -23,6 +23,7 @@ use crate::{
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         displayable_item::DisplayableHackerNewsItem,
+        flash::{FLASH_MESSAGE_DEFAULT_DURATION_MS, FlashMessage, FlashMessageType},
         handlers::ApplicationAction,
         router::AppRoute,
         utils::{loader::Loader, open_browser_tab},
@@ -122,8 +123,11 @@ impl UiComponent for StoriesPanel {
                     })
                     .collect(),
                 _ => {
-                    ctx.get_state_mut()
-                        .set_flash_message("Could not fetch HackerNews stories.", Some(50));
+                    ctx.get_state_mut().set_flash_message(FlashMessage::new(
+                        "Could not fetch HackerNews stories.",
+                        FlashMessageType::Error,
+                        FLASH_MESSAGE_DEFAULT_DURATION_MS,
+                    ));
                     vec![]
                 }
             }
