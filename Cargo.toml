@@ -21,7 +21,7 @@ chrono = { version = "0.4.42", features = ["serde"] }
 crossterm = "0.29.0"
 directories = "6.0.0"
 futures = "0.3.31"
-html2text = "0.15.5"
+html2text = "0.16.2"
 log = "0.4.28"
 num-traits = "0.2.19"
 ratatui = "0.29.0"
