@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { resolve } from "$app/paths";
+
   import ExternalLink from "./ExternalLink.svelte";
 
   import GitHubLogo from "$lib/assets/github.svg";
@@ -7,7 +9,7 @@
 
 <header>
   <nav>
-    <a href="/" aria-label="Home" class="flex flex-col items-center">
+    <a href={resolve("/")} aria-label="Home" class="flex flex-col items-center">
       <img alt="hncli logo" src={HnCliTextLogo} class="max-w-40 h-auto" />
       <h1 class="hidden">hncli</h1>
     </a>

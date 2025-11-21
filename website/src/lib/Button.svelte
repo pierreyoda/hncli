@@ -62,7 +62,7 @@
     href={propsRest.href}
     class={buttonClass}
     target={propsRest.externalLink ? "_blank" : undefined}
-    rel={propsRest.externalLink ? "noopener noreferrer" : undefined}
+    rel={propsRest.externalLink ? "external noopener noreferrer" : undefined}
     {title}
     aria-label={ariaLabel}
   >
