@@ -1,5 +1,5 @@
 # BUILDER
-FROM rust:1.91-slim AS builder
+FROM rust:1.92-slim AS builder
 
 WORKDIR /usr/src/hncli/
 
