@@ -42,8 +42,8 @@ impl HomeScreen {
         Self {
             section,
             breakpoints: Breakpoints::new("home_screen", &[20, 65, 15])
-                .breakpoint(25, &[15, 75, 10])
-                .breakpoint(45, &[7, 88, 5]),
+                .breakpoint(25, &[10, 80, 10])
+                .breakpoint(45, &[5, 88, 7]),
         }
     }
 }

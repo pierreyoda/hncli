@@ -174,9 +174,9 @@ impl UserInterface {
 
         // Contextual help setup
         let contextual_helper = ContextualHelper::default();
-        let breakpoints_default = Breakpoints::new("ui_default", &[100, 0]);
+        let breakpoints_default = Breakpoints::new("ui_default", &[92, 8]);
         let breakpoints_helper_or_flash =
-            Breakpoints::new("ui_helper", &[90, 10]).breakpoint(30, &[95, 5]);
+            Breakpoints::new("ui_helper", &[85, 15]).breakpoint(30, &[90, 10]);
 
         'ui: loop {
             let app = &mut self.app;
