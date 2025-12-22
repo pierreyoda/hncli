@@ -13,12 +13,15 @@ use crate::{
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         handlers::ApplicationAction,
+        theme::UiTheme,
         utils::breakpoints::Breakpoints,
     },
 };
 
 #[derive(Debug)]
 enum SettingsOption {
+    /// Theme to use across the application.
+    UiTheme(UiTheme),
     /// On the main items list (home screen), should we display the items' metadata (score, number of comments, etc.)?
     DisplayItemsListItemMeta(bool),
     /// On the item details page, should we display the comments panel by default or not?
@@ -30,8 +33,9 @@ enum SettingsOption {
 }
 
 impl SettingsOption {
-    pub fn get_representation(&self) -> Span {
+    pub fn get_representation(&self) -> Span<'_> {
         match self {
+            Self::UiTheme(theme) => Self::get_theme_representation(theme),
             Self::DisplayItemsListItemMeta(value) => Self::get_boolean_representation(*value),
             Self::DisplayCommentsPanelByDefault(value) => Self::get_boolean_representation(*value),
             Self::ShowContextualHelp(value) => Self::get_boolean_representation(*value),
@@ -39,6 +43,10 @@ impl SettingsOption {
                 Self::get_boolean_representation(*value)
             }
         }
+    }
+
+    fn get_theme_representation(value: &UiTheme) -> Span<'_> {
+        Span::styled(value.label(), Style::default().fg(value.get_main_color()))
     }
 
     fn get_boolean_representation(value: bool) -> Span<'static> {

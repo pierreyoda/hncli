@@ -7,7 +7,10 @@ use directories::ProjectDirs;
 use log::warn;
 use serde::{Deserialize, Serialize};
 
-use crate::errors::{HnCliError, Result};
+use crate::{
+    errors::{HnCliError, Result},
+    ui::theme::UiTheme,
+};
 
 pub const HNCLI_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -19,6 +22,8 @@ pub const SHOW_CONTEXTUAL_HELP_DEFAULT: bool = true;
 /// Persisted, global application configuration.
 #[derive(Debug, Serialize)]
 pub struct AppConfiguration {
+    /// Theme to use across the application.
+    theme: UiTheme,
     /// Enable the 'q' quit shortcut in sub-screens (*i.e* everything but the initial, main screen).
     enable_global_sub_screen_quit_shortcut: bool,
     /// On the item details page, should we display the comments panel by default or not?
@@ -32,6 +37,7 @@ pub struct AppConfiguration {
 impl Default for AppConfiguration {
     fn default() -> Self {
         Self {
+            theme: UiTheme::default(),
             enable_global_sub_screen_quit_shortcut: ENABLE_GLOBAL_SUB_SCREEN_QUIT_SHORTCUT_DEFAULT,
             display_comments_panel_by_default: DISPLAY_COMMENTS_PANEL_BY_DEFAULT_DEFAULT,
             display_main_items_list_item_meta: DISPLAY_MAIN_ITEMS_LIST_ITEM_META,
@@ -46,6 +52,7 @@ impl Default for AppConfiguration {
 /// for instance when adding a new configuration option.
 #[derive(Debug, Deserialize)]
 struct DeserializableAppConfiguration {
+    theme: Option<UiTheme>,
     enable_global_sub_screen_quit_shortcut: Option<bool>,
     display_comments_panel_by_default: Option<bool>,
     display_main_items_list_item_meta: Option<bool>,
@@ -196,6 +203,7 @@ impl AppConfiguration {
             };
 
         Ok(Self {
+            theme: deserializable_config.theme.unwrap_or(UiTheme::default()),
             enable_global_sub_screen_quit_shortcut: deserializable_config
                 .enable_global_sub_screen_quit_shortcut
                 .unwrap_or(ENABLE_GLOBAL_SUB_SCREEN_QUIT_SHORTCUT_DEFAULT),
