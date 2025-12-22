@@ -24,6 +24,7 @@ use super::{Screen, ScreenComponentsRegistry, ScreenEventResponse};
 /// |      <SCORE> POINTS / BY <USERNAME>     |
 /// |   <#COMMENTS COUNT>  / POSTED <X> AGO   |
 /// |_________________________________________|
+/// |                                         |
 /// |               COMMENTS                  |
 /// |_________________________________________|
 /// ```

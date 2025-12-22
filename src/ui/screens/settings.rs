@@ -4,6 +4,7 @@ use crate::{
     app::{history::AppHistory, state::AppState},
     ui::{
         components::{navigation::NAVIGATION_ID, settings::SETTINGS_ID},
+        flash::{FLASH_MESSAGE_DEFAULT_DURATION_MS, FlashMessage, FlashMessageType},
         handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
         utils::breakpoints::{Breakpoints, BreakpointsDirection},
@@ -30,6 +31,14 @@ impl SettingsScreen {
 }
 
 impl Screen for SettingsScreen {
+    fn before_unmount(&mut self, state: &mut AppState) {
+        state.set_flash_message(FlashMessage::new(
+            "Settings successfully saved.",
+            FlashMessageType::Info,
+            FLASH_MESSAGE_DEFAULT_DURATION_MS,
+        ));
+    }
+
     fn handle_inputs(
         &mut self,
         inputs: &InputsController,
