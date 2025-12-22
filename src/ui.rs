@@ -90,7 +90,8 @@ pub struct UserInterface {
     components: HashMap<UiComponentId, ComponentWrapper>,
 }
 
-pub const UI_TICK_RATE_MS: u64 = 100;
+/** A UI tick is as close as possible to 100ms. */
+pub const UI_TICK_RATE_MS: u16 = 100;
 
 impl UserInterface {
     /// Create a new `UserInterface` instance and prepare the terminal for it.
@@ -116,7 +117,7 @@ impl UserInterface {
     /// Set up the Event Loop channels and the various UI components.
     pub fn setup(&mut self) -> Result<Receiver<UserInterfaceEvent>> {
         // event loop
-        let tick_rate = Duration::from_millis(UI_TICK_RATE_MS);
+        let tick_rate = Duration::from_millis(UI_TICK_RATE_MS as u64);
         let (tx, rx) = mpsc::channel();
         thread::spawn(move || {
             let mut last_tick = Instant::now();
@@ -293,7 +294,7 @@ impl UserInterface {
                         self.app.update_latest_interacted_with_component(None);
                     }
                 }
-                _ => {
+                UserInterfaceEvent::Tick => {
                     flash_message_elapsed_ticks += 1;
                     self.update().await?;
                 }

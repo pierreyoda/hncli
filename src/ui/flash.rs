@@ -9,7 +9,7 @@ use ratatui::{
 };
 use std::cmp;
 
-use crate::ui::common::UiTickScalar;
+use crate::ui::{UI_TICK_RATE_MS, common::UiTickScalar};
 
 use super::common::RenderFrame;
 
@@ -41,7 +41,7 @@ impl FlashMessageType {
 /// Global flash message renderer.
 #[derive(Debug)]
 pub struct FlashMessage {
-    /// Cached for the rendering function.
+    /// Cached instead of the message type for the rendering function.
     color: Color,
     message: String,
     starting_duration_ms: FlashMessageDurationType,
@@ -96,7 +96,7 @@ impl FlashMessage {
 
     fn ui_ticks_to_ms(ticks: UiTickScalar) -> FlashMessageDurationType {
         // a UI tick is as close as possible to 100ms
-        ticks * (100 as UiTickScalar)
+        ticks * UI_TICK_RATE_MS
     }
 }
 
