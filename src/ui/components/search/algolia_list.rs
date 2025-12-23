@@ -14,7 +14,7 @@ use crate::{
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         components::{
-            common::{COMMON_BLOCK_NORMAL_COLOR, render_text_message},
+            common::render_text_message,
             widgets::custom_list::{CustomList, CustomListState},
         },
         displayable_algolia_item::{
@@ -183,7 +183,7 @@ impl UiComponent for AlgoliaList {
             let items = self.list_state.get_items();
             let selected_item = &items[selected.unwrap()];
             let item_hn_link = selected_item.get_hacker_news_link();
-            open_browser_tab(item_hn_link.as_str());
+            open_browser_tab(&item_hn_link);
             true
         } else if inputs.is_active(&ApplicationAction::OpenExternalOrHackerNewsLink) {
             let items = self.list_state.get_items();
@@ -198,7 +198,9 @@ impl UiComponent for AlgoliaList {
         })
     }
 
-    fn render(&mut self, f: &mut RenderFrame, inside: Rect, _ctx: &AppContext) -> Result<()> {
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
+        let theme = ctx.get_theme();
+
         let block_border_style = Style::default().fg(match self.status {
             AlgoliaListStatus::Unselected => Color::White,
             AlgoliaListStatus::Selected => Color::Yellow,
@@ -208,7 +210,7 @@ impl UiComponent for AlgoliaList {
         // Empty input case
         if self.empty_input {
             let block = Block::default()
-                .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
+                .style(Style::default().fg(theme.get_block_color()))
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded)
                 .border_style(block_border_style);
@@ -224,7 +226,7 @@ impl UiComponent for AlgoliaList {
         // Loading case
         if self.loading {
             let block = Block::default()
-                .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
+                .style(Style::default().fg(theme.get_block_color()))
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded)
                 .border_style(block_border_style);
@@ -239,7 +241,7 @@ impl UiComponent for AlgoliaList {
 
         // Empty case
         if self.list_state.is_empty() {
-            render_text_message(f, inside, "No results...");
+            render_text_message(f, inside, "No results...", theme);
             return Ok(());
         }
 

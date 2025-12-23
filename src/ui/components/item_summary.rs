@@ -13,8 +13,6 @@ use crate::{
     ui::common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
 };
 
-use super::common::COMMON_BLOCK_NORMAL_COLOR;
-
 /// Item summary component, intended for when navigating sub-comments.
 ///
 /// Does not do any fetching, everything is pre-cached.
@@ -68,8 +66,10 @@ impl UiComponent for ItemSummary {
             return Ok(());
         };
 
+        let theme = ctx.get_theme();
+
         let block = Block::default()
-            .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
+            .style(Style::default().fg(theme.get_block_color()))
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded);
 

@@ -1,17 +1,15 @@
 use ratatui::{
     layout::{Alignment, Rect},
-    style::{Color, Style},
+    style::Style,
     text::Line,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
 
-use crate::ui::common::RenderFrame;
+use crate::ui::{common::RenderFrame, theme::UiTheme};
 
-pub const COMMON_BLOCK_NORMAL_COLOR: Color = Color::White;
-
-pub fn render_text_message(f: &mut RenderFrame, inside: Rect, message: &str) {
+pub fn render_text_message(f: &mut RenderFrame, inside: Rect, message: &str, theme: &UiTheme) {
     let block = Block::default()
-        .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
+        .style(Style::default().fg(theme.get_block_color()))
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded);
 

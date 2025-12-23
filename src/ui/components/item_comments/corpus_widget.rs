@@ -30,20 +30,20 @@ impl<'a> Widget for CommentWidget<'a> {
         buf.set_string(
             header_area.x + PADDING,
             header_area.y,
-            self.comment.by_username.as_str(),
+            &self.comment.by_username,
             Style::default().fg(Color::LightGreen),
         );
         // -> posted since
         buf.set_string(
             header_area.right() - self.comment.posted_since.len() as u16 - PADDING,
             header_area.y,
-            self.comment.posted_since.as_str(),
+            &self.comment.posted_since,
             Style::default().fg(Color::Gray),
         );
 
         // Corpus
         let corpus_str = if let Some(text) = &self.comment.text {
-            text.as_str()
+            &text
         } else {
             ""
         };

@@ -30,10 +30,7 @@ use crate::{
     },
 };
 
-use super::{
-    common::COMMON_BLOCK_NORMAL_COLOR,
-    widgets::custom_list::{CustomList, CustomListState},
-};
+use super::widgets::custom_list::{CustomList, CustomListState};
 
 #[derive(Debug)]
 pub struct StoriesPanel {
@@ -165,7 +162,7 @@ impl UiComponent for StoriesPanel {
             let items = self.list_state.get_items();
             let selected_item = &items[selected.unwrap()];
             let item_hn_link = selected_item.get_hacker_news_link();
-            open_browser_tab(item_hn_link.as_str());
+            open_browser_tab(&item_hn_link);
             true
         } else if inputs.is_active(&ApplicationAction::OpenExternalOrHackerNewsLink) {
             let items = self.list_state.get_items();
@@ -174,7 +171,7 @@ impl UiComponent for StoriesPanel {
                 .url
                 .clone()
                 .unwrap_or_else(|| selected_item.get_hacker_news_link());
-            open_browser_tab(item_link.as_str());
+            open_browser_tab(&item_link);
             true
         } else if let Some(selected_index) = selected {
             if inputs.is_active(&ApplicationAction::SelectItem)
@@ -195,10 +192,12 @@ impl UiComponent for StoriesPanel {
     }
 
     fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
+        let theme = ctx.get_theme();
+
         // Loading case
         if ctx.get_state().get_main_stories_loading() || self.loading {
             let block = Block::default()
-                .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
+                .style(Style::default().fg(theme.get_block_color()))
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded);
 
@@ -218,7 +217,7 @@ impl UiComponent for StoriesPanel {
             HnStoriesSections::Jobs => "Jobs",
         };
         let block = Block::default()
-            .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
+            .style(Style::default().fg(theme.get_block_color()))
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded)
             .title(block_title);
