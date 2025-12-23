@@ -144,7 +144,7 @@ impl UiComponent for Navigation {
                     .title("Menu"),
             )
             .style(Style::default().fg(Color::White))
-            .highlight_style(Style::default().fg(Color::Yellow))
+            .highlight_style(Style::default().fg(theme.get_accent_color()))
             .divider(Span::raw("|"));
 
         f.render_widget(tabs, inside);

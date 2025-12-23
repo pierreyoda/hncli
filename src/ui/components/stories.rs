@@ -229,7 +229,7 @@ impl UiComponent for StoriesPanel {
             |rect, buf, item, is_selected| {
                 // selected color
                 let style = Style::default().fg(if is_selected {
-                    Color::Yellow
+                    theme.get_accent_color()
                 } else {
                     Color::White
                 });
@@ -260,7 +260,7 @@ impl UiComponent for StoriesPanel {
         .block(block)
         .style(Style::default().fg(Color::White))
         .highlight_symbol(">> ")
-        .highlight_style(Style::default().fg(Color::Yellow));
+        .highlight_style(Style::default().fg(theme.get_accent_color()));
 
         f.render_widget(custom_list_stories, inside);
 

@@ -130,7 +130,7 @@ impl UiComponent for Options {
                 Line::from(Span::styled(
                     sorting_option.get_label(),
                     Style::default().fg(if i == self.selected_sorting_index {
-                        Color::Yellow
+                        theme.get_main_color()
                     } else {
                         Color::White
                     }),
@@ -142,7 +142,7 @@ impl UiComponent for Options {
         let tabs = Tabs::new(tabs_titles)
             .select(self.selected_sorting_index)
             .style(Style::default().fg(Color::White))
-            .highlight_style(Style::default().fg(Color::Yellow))
+            .highlight_style(Style::default().fg(theme.get_accent_color()))
             .divider(Span::raw("|"))
             .block(block);
 

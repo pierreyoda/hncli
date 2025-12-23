@@ -65,7 +65,7 @@ struct SettingsControl {
 }
 
 impl SettingsControl {
-    pub fn render(&self, f: &mut RenderFrame, inside: Rect, is_active: bool) {
+    pub fn render(&self, f: &mut RenderFrame, inside: Rect, is_active: bool, theme: &UiTheme) {
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
             .constraints(vec![Constraint::Percentage(75), Constraint::Percentage(25)])
@@ -78,7 +78,7 @@ impl SettingsControl {
             Line::from(Span::styled(
                 &self.label,
                 Style::default().fg(if is_active {
-                    Color::Yellow
+                    theme.get_accent_color()
                 } else {
                     Color::White
                 }),
@@ -151,7 +151,7 @@ impl UiComponent for Settings {
         })
     }
 
-    fn render(&mut self, f: &mut RenderFrame, inside: Rect, _ctx: &AppContext) -> Result<()> {
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints(self.breakpoints.to_constraints(inside.height))
@@ -177,7 +177,12 @@ impl UiComponent for Settings {
             .constraints(controls_constraints)
             .split(chunks[1]);
         for (i, control) in self.controls.iter().enumerate() {
-            control.render(f, controls_chunks[i], i == self.selected_control_index);
+            control.render(
+                f,
+                controls_chunks[i],
+                i == self.selected_control_index,
+                ctx.get_theme(),
+            );
         }
 
         Ok(())

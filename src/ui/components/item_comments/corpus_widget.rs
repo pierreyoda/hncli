@@ -5,17 +5,20 @@ use ratatui::{
     widgets::Widget,
 };
 
-use crate::ui::{displayable_item::DisplayableHackerNewsItem, utils::html_to_plain_text};
+use crate::ui::{
+    displayable_item::DisplayableHackerNewsItem, theme::UiTheme, utils::html_to_plain_text,
+};
 
 #[derive(Debug)]
 pub struct CommentWidget<'a> {
+    theme: &'a UiTheme,
     comment: &'a DisplayableHackerNewsItem,
 }
 
 impl<'a> CommentWidget<'a> {
-    pub fn with_comment(comment: &'a DisplayableHackerNewsItem) -> Self {
+    pub fn with_comment(theme: &'a UiTheme, comment: &'a DisplayableHackerNewsItem) -> Self {
         assert!(comment.is_comment);
-        Self { comment }
+        Self { theme, comment }
     }
 }
 
@@ -31,14 +34,14 @@ impl<'a> Widget for CommentWidget<'a> {
             header_area.x + PADDING,
             header_area.y,
             &self.comment.by_username,
-            Style::default().fg(Color::LightGreen),
+            Style::default().fg(self.theme.get_main_color()),
         );
         // -> posted since
         buf.set_string(
             header_area.right() - self.comment.posted_since.len() as u16 - PADDING,
             header_area.y,
             &self.comment.posted_since,
-            Style::default().fg(Color::Gray),
+            Style::default().fg(self.theme.get_block_color()),
         );
 
         // Corpus

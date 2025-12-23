@@ -23,7 +23,7 @@ pub enum UiTheme {
 
 impl Default for UiTheme {
     fn default() -> Self {
-        Self::Blue
+        Self::Yellow
     }
 }
 
@@ -43,7 +43,8 @@ impl UiTheme {
     }
 
     theme_define_color_palettes! {
-        get_main_color: Color::LightBlue, Color::Yellow,
-        get_block_color: Color::DarkGray, Color::White,
+        get_main_color: Color::LightBlue, Color::LightYellow,
+        get_block_color: Color::LightCyan, Color::White,
+        get_accent_color: Color::Blue, Color::Yellow,
     }
 }
