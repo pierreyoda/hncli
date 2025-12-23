@@ -76,7 +76,7 @@ impl SettingsControl {
             Line::from(""),
             Line::from(""),
             Line::from(Span::styled(
-                self.label.as_str(),
+                &self.label,
                 Style::default().fg(if is_active {
                     Color::Yellow
                 } else {
@@ -200,10 +200,11 @@ impl Settings {
     fn toggle_current_control(&mut self, ctx: &mut AppContext) {
         let config = ctx.get_config_mut();
         match self.selected_control_index {
-            0 => config.toggle_display_main_items_list_item_meta(),
-            1 => config.toggle_display_comments_panel_by_default(),
-            2 => config.toggle_show_contextual_help(),
-            3 => config.toggle_enable_global_sub_screen_quit_shortcut(),
+            0 => config.set_theme_to_next_value(),
+            1 => config.toggle_display_main_items_list_item_meta(),
+            2 => config.toggle_display_comments_panel_by_default(),
+            3 => config.toggle_show_contextual_help(),
+            4 => config.toggle_enable_global_sub_screen_quit_shortcut(),
             _ => (),
         }
         self.refresh_controls(ctx);
@@ -212,6 +213,10 @@ impl Settings {
     fn refresh_controls(&mut self, ctx: &AppContext) {
         let config = ctx.get_config();
         self.controls = vec![
+            SettingsControl {
+                label: "Application-wide theme".into(),
+                option: SettingsOption::UiTheme(*config.get_theme()),
+            },
             SettingsControl {
                 label: "Display the stories' metadata on main screen:".into(),
                 option: SettingsOption::DisplayItemsListItemMeta(

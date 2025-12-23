@@ -12,7 +12,7 @@ use crate::{
     ui::theme::UiTheme,
 };
 
-pub const HNCLI_VERSION: &str = env!("CARGO_PKG_VERSION");
+pub const HNCLI_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 pub const ENABLE_GLOBAL_SUB_SCREEN_QUIT_SHORTCUT_DEFAULT: bool = true;
 pub const DISPLAY_COMMENTS_PANEL_BY_DEFAULT_DEFAULT: bool = false;
@@ -68,6 +68,15 @@ impl AppConfiguration {
                 Self::default()
             }
         }
+    }
+
+    pub fn get_theme(&self) -> &UiTheme {
+        &self.theme
+    }
+
+    pub fn set_theme_to_next_value(&mut self) {
+        self.theme = self.theme.next_value();
+        self.save_to_file_warn_if_fail();
     }
 
     pub fn get_enable_global_sub_screen_quit_shortcut(&self) -> bool {
