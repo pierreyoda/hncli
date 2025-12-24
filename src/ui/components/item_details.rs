@@ -109,7 +109,7 @@ impl UiComponent for ItemDetails {
 }
 
 impl ItemDetails {
-    fn build_item_text_line(&self, inside: Rect, ctx: &AppContext) -> Result<Vec<Line>> {
+    fn build_item_text_line(&self, inside: Rect, ctx: &AppContext) -> Result<Vec<Line<'_>>> {
         Ok(if let Some(ref corpus) = self.text {
             if ctx
                 .get_state()

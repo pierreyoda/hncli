@@ -146,7 +146,7 @@ impl App {
     }
 
     /// Get the context handle allowing components to interact with the application.
-    pub fn get_context(&mut self) -> AppContext {
+    pub fn get_context(&mut self) -> AppContext<'_> {
         AppContext {
             inputs: &self.inputs,
             state: &mut self.state,
