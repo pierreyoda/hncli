@@ -117,7 +117,7 @@ impl ItemDetails {
             {
                 vec![]
             } else {
-                let rendered = html_to_plain_text(&corpus, inside.width as usize)?;
+                let rendered = html_to_plain_text(corpus, inside.width as usize)?;
                 let line = rendered
                     .lines()
                     .map(|line| Line::from(line.to_string()))

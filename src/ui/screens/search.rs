@@ -65,15 +65,14 @@ impl Screen for SearchScreen {
         // the Algolia searchbox input is handled here
         // due to interference with the below commands
         if currently_used_algolia_part == SearchScreenPart::Input {
-            if let Some((_, char)) = inputs.get_active_input_key() {
-                if state.get_current_algolia_query_state().get_value().len()
+            if let Some((_, char)) = inputs.get_active_input_key()
+                && state.get_current_algolia_query_state().get_value().len()
                     < MAX_ALGOLIA_INPUT_LENGTH
-                {
-                    state
-                        .get_current_algolia_query_state_mut()
-                        .handle_action(&TextInputStateAction::InsertCharacter(char));
-                    return (ScreenEventResponse::Caught, None);
-                }
+            {
+                state
+                    .get_current_algolia_query_state_mut()
+                    .handle_action(&TextInputStateAction::InsertCharacter(char));
+                return (ScreenEventResponse::Caught, None);
             }
             for available_action in TEXT_INPUT_AVAILABLE_ACTIONS {
                 if inputs.is_active(&available_action) {

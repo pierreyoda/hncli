@@ -15,16 +15,11 @@ macro_rules! theme_define_color_palettes {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum UiTheme {
     Blue,
+    #[default]
     Yellow,
-}
-
-impl Default for UiTheme {
-    fn default() -> Self {
-        Self::Yellow
-    }
 }
 
 impl UiTheme {

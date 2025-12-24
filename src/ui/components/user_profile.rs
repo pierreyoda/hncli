@@ -170,7 +170,7 @@ impl UserProfile {
         about: &Option<String>,
     ) -> Result<Vec<Line<'_>>> {
         Ok(if let Some(corpus) = about {
-            let rendered = html_to_plain_text(&corpus, inside.width as usize)?;
+            let rendered = html_to_plain_text(corpus, inside.width as usize)?;
             let spans = rendered
                 .lines()
                 .map(|line| Line::from(line.to_string()))

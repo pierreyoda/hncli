@@ -126,17 +126,17 @@ where
 
     fn reconciliate_current_selection(&mut self, old_items: Vec<T>) {
         let mut found = false;
-        if let Some(selected_index) = self.selected {
-            if let Some(old_selected_item) = old_items.get(selected_index) {
-                let old_selected_item_id = old_selected_item.get_id();
-                if let Some(new_selected_index) = self
-                    .items
-                    .iter()
-                    .position(|i| i.get_id() == old_selected_item_id)
-                {
-                    found = true;
-                    self.select(Some(new_selected_index));
-                }
+        if let Some(selected_index) = self.selected
+            && let Some(old_selected_item) = old_items.get(selected_index)
+        {
+            let old_selected_item_id = old_selected_item.get_id();
+            if let Some(new_selected_index) = self
+                .items
+                .iter()
+                .position(|i| i.get_id() == old_selected_item_id)
+            {
+                found = true;
+                self.select(Some(new_selected_index));
             }
         }
         if !found {

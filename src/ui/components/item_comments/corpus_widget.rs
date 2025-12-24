@@ -46,7 +46,7 @@ impl<'a> Widget for CommentWidget<'a> {
 
         // Corpus
         let corpus_str = if let Some(text) = &self.comment.text {
-            &text
+            text
         } else {
             ""
         };

@@ -44,10 +44,10 @@ impl Screen for StoryDetailsScreen {
         state.set_currently_viewed_item(Some(self.item.clone()));
 
         state.reset_currently_viewed_item_comments_chain();
-        if let Some(item_kids) = self.item.kids.as_ref() {
-            if let Some(first_comment_id) = item_kids.first() {
-                state.push_currently_viewed_item_comments_chain(*first_comment_id);
-            }
+        if let Some(item_kids) = self.item.kids.as_ref()
+            && let Some(first_comment_id) = item_kids.first()
+        {
+            state.push_currently_viewed_item_comments_chain(*first_comment_id);
         }
 
         if state
