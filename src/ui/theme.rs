@@ -45,6 +45,6 @@ impl UiTheme {
     theme_define_color_palettes! {
         get_main_color: Color::LightBlue, Color::LightYellow,
         get_block_color: Color::LightCyan, Color::White,
-        get_accent_color: Color::Blue, Color::Yellow,
+        get_accent_color: Color::LightMagenta, Color::Yellow,
     }
 }
