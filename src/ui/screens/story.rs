@@ -100,7 +100,7 @@ impl Screen for StoryDetailsScreen {
             (ScreenEventResponse::Caught, None)
         } else if inputs.is_active(&ApplicationAction::OpenHackerNewsLink) {
             let item_hn_link = self.item.get_hacker_news_link();
-            open_browser_tab(item_hn_link.as_str());
+            open_browser_tab(&item_hn_link);
             (ScreenEventResponse::Caught, None)
         } else if inputs.is_active(&ApplicationAction::OpenExternalOrHackerNewsLink) {
             let item_link = self
@@ -108,7 +108,7 @@ impl Screen for StoryDetailsScreen {
                 .url
                 .clone()
                 .unwrap_or_else(|| self.item.get_hacker_news_link());
-            open_browser_tab(item_link.as_str());
+            open_browser_tab(&item_link);
             (ScreenEventResponse::Caught, None)
         } else {
             (ScreenEventResponse::PassThrough, None)

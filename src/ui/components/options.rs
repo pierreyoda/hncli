@@ -19,8 +19,6 @@ use crate::{
     },
 };
 
-use super::common::COMMON_BLOCK_NORMAL_COLOR;
-
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum HomeSortingOptions {
     Newest,
@@ -116,9 +114,11 @@ impl UiComponent for Options {
         }
     }
 
-    fn render(&mut self, f: &mut RenderFrame, inside: Rect, _ctx: &AppContext) -> Result<()> {
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
+        let theme = ctx.get_theme();
+
         let block = Block::default()
-            .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
+            .style(Style::default().fg(theme.get_block_color()))
             .border_type(BorderType::Thick)
             .borders(Borders::ALL)
             .title("Options (S to toggle sorting)");
@@ -130,7 +130,7 @@ impl UiComponent for Options {
                 Line::from(Span::styled(
                     sorting_option.get_label(),
                     Style::default().fg(if i == self.selected_sorting_index {
-                        Color::Yellow
+                        theme.get_main_color()
                     } else {
                         Color::White
                     }),
@@ -142,7 +142,7 @@ impl UiComponent for Options {
         let tabs = Tabs::new(tabs_titles)
             .select(self.selected_sorting_index)
             .style(Style::default().fg(Color::White))
-            .highlight_style(Style::default().fg(Color::Yellow))
+            .highlight_style(Style::default().fg(theme.get_accent_color()))
             .divider(Span::raw("|"))
             .block(block);
 

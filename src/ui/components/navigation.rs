@@ -18,8 +18,6 @@ use crate::{
     },
 };
 
-use super::common::COMMON_BLOCK_NORMAL_COLOR;
-
 const TABS_TITLES: [&str; 6] = ["Home", "Ask HN", "Show HN", "Jobs", "Settings", "Help"];
 
 /// The Navigation bar provides a convenient way to switch between screens
@@ -105,6 +103,8 @@ impl UiComponent for Navigation {
     }
 
     fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
+        let theme = ctx.get_theme();
+
         let current_tab_index = match ctx.get_router().get_current_route() {
             AppRoute::Home(section) => match section {
                 HnStoriesSections::Home => 0,
@@ -138,13 +138,13 @@ impl UiComponent for Navigation {
             .select(self.selected_index)
             .block(
                 Block::default()
-                    .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
+                    .style(Style::default().fg(theme.get_block_color()))
                     .borders(Borders::ALL)
                     .border_type(BorderType::Rounded)
                     .title("Menu"),
             )
             .style(Style::default().fg(Color::White))
-            .highlight_style(Style::default().fg(Color::Yellow))
+            .highlight_style(Style::default().fg(theme.get_accent_color()))
             .divider(Span::raw("|"));
 
         f.render_widget(tabs, inside);

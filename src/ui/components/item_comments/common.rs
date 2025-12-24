@@ -49,9 +49,11 @@ impl ItemCommentsCommon {
     where
         F: FnOnce() -> Option<String>,
     {
+        let theme = ctx.get_theme();
+
         // (Initial) loading case
         if self.loading {
-            render_text_message(f, inside, &self.loader.text());
+            render_text_message(f, inside, &self.loader.text(), theme);
             return Ok(());
         }
 
@@ -60,7 +62,12 @@ impl ItemCommentsCommon {
             if let Some(cached_comments) = ctx.get_state().get_currently_viewed_item_comments() {
                 cached_comments
             } else {
-                render_text_message(f, inside, "Comments fetching issue. Please retry later.");
+                render_text_message(
+                    f,
+                    inside,
+                    "Comments fetching issue. Please retry later.",
+                    theme,
+                );
                 return Ok(());
             };
 
@@ -74,21 +81,23 @@ impl ItemCommentsCommon {
                 f,
                 inside,
                 "An error has occurred on this thread. Please retry later.",
+                theme,
             );
             return Ok(());
         } else if viewed_item_comments.is_empty() {
-            render_text_message(f, inside, "No comments yet.");
+            render_text_message(f, inside, "No comments yet.", theme);
             return Ok(());
         }
 
         // Specific error cases
         if let Some(error_message) = specific_error_handler() {
-            render_text_message(f, inside, error_message.as_str());
+            render_text_message(f, inside, &error_message, theme);
             return Ok(());
         }
 
         // Widget rendering
-        let widget = ItemCommentsWidget::with_comments(&self.widget_state, viewed_item_comments);
+        let widget =
+            ItemCommentsWidget::with_comments(theme, &self.widget_state, viewed_item_comments);
         f.render_widget(widget, inside);
 
         Ok(())

@@ -11,6 +11,7 @@ use crate::{
         handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
         screens::{Screen, ScreenComponentsRegistry, ScreenEventResponse},
+        theme::UiTheme,
     },
 };
 
@@ -45,6 +46,11 @@ impl<'a> AppContext<'a> {
 
     pub fn get_config_mut(&mut self) -> &mut AppConfiguration {
         self.config
+    }
+
+    /// Shorthand for `get_config().get_theme()`.
+    pub fn get_theme(&self) -> &UiTheme {
+        self.config.get_theme()
     }
 
     pub fn get_history(&self) -> &AppHistory {

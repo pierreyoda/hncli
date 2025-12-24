@@ -3,6 +3,7 @@
 
   import CommentsScreenshot from "$lib/assets/hncli-comments.webp";
   import SettingsScreenshot from "$lib/assets/hncli-settings.webp";
+  import ThemingSystemScreenshot from "$lib/assets/hncli-theme.webp";
   import ObsoleteSearchScreenshot from "$lib/assets/hncli-limited-search.png";
   import ContextualHelpScreenshot from "$lib/assets/hncli-contextual-help.webp";
 </script>
@@ -29,11 +30,17 @@
       imageAlt="hncli settings screen"
     />
     <FeatureFocus
+      title="Theming system"
+      description="Theming system, easily modified and extendable."
+      imageSrc={ThemingSystemScreenshot}
+      imageAlt="hncli theming system"
+      reversed
+    />
+    <FeatureFocus
       title="Search throughout hncli (posts, comments, users)"
       description="After heavy efforts on my part, hn.algolia unfortunately shut down almost all its returned data. Here is an example of what still works."
       imageSrc={ObsoleteSearchScreenshot}
       imageAlt="hncli search screen (limited by hn.algolia.com"
-      reversed
       obsolete
     />
   </div>

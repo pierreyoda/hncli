@@ -7,7 +7,10 @@ use ratatui::{
 };
 use unicode_width::UnicodeWidthStr;
 
-use crate::{api::types::HnItemIdScalar, ui::displayable_item::DisplayableHackerNewsItemComments};
+use crate::{
+    api::types::HnItemIdScalar,
+    ui::{displayable_item::DisplayableHackerNewsItemComments, theme::UiTheme},
+};
 
 use super::corpus_widget::CommentWidget;
 
@@ -156,6 +159,8 @@ impl ItemCommentsWidgetState {
 /// Custom `tui-rs` widget in charge of displaying a HackerNews Item comments.
 #[derive(Debug)]
 pub struct ItemCommentsWidget<'a> {
+    /// Theme.
+    theme: &'a UiTheme,
     /// Persistent state.
     state: &'a ItemCommentsWidgetState,
     /// Comments of the top-level parent item.
@@ -164,10 +169,15 @@ pub struct ItemCommentsWidget<'a> {
 
 impl<'a> ItemCommentsWidget<'a> {
     pub fn with_comments(
+        theme: &'a UiTheme,
         state: &'a ItemCommentsWidgetState,
         comments: &'a DisplayableHackerNewsItemComments,
     ) -> Self {
-        Self { state, comments }
+        Self {
+            theme,
+            state,
+            comments,
+        }
     }
 }
 
@@ -198,7 +208,7 @@ impl<'a> Widget for ItemCommentsWidget<'a> {
         };
 
         // Comment rendering
-        let focused_comment_widget = CommentWidget::with_comment(focused_comment);
+        let focused_comment_widget = CommentWidget::with_comment(self.theme, focused_comment);
         focused_comment_widget.render(
             area.inner(Margin {
                 vertical: PADDING,
@@ -243,7 +253,7 @@ impl<'a> Widget for ItemCommentsWidget<'a> {
             (footer_area.right() - footer_area.left()) / 2 - footer_text.width() as u16 / 2,
             footer_area.y,
             footer_text,
-            Style::default().fg(Color::LightBlue),
+            Style::default().fg(self.theme.get_main_color()),
         );
     }
 }

@@ -18,7 +18,7 @@ use crate::{
     },
 };
 
-use super::common::{COMMON_BLOCK_NORMAL_COLOR, render_text_message};
+use super::common::render_text_message;
 
 /// User profile component.
 ///
@@ -104,9 +104,11 @@ impl UiComponent for UserProfile {
     }
 
     fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
+        let theme = ctx.get_theme();
+
         // Loading case
         if self.loading {
-            render_text_message(f, inside, &self.loader.text());
+            render_text_message(f, inside, &self.loader.text(), theme);
             return Ok(());
         }
 
@@ -118,6 +120,7 @@ impl UiComponent for UserProfile {
                 f,
                 inside,
                 "Sorry, this user cannot be displayed due to an error.",
+                theme,
             );
             return Ok(());
         };
@@ -133,12 +136,13 @@ impl UiComponent for UserProfile {
                 &format!(
                     "The user data of '{viewed_user_id}' cannot be loaded, please retry later."
                 ),
+                theme,
             );
             return Ok(());
         };
 
         let block = Block::default()
-            .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
+            .style(Style::default().fg(theme.get_block_color()))
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded);
 
@@ -161,7 +165,7 @@ impl UiComponent for UserProfile {
 impl UserProfile {
     fn build_user_about_spans(&self, inside: Rect, about: &Option<String>) -> Result<Vec<Line>> {
         Ok(if let Some(corpus) = about {
-            let rendered = html_to_plain_text(corpus.as_str(), inside.width as usize)?;
+            let rendered = html_to_plain_text(&corpus, inside.width as usize)?;
             let spans = rendered
                 .lines()
                 .map(|line| Line::from(line.to_string()))

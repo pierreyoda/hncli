@@ -12,7 +12,6 @@ use crate::{
     errors::Result,
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
-        components::common::COMMON_BLOCK_NORMAL_COLOR,
         utils::html_to_plain_text,
     },
 };
@@ -73,8 +72,10 @@ impl UiComponent for ItemDetails {
             return Ok(());
         };
 
+        let theme = ctx.get_theme();
+
         let block = Block::default()
-            .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
+            .style(Style::default().fg(theme.get_block_color()))
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded);
 
@@ -116,7 +117,7 @@ impl ItemDetails {
             {
                 vec![]
             } else {
-                let rendered = html_to_plain_text(corpus.as_str(), inside.width as usize)?;
+                let rendered = html_to_plain_text(&corpus, inside.width as usize)?;
                 let line = rendered
                     .lines()
                     .map(|line| Line::from(line.to_string()))

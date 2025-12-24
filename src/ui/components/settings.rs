@@ -13,12 +13,15 @@ use crate::{
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         handlers::ApplicationAction,
+        theme::UiTheme,
         utils::breakpoints::Breakpoints,
     },
 };
 
 #[derive(Debug)]
 enum SettingsOption {
+    /// Theme to use across the application.
+    UiTheme(UiTheme),
     /// On the main items list (home screen), should we display the items' metadata (score, number of comments, etc.)?
     DisplayItemsListItemMeta(bool),
     /// On the item details page, should we display the comments panel by default or not?
@@ -30,8 +33,9 @@ enum SettingsOption {
 }
 
 impl SettingsOption {
-    pub fn get_representation(&self) -> Span {
+    pub fn get_representation(&self) -> Span<'_> {
         match self {
+            Self::UiTheme(theme) => Self::get_theme_representation(theme),
             Self::DisplayItemsListItemMeta(value) => Self::get_boolean_representation(*value),
             Self::DisplayCommentsPanelByDefault(value) => Self::get_boolean_representation(*value),
             Self::ShowContextualHelp(value) => Self::get_boolean_representation(*value),
@@ -39,6 +43,10 @@ impl SettingsOption {
                 Self::get_boolean_representation(*value)
             }
         }
+    }
+
+    fn get_theme_representation(value: &UiTheme) -> Span<'_> {
+        Span::styled(value.label(), Style::default().fg(value.get_main_color()))
     }
 
     fn get_boolean_representation(value: bool) -> Span<'static> {
@@ -57,7 +65,7 @@ struct SettingsControl {
 }
 
 impl SettingsControl {
-    pub fn render(&self, f: &mut RenderFrame, inside: Rect, is_active: bool) {
+    pub fn render(&self, f: &mut RenderFrame, inside: Rect, is_active: bool, theme: &UiTheme) {
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
             .constraints(vec![Constraint::Percentage(75), Constraint::Percentage(25)])
@@ -68,9 +76,9 @@ impl SettingsControl {
             Line::from(""),
             Line::from(""),
             Line::from(Span::styled(
-                self.label.as_str(),
+                &self.label,
                 Style::default().fg(if is_active {
-                    Color::Yellow
+                    theme.get_accent_color()
                 } else {
                     Color::White
                 }),
@@ -143,7 +151,7 @@ impl UiComponent for Settings {
         })
     }
 
-    fn render(&mut self, f: &mut RenderFrame, inside: Rect, _ctx: &AppContext) -> Result<()> {
+    fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints(self.breakpoints.to_constraints(inside.height))
@@ -169,7 +177,12 @@ impl UiComponent for Settings {
             .constraints(controls_constraints)
             .split(chunks[1]);
         for (i, control) in self.controls.iter().enumerate() {
-            control.render(f, controls_chunks[i], i == self.selected_control_index);
+            control.render(
+                f,
+                controls_chunks[i],
+                i == self.selected_control_index,
+                ctx.get_theme(),
+            );
         }
 
         Ok(())
@@ -192,10 +205,11 @@ impl Settings {
     fn toggle_current_control(&mut self, ctx: &mut AppContext) {
         let config = ctx.get_config_mut();
         match self.selected_control_index {
-            0 => config.toggle_display_main_items_list_item_meta(),
-            1 => config.toggle_display_comments_panel_by_default(),
-            2 => config.toggle_show_contextual_help(),
-            3 => config.toggle_enable_global_sub_screen_quit_shortcut(),
+            0 => config.set_theme_to_next_value(),
+            1 => config.toggle_display_main_items_list_item_meta(),
+            2 => config.toggle_display_comments_panel_by_default(),
+            3 => config.toggle_show_contextual_help(),
+            4 => config.toggle_enable_global_sub_screen_quit_shortcut(),
             _ => (),
         }
         self.refresh_controls(ctx);
@@ -204,6 +218,10 @@ impl Settings {
     fn refresh_controls(&mut self, ctx: &AppContext) {
         let config = ctx.get_config();
         self.controls = vec![
+            SettingsControl {
+                label: "Application-wide theme".into(),
+                option: SettingsOption::UiTheme(*config.get_theme()),
+            },
             SettingsControl {
                 label: "Display the stories' metadata on main screen:".into(),
                 option: SettingsOption::DisplayItemsListItemMeta(

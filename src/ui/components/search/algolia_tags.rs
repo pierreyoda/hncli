@@ -12,7 +12,6 @@ use crate::{
     errors::Result,
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
-        components::common::COMMON_BLOCK_NORMAL_COLOR,
         handlers::ApplicationAction,
         screens::search::SearchScreenPart,
         utils::debouncer::Debouncer,
@@ -114,6 +113,8 @@ impl UiComponent for AlgoliaTags {
     }
 
     fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
+        let theme = ctx.get_theme();
+
         let tabs_titles: Vec<Line> = self
             .titles
             .iter()
@@ -144,7 +145,7 @@ impl UiComponent for AlgoliaTags {
             .select(self.hovered_index)
             .block(
                 Block::default()
-                    .style(Style::default().fg(COMMON_BLOCK_NORMAL_COLOR))
+                    .style(Style::default().fg(theme.get_block_color()))
                     .borders(Borders::ALL)
                     .border_type(BorderType::Plain)
                     .border_style(tabs_border_style)

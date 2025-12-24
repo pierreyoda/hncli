@@ -55,6 +55,7 @@ mod helper;
 mod panels;
 pub mod router;
 pub mod screens;
+pub mod theme;
 pub mod utils;
 
 type TerminalUi = Terminal<CrosstermBackend<Stdout>>;

@@ -49,7 +49,7 @@ impl Screen for UserDetailsScreen {
             )
         } else if inputs.is_active(&ApplicationAction::OpenHackerNewsProfile) {
             let item_link = DisplayableHackerNewsUser::build_hacker_news_link(&self.user_id);
-            open_browser_tab(item_link.as_str());
+            open_browser_tab(&item_link);
             (ScreenEventResponse::Caught, None)
         } else {
             (ScreenEventResponse::PassThrough, None)
