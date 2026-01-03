@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use ratatui::{
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    layout::{HorizontalAlignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     text::{Line, Span},
     widgets::{Block, BorderType, Borders, Paragraph},
@@ -84,7 +84,7 @@ impl SettingsControl {
                 }),
             )),
         ];
-        let label_paragraph = Paragraph::new(label_text).alignment(Alignment::Left);
+        let label_paragraph = Paragraph::new(label_text).alignment(HorizontalAlignment::Left);
         f.render_widget(label_paragraph, chunks[0]);
 
         let value_text = vec![
@@ -93,7 +93,7 @@ impl SettingsControl {
             Line::from(""),
             Line::from(self.option.get_representation()),
         ];
-        let value_paragraph = Paragraph::new(value_text).alignment(Alignment::Right);
+        let value_paragraph = Paragraph::new(value_text).alignment(HorizontalAlignment::Right);
         f.render_widget(value_paragraph, chunks[1]);
     }
 }
@@ -162,7 +162,7 @@ impl UiComponent for Settings {
             let header_text = vec![Line::from("Settings")];
             let header_paragraph = Paragraph::new(header_text)
                 .block(Self::get_common_block())
-                .alignment(Alignment::Center);
+                .alignment(HorizontalAlignment::Center);
             f.render_widget(header_paragraph, chunks[0]);
         }
 

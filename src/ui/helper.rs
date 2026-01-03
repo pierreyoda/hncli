@@ -1,5 +1,5 @@
 use ratatui::{
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    layout::{HorizontalAlignment, Constraint, Direction, Layout, Rect},
     text::Line,
     widgets::Paragraph,
 };
@@ -35,7 +35,7 @@ impl HelpWidget {
             }
         };
         let text = vec![Line::from(widget_text)];
-        let paragraph = Paragraph::new(text).alignment(Alignment::Center);
+        let paragraph = Paragraph::new(text).alignment(HorizontalAlignment::Center);
 
         f.render_widget(paragraph, inside);
     }

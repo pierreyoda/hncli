@@ -5,7 +5,7 @@ use std::convert::TryFrom;
 use async_trait::async_trait;
 
 use ratatui::{
-    layout::{Alignment, Rect},
+    layout::{HorizontalAlignment, Rect},
     style::{Color, Style},
     text::Line,
     widgets::{Block, BorderType, Borders, Paragraph},
@@ -204,7 +204,7 @@ impl UiComponent for StoriesPanel {
             let text = vec![Line::from(""), Line::from(self.loader.text())];
             let paragraph = Paragraph::new(text)
                 .block(block)
-                .alignment(Alignment::Center);
+                .alignment(HorizontalAlignment::Center);
             f.render_widget(paragraph, inside);
             return Ok(());
         }

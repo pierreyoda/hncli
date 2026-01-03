@@ -1,5 +1,5 @@
 use ratatui::{
-    layout::{Alignment, Rect},
+    layout::{HorizontalAlignment, Rect},
     style::{
         Color::{self, Blue, Red, Yellow},
         Style,
@@ -89,7 +89,7 @@ impl FlashMessage {
     pub fn render(&self, f: &mut RenderFrame, inside: Rect) {
         let text = vec![Line::from(self.message.clone())];
         let paragraph = Paragraph::new(text)
-            .alignment(Alignment::Center)
+            .alignment(HorizontalAlignment::Center)
             .style(Style::default().fg(self.color));
         f.render_widget(paragraph, inside);
     }

@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use ratatui::{
-    layout::{Alignment::Center, Constraint, Direction, Layout, Rect},
+    layout::{HorizontalAlignment, Constraint, Direction, Layout, Rect},
     text::Line,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
@@ -72,7 +72,7 @@ impl AlgoliaHelp {
         ];
         let paragraph = Paragraph::new(text)
             .block(Self::get_common_block())
-            .alignment(Center);
+            .alignment(HorizontalAlignment::Center);
         f.render_widget(paragraph, inside);
     }
 

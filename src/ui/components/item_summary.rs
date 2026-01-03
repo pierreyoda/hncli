@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use ratatui::{
-    layout::{Alignment, Rect},
+    layout::{HorizontalAlignment, Rect},
     style::Style,
     text::Line,
     widgets::{Block, BorderType, Borders, Paragraph},
@@ -85,7 +85,7 @@ impl UiComponent for ItemSummary {
 
         let paragraph = Paragraph::new(text_base)
             .block(block)
-            .alignment(Alignment::Center);
+            .alignment(HorizontalAlignment::Center);
         f.render_widget(paragraph, inside);
 
         Ok(())

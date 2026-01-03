@@ -1,5 +1,5 @@
 use ratatui::{
-    layout::{Alignment, Rect},
+    layout::{HorizontalAlignment, Rect},
     style::Style,
     text::Line,
     widgets::{Block, BorderType, Borders, Paragraph},
@@ -16,6 +16,6 @@ pub fn render_text_message(f: &mut RenderFrame, inside: Rect, message: &str, the
     let text = vec![Line::from(""), Line::from(message.to_string())];
     let paragraph = Paragraph::new(text)
         .block(block)
-        .alignment(Alignment::Center);
+        .alignment(HorizontalAlignment::Center);
     f.render_widget(paragraph, inside);
 }
