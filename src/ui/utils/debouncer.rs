@@ -23,7 +23,7 @@ impl Debouncer {
     }
 
     pub fn tick(&mut self, elapsed_ticks: UiTickScalar) {
-        self.elapsed_ticks += elapsed_ticks;
+        self.elapsed_ticks = self.elapsed_ticks.wrapping_add(elapsed_ticks);
     }
 
     pub fn is_action_allowed(&mut self) -> bool {
