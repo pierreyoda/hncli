@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use ratatui::{
-    layout::{HorizontalAlignment, Constraint, Direction, Layout, Rect},
+    layout::{Constraint, Direction, HorizontalAlignment, Layout, Rect},
     text::Line,
     widgets::{Block, BorderType, Borders, Paragraph},
 };
