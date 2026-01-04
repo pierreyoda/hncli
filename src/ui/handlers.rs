@@ -130,7 +130,7 @@ impl ApplicationAction {
             ToggleHelp => inputs.key == Key::Char('h'),
             Back => inputs.key == Key::Escape,
             Quit => inputs.modifier == KeyModifier::Control && inputs.key == Key::Char('c'),
-            QuitShortcut => inputs.key == Key::Char('q'),
+            QuitShortcut => inputs.modifier == KeyModifier::None && inputs.key == Key::Char('q'),
             // navigation
             NavigateUp => inputs.key == Key::Up,
             NavigateDown => inputs.key == Key::Down,

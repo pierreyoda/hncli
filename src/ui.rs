@@ -351,8 +351,12 @@ impl UserInterface {
 
     fn can_quit_via_shortcut(&mut self) -> bool {
         let app_context = self.app.get_context();
-        // In Algolia input mode?
-        if app_context.get_state().get_currently_used_algolia_part() == SearchScreenPart::Input {
+        if app_context
+            .get_router()
+            .get_current_route()
+            .is_in_search_mode()
+            && app_context.get_state().get_currently_used_algolia_part() == SearchScreenPart::Input
+        {
             return false;
         }
         // Check configuration first
