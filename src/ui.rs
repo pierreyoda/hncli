@@ -283,12 +283,11 @@ impl UserInterface {
                         && self.can_quit_via_shortcut()
                     {
                         disable_raw_mode().map_err(|_| {
-                            HnCliError::CrosstermError("disable_raw_mode error".into())
+                            HnCliError::CrosstermError("crossterm disable_raw_mode error".into())
                         })?;
-                        let _ = self
-                            .terminal
-                            .show_cursor()
-                            .map_err(|_| HnCliError::CrosstermError("show_curor error".into()));
+                        let _ = self.terminal.show_cursor().map_err(|_| {
+                            HnCliError::CrosstermError("crossterm show_cursor error".into())
+                        });
                         break 'ui;
                     }
                     if self.app.handle_inputs() && !self.handle_inputs()? {

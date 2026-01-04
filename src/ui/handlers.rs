@@ -199,12 +199,13 @@ impl InputsController {
     }
 
     pub fn pump_event(&mut self, event: KeyEvent, _state: &AppState) {
-        // TODO: somehow make the modifiers work properly in all circumstances
-        self.modifier = match event.modifiers {
-            KeyModifiers::CONTROL => KeyModifier::Control,
-            KeyModifiers::SHIFT => KeyModifier::Shift,
-            _ => KeyModifier::None,
-        };
+        if event.modifiers.contains(KeyModifiers::CONTROL) {
+            self.modifier = KeyModifier::Control;
+        } else if event.modifiers.contains(KeyModifiers::SHIFT) {
+            self.modifier = KeyModifier::Shift;
+        } else {
+            self.modifier = KeyModifier::None;
+        }
         self.key = Key::from(event);
         self.active_input_key = if self.active_input_mode {
             match Key::from(event) {
