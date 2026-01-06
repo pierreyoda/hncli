@@ -96,7 +96,7 @@ impl UiComponent for StoriesPanel {
         let sorting_type = *ctx.get_state().get_main_stories_sorting();
 
         // Data fetching
-        let api = client.classic();
+        let api = client.classic().await;
         let router = ctx.get_router();
         let displayable_stories = {
             let fetched_stories =

@@ -72,11 +72,15 @@ impl UiComponent for CommentItemNestedComments {
         // Comments fetching
         let cached_comments_ids = ctx
             .get_state()
-            .get_currently_viewed_item_comments()
-            .unwrap_or(&DisplayableHackerNewsItemComments::new())
-            .to_cached_ids();
+            .use_currently_viewed_item_comments(|cached_comments| {
+                cached_comments
+                    .unwrap_or(&DisplayableHackerNewsItemComments::new())
+                    .to_cached_ids()
+            })
+            .await;
         let comments_raw = client
             .classic()
+            .await
             .get_item_comments(parent_comment_kids.as_slice(), &cached_comments_ids, false)
             .await?;
         let comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
