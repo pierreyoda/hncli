@@ -1,3 +1,7 @@
+use std::sync::Arc;
+
+use futures::lock::{Mutex, MutexGuard};
+
 use crate::errors::Result;
 
 use self::{algolia_client::AlgoliaHnClient, client::ClassicHnClient};
@@ -12,28 +16,32 @@ pub struct HnClient {
     /// Original Hacker News API client.
     ///
     /// Documentation: https://github.com/HackerNews/API
-    classic_client: ClassicHnClient,
+    classic_client: Arc<Mutex<ClassicHnClient>>,
     /// Algolia Hacker News API client.
     ///
     /// Documentation: https://hn.algolia.com/api
-    algolia_client: AlgoliaHnClient,
+    algolia_client: Arc<Mutex<AlgoliaHnClient>>,
 }
 
 impl HnClient {
-    pub fn classic(&self) -> &ClassicHnClient {
-        &self.classic_client
+    pub async fn classic(&self) -> MutexGuard<ClassicHnClient> {
+        self.classic_client.lock().await
     }
 
-    pub fn algolia(&self) -> &AlgoliaHnClient {
-        &self.algolia_client
+    pub fn classic_non_blocking(&self) -> Arc<Mutex<ClassicHnClient>> {
+        Arc::clone(&self.classic_client)
+    }
+
+    pub async fn algolia(&self) -> MutexGuard<AlgoliaHnClient> {
+        self.algolia_client.lock().await
     }
 }
 
 impl HnClient {
     pub fn new() -> Result<Self> {
         Ok(Self {
-            classic_client: ClassicHnClient::new()?,
-            algolia_client: AlgoliaHnClient::new()?,
+            classic_client: Arc::new(Mutex::new(ClassicHnClient::new()?)),
+            algolia_client: Arc::new(Mutex::new(AlgoliaHnClient::new()?)),
         })
     }
 }

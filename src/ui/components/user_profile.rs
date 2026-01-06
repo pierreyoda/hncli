@@ -73,7 +73,7 @@ impl UiComponent for UserProfile {
 
         let currently_viewed_user_id = ctx.get_state().get_currently_viewed_user_id();
         if let Some(user_id) = currently_viewed_user_id {
-            match client.classic().get_user_data(user_id).await {
+            match client.classic().await.get_user_data(user_id).await {
                 Ok(user_raw) => {
                     self.current_user = Some(
                         user_raw

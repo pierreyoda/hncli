@@ -1,3 +1,7 @@
+use std::sync::Arc;
+
+use futures::lock::Mutex;
+
 use crate::{
     api::{
         algolia_types::AlgoliaHnSearchTag,
@@ -32,7 +36,7 @@ pub struct AppState {
     /// Has the currently viewed item (not a comment) changed recently?
     currently_viewed_item_switched: bool,
     /// The comments of the currently viewed item, if applicable.
-    currently_viewed_item_comments: Option<DisplayableHackerNewsItemComments>,
+    currently_viewed_item_comments: Arc<Mutex<Option<DisplayableHackerNewsItemComments>>>,
     /// The successive IDs of the viewed comment, starting at the root parent comment.
     currently_viewed_item_comments_chain: Vec<HnItemIdScalar>,
     /// The ID of the comment to restore when coming back from a sub-comment.
@@ -60,7 +64,7 @@ impl AppState {
             main_stories_sorting: HnStoriesSorting::Top,
             currently_viewed_item: None,
             currently_viewed_item_switched: false,
-            currently_viewed_item_comments: None,
+            currently_viewed_item_comments: Arc::new(Mutex::new(None)),
             currently_viewed_item_comments_chain: vec![],
             previously_viewed_comment_id: None,
             item_page_display_comments_panel: config.get_display_comments_panel_by_default(),
@@ -125,24 +129,33 @@ impl AppState {
         self.currently_viewed_item_switched
     }
 
-    /// Get the comments of the currently viewed item.
-    pub fn get_currently_viewed_item_comments(&self) -> Option<&DisplayableHackerNewsItemComments> {
-        self.currently_viewed_item_comments.as_ref()
+    /// Convenience function for read-only usage of the currently viewed item comments.
+    pub async fn use_currently_viewed_item_comments<F, R>(&self, function: F) -> R
+    where
+        F: FnOnce(Option<&DisplayableHackerNewsItemComments>) -> R,
+    {
+        let comments_lock = self.currently_viewed_item_comments.lock().await;
+        function(comments_lock.as_ref())
     }
 
     /// Set the comments of the currently viewed item.
-    pub fn set_currently_viewed_item_comments(
+    pub async fn set_currently_viewed_item_comments(
         &mut self,
         comments: Option<DisplayableHackerNewsItemComments>,
     ) {
         // Different item: replace the comments
         if self.currently_viewed_item_switched {
-            self.currently_viewed_item_comments = comments;
+            self.currently_viewed_item_comments
+                .lock()
+                .await
+                .replace(comments.unwrap_or_default());
             self.currently_viewed_item_switched = false;
             return;
         }
         // Same item: merge the comments (since some children comments may be new)
-        if let Some(current_comments_cache) = &mut self.currently_viewed_item_comments {
+        if let Some(current_comments_cache) =
+            self.currently_viewed_item_comments.lock().await.as_mut()
+        {
             if let Some(incoming_comments_cache) = comments {
                 for (incoming_comment_id, incoming_comment) in incoming_comments_cache {
                     // we prefer the freshly updated comments over potentially outdated ones
@@ -151,7 +164,10 @@ impl AppState {
             }
             // else: when no further children comments are found, we preserve our current comments cache for this item
         } else {
-            self.currently_viewed_item_comments = comments;
+            self.currently_viewed_item_comments
+                .lock()
+                .await
+                .replace(comments.unwrap_or_default());
         }
     }
 
