@@ -19,6 +19,8 @@ pub enum HnCliError {
     CrosstermError(String),
     #[error("html2text error: {0}")]
     Html2TextError(#[source] html2text::Error),
+    #[error("UI error: {0}")]
+    UiError(String),
     #[error("Config synchronization error: {0}")]
     ConfigSynchronizationError(String),
     #[error("History synchronization error: {0}")]

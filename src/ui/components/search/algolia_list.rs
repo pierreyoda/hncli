@@ -72,7 +72,11 @@ impl UiComponent for AlgoliaList {
         self.loader.stop();
     }
 
-    fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
+    async fn should_update(
+        &mut self,
+        elapsed_ticks: UiTickScalar,
+        ctx: &AppContext,
+    ) -> Result<bool> {
         self.debouncer.tick(elapsed_ticks);
         let should_update = Some(
             ctx.get_state()
@@ -175,7 +179,7 @@ impl UiComponent for AlgoliaList {
         Ok(())
     }
 
-    fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
+    async fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
         if self.loading || !matches!(self.status, AlgoliaListStatus::Focused) {
             return Ok(false);
         }

@@ -85,7 +85,11 @@ impl UiComponent for AlgoliaTags {
         ALGOLIA_TAGS_ID
     }
 
-    fn should_update(&mut self, elapsed_ticks: UiTickScalar, _ctx: &AppContext) -> Result<bool> {
+    async fn should_update(
+        &mut self,
+        elapsed_ticks: UiTickScalar,
+        _ctx: &AppContext,
+    ) -> Result<bool> {
         self.debouncer.tick(elapsed_ticks);
         Ok(self.debouncer.is_action_allowed())
     }
@@ -96,7 +100,7 @@ impl UiComponent for AlgoliaTags {
         Ok(())
     }
 
-    fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
+    async fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
         let inputs = ctx.get_inputs();
         Ok(if inputs.is_active(&ApplicationAction::NavigateLeft) {
             self.previous();

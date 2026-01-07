@@ -117,16 +117,18 @@ impl ItemCommentsCommon {
     /// NB: will panic if some invariants about cached comments do not hold true.
     ///
     /// TODO: avoid cloning and expects here
-    pub(super) fn get_focused_comment<'a>(
+    pub(super) async fn get_focused_comment(
         &self,
-        state: &'a AppState,
+        state: &AppState,
     ) -> Option<DisplayableHackerNewsItem> {
         let focused_comment_id = self.widget_state.get_focused_comment_id()?;
-        state.use_currently_viewed_item_comments(|comments| {
-            comments
-                .expect("comments should be cached in the global state")
-                .get(&focused_comment_id)
-                .cloned()
-        })
+        state
+            .use_currently_viewed_item_comments(|comments| {
+                comments
+                    .expect("comments should be cached in the global state")
+                    .get(&focused_comment_id)
+                    .cloned()
+            })
+            .await
     }
 }

@@ -37,7 +37,7 @@ pub enum ScreenEventResponse {
 }
 
 /// A Screen is a self-contained state of the application with its own update and rendering logic.
-pub trait Screen: Debug + Send {
+pub trait Screen: Debug + Send + Sync {
     /// Called after instantiation and before mounting the screen.
     fn before_mount(&mut self, _state: &mut AppState, _config: &AppConfiguration) {}
 
