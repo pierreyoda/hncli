@@ -38,7 +38,11 @@ impl UiComponent for CommentItemNestedComments {
         COMMENT_ITEM_NESTED_COMMENTS_ID
     }
 
-    fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
+    async fn should_update(
+        &mut self,
+        elapsed_ticks: UiTickScalar,
+        ctx: &AppContext,
+    ) -> Result<bool> {
         self.common.ticks_since_last_update += elapsed_ticks;
         self.common.inputs_debouncer.tick(elapsed_ticks);
 
@@ -85,7 +89,7 @@ impl UiComponent for CommentItemNestedComments {
             .await?;
         let comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
         ctx.get_state_mut()
-            .set_currently_viewed_item_comments(Some(comments));
+            .update_currently_viewed_item_comments(Some(comments));
 
         self.common.loading = false;
 
@@ -111,7 +115,7 @@ impl UiComponent for CommentItemNestedComments {
         Ok(())
     }
 
-    fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
+    async fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
         if ctx.get_inputs().is_active(&ApplicationAction::Back) {
             // TODO: this should be handled at screen level but seems to be needed somehow
             ctx.router_pop_navigation_stack();
@@ -148,7 +152,7 @@ impl UiComponent for CommentItemNestedComments {
                 .replace_latest_in_currently_viewed_item_comments_chain(new_focused_id);
             true
         } else if inputs.is_active(&ApplicationAction::ItemExpandFocusedComment) {
-            if let Some(focused_comment) = self.common.get_focused_comment(ctx.get_state()) {
+            if let Some(focused_comment) = self.common.get_focused_comment(ctx.get_state()).await {
                 if focused_comment
                     .kids
                     .as_ref()
@@ -165,7 +169,7 @@ impl UiComponent for CommentItemNestedComments {
                 false
             }
         } else if inputs.is_active(&ApplicationAction::FocusedCommentViewUserProfile) {
-            if let Some(focused_comment) = self.common.get_focused_comment(ctx.get_state()) {
+            if let Some(focused_comment) = self.common.get_focused_comment(ctx.get_state()).await {
                 ctx.router_push_navigation_stack(AppRoute::UserProfile(
                     focused_comment.by_username.clone(),
                 ));

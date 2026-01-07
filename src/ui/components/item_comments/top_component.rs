@@ -41,7 +41,11 @@ impl UiComponent for ItemTopLevelComments {
         self.common.loader.stop();
     }
 
-    fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
+    async fn should_update(
+        &mut self,
+        elapsed_ticks: UiTickScalar,
+        ctx: &AppContext,
+    ) -> Result<bool> {
         if ctx.get_state().get_currently_viewed_item_switched() {
             // update comments on viewed item switch
             self.common.inputs_debouncer.reset();
@@ -89,7 +93,7 @@ impl UiComponent for ItemTopLevelComments {
                     .common
                     .widget_state
                     .get_focused_same_level_comments_count()
-            || self.common.fetched_comments.lock().unwrap().is_some();
+            || self.common.fetched_comments.lock().await.is_some();
 
         self.common.loader.update();
 
@@ -104,14 +108,15 @@ impl UiComponent for ItemTopLevelComments {
         self.common.loading = true;
 
         // Fetched comments handling
-        if let Some(fetched_comments) = self.common.fetched_comments.lock().unwrap().take() {
+        if let Some(fetched_comments) = self.common.fetched_comments.lock().await.take() {
             ctx.get_state_mut()
-                .set_currently_viewed_item_comments(Some(fetched_comments));
+                .update_currently_viewed_item_comments(Some(fetched_comments));
             self.common.loading = false;
             self.update_widget_state(
                 ctx.get_state(),
                 &Self::get_parent_item_kids(ctx.get_state())?,
-            )?;
+            )
+            .await?;
             return Ok(());
         }
 
@@ -130,23 +135,23 @@ impl UiComponent for ItemTopLevelComments {
         let fetching_client = client.classic_non_blocking();
         // fetching in a separate thread to avoid blocking the async runtime
         thread::spawn(async move || {
-            if *fetching.lock().await) {
+            if *fetching.lock().await {
                 return Ok(());
             }
-            *fetching.lock().await) = true;
+            *fetching.lock().await = true;
             let comments_raw = fetching_client
                 .lock()
                 .await
                 .get_item_comments(&parent_item_kids.clone(), &cached_comments_ids, false) // TODO: avoid .clone()
                 .await?;
-            *fetching.lock().await) = false;
+            *fetching.lock().await = false;
             let comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
-            *fetched_comments.lock().await) = Some(comments);
+            *fetched_comments.lock().await = Some(comments);
             Ok::<(), HnCliError>(())
         });
-        if let Some(fetched_comments) = self.common.fetched_comments.lock().unwrap().take() {
+        if let Some(fetched_comments) = self.common.fetched_comments.lock().await.take() {
             ctx.get_state_mut()
-                .set_currently_viewed_item_comments(Some(fetched_comments))
+                .update_currently_viewed_item_comments(Some(fetched_comments))
                 .await;
         }
 
@@ -154,14 +159,15 @@ impl UiComponent for ItemTopLevelComments {
         self.update_widget_state(
             ctx.get_state(),
             &Self::get_parent_item_kids(ctx.get_state())?,
-        )?;
+        )
+        .await?;
 
         self.common.loading = false;
 
         Ok(())
     }
 
-    fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
+    async fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
         if ctx.get_inputs().is_active(&ApplicationAction::Back) {
             // TODO: this should be handled at screen level but seems to be needed sometimes
             ctx.router_pop_navigation_stack();
@@ -190,12 +196,15 @@ impl UiComponent for ItemTopLevelComments {
                 .replace_latest_in_currently_viewed_item_comments_chain(new_focused_id);
             true
         } else if inputs.is_active(&ApplicationAction::NavigateDown) {
-            let new_focused_id = self.common.widget_state.next_main_comment(parent_item_kids);
+            let new_focused_id = self
+                .common
+                .widget_state
+                .next_main_comment(&parent_item_kids);
             ctx.get_state_mut()
                 .replace_latest_in_currently_viewed_item_comments_chain(new_focused_id);
             true
         } else if inputs.is_active(&ApplicationAction::ItemExpandFocusedComment) {
-            if let Some(focused_comment) = self.common.get_focused_comment(ctx.get_state()) {
+            if let Some(focused_comment) = self.common.get_focused_comment(ctx.get_state()).await {
                 if focused_comment
                     .kids
                     .as_ref()
@@ -212,7 +221,7 @@ impl UiComponent for ItemTopLevelComments {
                 false
             }
         } else if inputs.is_active(&ApplicationAction::FocusedCommentViewUserProfile) {
-            if let Some(focused_comment) = self.common.get_focused_comment(ctx.get_state()) {
+            if let Some(focused_comment) = self.common.get_focused_comment(ctx.get_state()).await {
                 ctx.router_push_navigation_stack(AppRoute::UserProfile(
                     focused_comment.by_username.clone(),
                 ));
@@ -231,17 +240,19 @@ impl UiComponent for ItemTopLevelComments {
 }
 
 impl ItemTopLevelComments {
-    fn update_widget_state(
+    async fn update_widget_state(
         &mut self,
         state: &AppState,
         parent_item_kids: &[HnItemIdScalar],
     ) -> Result<()> {
-        let viewed_item_comments =
-            if let Some(cached_comments) = state.get_currently_viewed_item_comments() {
-                cached_comments
-            } else {
-                return Ok(());
-            };
+        let viewed_item_comments = if let Some(cached_comments) = state
+            .use_currently_viewed_item_comments(|comments| comments.unwrap_or_default())
+            .await
+        {
+            cached_comments
+        } else {
+            return Ok(());
+        };
         self.common
             .widget_state
             .update(viewed_item_comments, parent_item_kids);
@@ -250,7 +261,11 @@ impl ItemTopLevelComments {
     }
 
     fn get_parent_item_kids(state: &AppState) -> Result<Vec<HnItemIdScalar>> {
-        let parent_item = state.get_currently_viewed_item()?;
+        let parent_item = state.get_currently_viewed_item().ok_or_else(|| {
+            HnCliError::UiError(
+                "ItemTopLevelComments: cannot retrieve currently viewed item.".into(),
+            )
+        })?;
         Ok(
             parent_item
                 .kids

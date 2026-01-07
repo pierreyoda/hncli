@@ -129,7 +129,7 @@ impl AppState {
         self.currently_viewed_item_switched
     }
 
-    /// Convenience function for read-only usage of the currently viewed item comments.
+    /// Read-only usage of the currently viewed item comments.
     pub async fn use_currently_viewed_item_comments<F, R>(&self, function: F) -> R
     where
         F: FnOnce(Option<&DisplayableHackerNewsItemComments>) -> R,
@@ -138,8 +138,8 @@ impl AppState {
         function(comments_lock.as_ref())
     }
 
-    /// Set the comments of the currently viewed item.
-    pub async fn set_currently_viewed_item_comments(
+    /// Set the comments of the currently viewed item, with a merging behavior.
+    pub async fn update_currently_viewed_item_comments(
         &mut self,
         comments: Option<DisplayableHackerNewsItemComments>,
     ) {

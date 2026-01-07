@@ -43,14 +43,17 @@ impl UiComponent for ItemDetails {
         ITEM_DETAILS_ID
     }
 
-    fn should_update(&mut self, _elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
-        Ok(
-            if let Some(item) = ctx.get_state().get_currently_viewed_item() {
-                item.text != self.text
-            } else {
-                false
-            },
-        )
+    async fn should_update(
+        &mut self,
+        _elapsed_ticks: UiTickScalar,
+        ctx: &AppContext,
+    ) -> Result<bool> {
+        let currently_viewed_item = ctx.get_state().get_currently_viewed_item();
+        Ok(if let Some(item) = currently_viewed_item {
+            item.text != self.text
+        } else {
+            false
+        })
     }
 
     async fn update(&mut self, _client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
@@ -68,7 +71,7 @@ impl UiComponent for ItemDetails {
         Ok(())
     }
 
-    fn handle_inputs(&mut self, _ctx: &mut AppContext) -> Result<bool> {
+    async fn handle_inputs(&mut self, _ctx: &mut AppContext) -> Result<bool> {
         Ok(false)
     }
 

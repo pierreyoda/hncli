@@ -26,7 +26,11 @@ pub trait UiComponent {
     fn before_unmount(&mut self) {}
 
     /// Must return `true` if the state should update itself.
-    fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool>;
+    async fn should_update(
+        &mut self,
+        elapsed_ticks: UiTickScalar,
+        ctx: &AppContext,
+    ) -> Result<bool>;
 
     /// Update the state from various sources.
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()>;
@@ -35,7 +39,7 @@ pub trait UiComponent {
     ///
     /// Returns true if the active event is to be captured, that is swallowed
     /// and no longer passed to other components.
-    fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool>;
+    async fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool>;
 
     /// Renderer for the component.
     fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()>;

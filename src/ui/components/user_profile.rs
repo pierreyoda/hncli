@@ -54,7 +54,11 @@ impl UiComponent for UserProfile {
         self.loader.stop();
     }
 
-    fn should_update(&mut self, _elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
+    async fn should_update(
+        &mut self,
+        _elapsed_ticks: UiTickScalar,
+        ctx: &AppContext,
+    ) -> Result<bool> {
         // we don't do automatic refresh every X minutes since the information displayed has little chance to change
         // and some user profiles' JSON are very heavy due to many comments posted
         let should_update = !self.loading
@@ -100,7 +104,7 @@ impl UiComponent for UserProfile {
         Ok(())
     }
 
-    fn handle_inputs(&mut self, _ctx: &mut AppContext) -> Result<bool> {
+    async fn handle_inputs(&mut self, _ctx: &mut AppContext) -> Result<bool> {
         Ok(false)
     }
 

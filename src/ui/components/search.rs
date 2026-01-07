@@ -28,7 +28,11 @@ impl UiComponent for Search {
         SEARCH_ID
     }
 
-    fn should_update(&mut self, _elapsed_ticks: UiTickScalar, _ctx: &AppContext) -> Result<bool> {
+    async fn should_update(
+        &mut self,
+        _elapsed_ticks: UiTickScalar,
+        _ctx: &AppContext,
+    ) -> Result<bool> {
         Ok(false)
     }
 
@@ -36,7 +40,7 @@ impl UiComponent for Search {
         Ok(())
     }
 
-    fn handle_inputs(&mut self, _ctx: &mut AppContext) -> Result<bool> {
+    async fn handle_inputs(&mut self, _ctx: &mut AppContext) -> Result<bool> {
         Ok(false)
     }
 
