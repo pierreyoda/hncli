@@ -1,7 +1,6 @@
 use std::{sync::Arc, thread};
 
 use async_trait::async_trait;
-use log::warn;
 use ratatui::layout::Rect;
 
 use crate::{
@@ -107,21 +106,11 @@ impl UiComponent for ItemTopLevelComments {
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
         self.common.loading = true;
 
-        // Fetched comments handling
-        if let Some(fetched_comments) = self.common.fetched_comments.lock().await.take() {
-            ctx.get_state_mut()
-                .update_currently_viewed_item_comments(Some(fetched_comments));
-            self.common.loading = false;
-            self.update_widget_state(
-                ctx.get_state(),
-                &Self::get_parent_item_kids(ctx.get_state())?,
-            )
-            .await?;
-            return Ok(());
-        }
-
         // Comments fetching
         let parent_item_kids = Self::get_parent_item_kids(ctx.get_state())?;
+        if parent_item_kids.is_empty() {
+            return Ok(());
+        }
         let cached_comments_ids = ctx
             .get_state()
             .use_currently_viewed_item_comments(|comments| {
@@ -142,7 +131,7 @@ impl UiComponent for ItemTopLevelComments {
             let comments_raw = fetching_client
                 .lock()
                 .await
-                .get_item_comments(&parent_item_kids.clone(), &cached_comments_ids, false) // TODO: avoid .clone()
+                .get_item_comments(&parent_item_kids, &cached_comments_ids, false) // TODO: avoid .clone()
                 .await?;
             *fetching.lock().await = false;
             let comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
@@ -153,14 +142,25 @@ impl UiComponent for ItemTopLevelComments {
             ctx.get_state_mut()
                 .update_currently_viewed_item_comments(Some(fetched_comments))
                 .await;
-        }
+            // TODO: avoid cloning
+            let cached_comments = Some(
+                ctx.get_state()
+                    .use_currently_viewed_item_comments(|comments| {
+                        comments
+                            .unwrap_or(&DisplayableHackerNewsItemComments::new())
+                            .clone()
+                    })
+                    .await,
+            );
 
-        // Widget state
-        self.update_widget_state(
-            ctx.get_state(),
-            &Self::get_parent_item_kids(ctx.get_state())?,
-        )
-        .await?;
+            self.common.widget_state.update(
+                &cached_comments
+                    .as_ref()
+                    .unwrap_or(&DisplayableHackerNewsItemComments::new()),
+                &Self::get_parent_item_kids(ctx.get_state())?,
+            );
+            self.common.cached_comments = cached_comments;
+        }
 
         self.common.loading = false;
 
@@ -178,14 +178,7 @@ impl UiComponent for ItemTopLevelComments {
             return Ok(false);
         }
 
-        let parent_item = if let Some(item) = ctx.get_state().get_currently_viewed_item() {
-            item
-        } else {
-            warn!("ItemTopLevelComments.handle_inputs: no parent item.");
-            return Ok(false);
-        };
         let parent_item_kids = Self::get_parent_item_kids(ctx.get_state())?;
-
         let inputs = ctx.get_inputs();
         Ok(if inputs.is_active(&ApplicationAction::NavigateUp) {
             let new_focused_id = self
@@ -240,26 +233,6 @@ impl UiComponent for ItemTopLevelComments {
 }
 
 impl ItemTopLevelComments {
-    async fn update_widget_state(
-        &mut self,
-        state: &AppState,
-        parent_item_kids: &[HnItemIdScalar],
-    ) -> Result<()> {
-        let viewed_item_comments = if let Some(cached_comments) = state
-            .use_currently_viewed_item_comments(|comments| comments.unwrap_or_default())
-            .await
-        {
-            cached_comments
-        } else {
-            return Ok(());
-        };
-        self.common
-            .widget_state
-            .update(viewed_item_comments, parent_item_kids);
-
-        Ok(())
-    }
-
     fn get_parent_item_kids(state: &AppState) -> Result<Vec<HnItemIdScalar>> {
         let parent_item = state.get_currently_viewed_item().ok_or_else(|| {
             HnCliError::UiError(
