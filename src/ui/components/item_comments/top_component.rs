@@ -143,23 +143,20 @@ impl UiComponent for ItemTopLevelComments {
                 .update_currently_viewed_item_comments(Some(fetched_comments))
                 .await;
             // TODO: avoid cloning
-            let cached_comments = Some(
-                ctx.get_state()
-                    .use_currently_viewed_item_comments(|comments| {
-                        comments
-                            .unwrap_or(&DisplayableHackerNewsItemComments::new())
-                            .clone()
-                    })
-                    .await,
-            );
-
-            self.common.widget_state.update(
-                &cached_comments
-                    .as_ref()
-                    .unwrap_or(&DisplayableHackerNewsItemComments::new()),
-                &Self::get_parent_item_kids(ctx.get_state())?,
-            );
-            self.common.cached_comments = cached_comments;
+            ctx.get_state()
+                .use_currently_viewed_item_comments(|comments| {
+                    self.common.cached_comments = comments.cloned();
+                    self.common.widget_state.update(
+                        &self
+                            .common
+                            .cached_comments
+                            .as_ref()
+                            .unwrap_or(&DisplayableHackerNewsItemComments::new()),
+                        &Self::get_parent_item_kids(ctx.get_state())?,
+                    );
+                    Ok::<(), HnCliError>(())
+                })
+                .await?;
         }
 
         self.common.loading = false;
