@@ -1,3 +1,5 @@
+use std::{sync::Arc, thread};
+
 use async_trait::async_trait;
 use log::warn;
 use ratatui::layout::Rect;
@@ -5,7 +7,7 @@ use ratatui::layout::Rect;
 use crate::{
     api::{HnClient, types::HnItemIdScalar},
     app::{AppContext, state::AppState},
-    errors::Result,
+    errors::{HnCliError, Result},
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
         displayable_item::{
@@ -65,13 +67,13 @@ impl UiComponent for CommentItemNestedComments {
             return Ok(());
         }
 
-        // Parent comment handling
-        let parent_comment_kids = if let Some(kids) = Self::get_parent_comment_kids(ctx.get_state())
-        {
-            kids
-        } else {
-            return Ok(());
-        };
+        // Parent comments handling
+        let parent_comment_kids =
+            if let Some(kids) = Self::get_parent_comment_kids(ctx.get_state()).await {
+                kids
+            } else {
+                return Ok(());
+            };
 
         // Comments fetching
         let cached_comments_ids = ctx
@@ -82,33 +84,61 @@ impl UiComponent for CommentItemNestedComments {
                     .to_cached_ids()
             })
             .await;
-        let comments_raw = client
-            .classic()
-            .await
-            .get_item_comments(parent_comment_kids.as_slice(), &cached_comments_ids, false)
-            .await?;
-        let comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
-        ctx.get_state_mut()
-            .update_currently_viewed_item_comments(Some(comments));
+        let fetching = Arc::clone(&self.common.fetching);
+        let fetched_comments = Arc::clone(&self.common.fetched_comments);
+        let fetching_client = client.classic_non_blocking();
+        // fetching in a separate thread to avoid blocking the async runtime
+        thread::spawn(async move || {
+            if *fetching.lock().await {
+                return Ok(());
+            }
+            *fetching.lock().await = true;
+            let comments_raw = fetching_client
+                .lock()
+                .await
+                .get_item_comments(&parent_comment_kids, &cached_comments_ids, false) // TODO: avoid .clone()
+                .await?;
+            *fetching.lock().await = false;
+            let comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
+            *fetched_comments.lock().await = Some(comments);
+            Ok::<(), HnCliError>(())
+        });
+
+        // Widget state
+        if let Some(fetched_comments) = self.common.fetched_comments.lock().await.take() {
+            ctx.get_state_mut()
+                .update_currently_viewed_item_comments(Some(fetched_comments))
+                .await;
+            // TODO: avoid cloning
+            let cached_comments = Some(
+                ctx.get_state()
+                    .use_currently_viewed_item_comments(|comments| {
+                        comments
+                            .unwrap_or(&DisplayableHackerNewsItemComments::new())
+                            .clone()
+                    })
+                    .await,
+            );
+            self.common.widget_state.update(
+                &cached_comments
+                    .as_ref()
+                    .unwrap_or(&DisplayableHackerNewsItemComments::new()),
+                &Self::get_parent_comment_kids(ctx.get_state())
+                    .await
+                    .unwrap_or(vec![]),
+            );
+        }
 
         self.common.loading = false;
 
-        // Widget state
-        let viewed_item_comments =
-            if let Some(cached_comments) = ctx.get_state().get_currently_viewed_item_comments() {
-                cached_comments
-            } else {
-                return Ok(());
-            };
-        self.common
-            .widget_state
-            .update(viewed_item_comments, parent_comment_kids.as_slice());
-
         // Latest focused comment, if applicable
         if let Some(restored_comment_id) = ctx.get_state().get_previously_viewed_comment_id() {
-            self.common
-                .widget_state
-                .restore_focused_comment_id(restored_comment_id, parent_comment_kids.as_slice());
+            self.common.widget_state.restore_focused_comment_id(
+                restored_comment_id,
+                &Self::get_parent_comment_kids(ctx.get_state())
+                    .await
+                    .unwrap_or(vec![]),
+            );
             ctx.get_state_mut().set_previously_viewed_comment_id(None);
         }
 
@@ -126,12 +156,12 @@ impl UiComponent for CommentItemNestedComments {
             return Ok(false);
         }
 
-        let parent_comment_kids = if let Some(kids) = Self::get_parent_comment_kids(ctx.get_state())
-        {
-            kids
-        } else {
-            return Ok(false);
-        };
+        let parent_comment_kids =
+            if let Some(kids) = Self::get_parent_comment_kids(ctx.get_state()).await {
+                kids
+            } else {
+                return Ok(false);
+            };
 
         let inputs = ctx.get_inputs();
         // TODO: refactor with top component usage as much as possible
@@ -189,31 +219,31 @@ impl UiComponent for CommentItemNestedComments {
 }
 
 impl CommentItemNestedComments {
-    fn get_parent_comment_kids(state: &AppState) -> Option<Vec<HnItemIdScalar>> {
-        let comments_cache = state.get_currently_viewed_item_comments()?;
+    async fn get_parent_comment_kids(state: &AppState) -> Option<Vec<HnItemIdScalar>> {
+        state.use_currently_viewed_item_comments(|comments| {
+            let comments_cache = if let Some(cache) = comments.as_ref() {
+                cache
+            } else {
+                warn!("CommentItemNestedComments: no comments cache available.");
+                return None;
+            };
+            let parent_comment_id = if let Some(id) = Self::get_parent_comment_id(state) {
+                id
+            } else {
+                warn!("CommentItemNestedComments: cannot retrieve parent comment ID.");
+                return None;
+            };
+            let parent_comment = if let Some(comment) = comments_cache.get(&parent_comment_id) {
+                comment
+            } else {
+                warn!(
+                    "CommentItemNestedComments: cannot find parent comment with ID '{parent_comment_id}'"
+                );
+                return None;
+            };
 
-        let parent_comment_id = if let Some(id) = Self::get_parent_comment_id(state) {
-            id
-        } else {
-            warn!("CommentItemNestedComments: cannot retrieve parent comment ID.");
-            return None;
-        };
-
-        let parent_comment = if let Some(comment) = comments_cache.get(&parent_comment_id) {
-            comment
-        } else {
-            warn!(
-                "CommentItemNestedComments: cannot find parent comment with ID '{parent_comment_id}'"
-            );
-            return None;
-        };
-
-        Some(
-            parent_comment
-                .kids
-                .as_ref()
-                .map_or(vec![], |kids| kids.to_vec()),
-        )
+            Some(parent_comment.kids.as_ref().map_or(vec![], |kids| kids.to_vec()))
+        }).await
     }
 
     fn get_parent_comment_id(state: &AppState) -> Option<HnItemIdScalar> {
