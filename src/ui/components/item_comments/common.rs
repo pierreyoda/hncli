@@ -26,6 +26,7 @@ pub struct ItemCommentsCommon {
     pub(super) widget_state: ItemCommentsWidgetState,
     pub(super) fetching: Arc<Mutex<bool>>,
     pub(super) fetched_comments: Arc<Mutex<Option<DisplayableHackerNewsItemComments>>>,
+    pub(super) cached_comments: Option<DisplayableHackerNewsItemComments>,
 }
 
 const INPUTS_DEBOUNCER_THROTTLING_TIME: UiTickScalar = 5; // approx. 500ms
@@ -40,6 +41,7 @@ impl Default for ItemCommentsCommon {
             widget_state: ItemCommentsWidgetState::default(),
             fetching: Arc::new(Mutex::new(false)),
             fetched_comments: Arc::new(Mutex::new(None)),
+            cached_comments: None,
         }
     }
 }
@@ -65,10 +67,7 @@ impl ItemCommentsCommon {
         }
 
         // Unavailable comments cache case
-        let viewed_item_comments = if let Some(cached_comments) = ctx
-            .get_state()
-            .use_currently_viewed_item_comments(|cached_comments| cached_comments)
-        {
+        let viewed_item_comments = if let Some(cached_comments) = &self.cached_comments {
             cached_comments
         } else {
             render_text_message(
