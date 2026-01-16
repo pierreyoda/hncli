@@ -61,7 +61,7 @@ impl ItemCommentsCommon {
         let theme = ctx.get_theme();
 
         // (Initial) loading case
-        if self.loading {
+        if self.loading || self.cached_comments.is_none() {
             render_text_message(f, inside, &self.loader.text(), theme);
             return Ok(());
         }
