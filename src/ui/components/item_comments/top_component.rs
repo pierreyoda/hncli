@@ -1,6 +1,7 @@
-use std::{sync::Arc, thread};
+use std::{collections::HashMap, sync::Arc, thread};
 
 use async_trait::async_trait;
+use log::info;
 use ratatui::layout::Rect;
 
 use crate::{
@@ -79,10 +80,19 @@ impl UiComponent for ItemTopLevelComments {
             return Ok(false);
         };
 
+        let fetched_comments_len = self
+            .common
+            .fetched_comments
+            .lock()
+            .await
+            .as_ref()
+            .map_or(0, |c| c.len());
         let should_update = self.common.ticks_since_last_update >= MEAN_TICKS_BETWEEN_UPDATES
             || ctx
                 .get_state()
-                .use_currently_viewed_item_comments(|comments| comments.is_none())
+                .use_currently_viewed_item_comments(|comments| {
+                    comments.is_none() || comments.map_or(0, |c| c.len()) != fetched_comments_len
+                })
                 .await
             || currently_viewed_item
                 .kids
@@ -92,8 +102,13 @@ impl UiComponent for ItemTopLevelComments {
                     .common
                     .widget_state
                     .get_focused_same_level_comments_count()
-            || self.common.fetched_comments.lock().await.is_some();
-
+            || self
+                .common
+                .fetched_comments
+                .lock()
+                .await
+                .as_ref()
+                .is_none_or(|comments| comments.is_empty());
         self.common.loader.update();
 
         if should_update {
@@ -104,7 +119,11 @@ impl UiComponent for ItemTopLevelComments {
     }
 
     async fn update(&mut self, client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
+        // if self.common.fetching.lock().await.clone() {
+        //     return Ok(());
+        // }
         self.common.loading = true;
+        info!("updating");
 
         // Comments fetching
         let parent_item_kids = Self::get_parent_item_kids(ctx.get_state())?;
@@ -122,8 +141,9 @@ impl UiComponent for ItemTopLevelComments {
         let fetching = Arc::clone(&self.common.fetching);
         let fetched_comments = Arc::clone(&self.common.fetched_comments);
         let fetching_client = client.classic_non_blocking();
-        // fetching in a separate thread to avoid blocking the async runtime
-        thread::spawn(async move || {
+        // fetching in a separate task to avoid blocking the async runtime
+        tokio::spawn(async move {
+            info!("> spawning fetching for top-level comments");
             if *fetching.lock().await {
                 return Ok(());
             }
@@ -133,19 +153,18 @@ impl UiComponent for ItemTopLevelComments {
                 .await
                 .get_item_comments(&parent_item_kids, &cached_comments_ids, false) // TODO: avoid .clone()
                 .await?;
-            *fetching.lock().await = false;
+            info!("> fetched {} top-level comments", comments_raw.len());
             let comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
             *fetched_comments.lock().await = Some(comments);
+            *fetching.lock().await = false;
             Ok::<(), HnCliError>(())
         });
         if let Some(fetched_comments) = self.common.fetched_comments.lock().await.take() {
             ctx.get_state_mut()
                 .update_currently_viewed_item_comments(Some(fetched_comments))
                 .await;
-            // TODO: avoid cloning
             ctx.get_state()
                 .use_currently_viewed_item_comments(|comments| {
-                    self.common.cached_comments = comments.cloned();
                     self.common.widget_state.update(
                         &self
                             .common
@@ -154,6 +173,8 @@ impl UiComponent for ItemTopLevelComments {
                             .unwrap_or(&DisplayableHackerNewsItemComments::new()),
                         &Self::get_parent_item_kids(ctx.get_state())?,
                     );
+                    // TODO: avoid cloning
+                    self.common.cached_comments = comments.cloned();
                     Ok::<(), HnCliError>(())
                 })
                 .await?;
