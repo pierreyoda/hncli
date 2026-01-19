@@ -46,6 +46,7 @@
   }
 
   .container :global(.copy-button) {
+    @apply hidden text-center md:block;
     @apply absolute right-8 font-mono opacity-50 hover:opacity-100;
     @apply top-[50%] translate-y-[-50%];
   }
