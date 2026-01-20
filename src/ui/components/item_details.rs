@@ -32,6 +32,7 @@ use crate::{
 #[derive(Debug, Default)]
 pub struct ItemDetails {
     text: Option<String>,
+    comments_count: Option<usize>,
 }
 
 pub const ITEM_DETAILS_ID: UiComponentId = "item_details";
@@ -42,14 +43,17 @@ impl UiComponent for ItemDetails {
         ITEM_DETAILS_ID
     }
 
-    fn should_update(&mut self, _elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
-        Ok(
-            if let Some(item) = ctx.get_state().get_currently_viewed_item() {
-                item.text != self.text
-            } else {
-                false
-            },
-        )
+    async fn should_update(
+        &mut self,
+        _elapsed_ticks: UiTickScalar,
+        ctx: &AppContext,
+    ) -> Result<bool> {
+        let currently_viewed_item = ctx.get_state().get_currently_viewed_item();
+        Ok(if let Some(item) = currently_viewed_item {
+            item.text != self.text
+        } else {
+            false
+        })
     }
 
     async fn update(&mut self, _client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
@@ -58,10 +62,16 @@ impl UiComponent for ItemDetails {
         } else {
             None
         };
+        self.comments_count = ctx
+            .get_state()
+            .use_currently_viewed_item_comments(|comments| {
+                comments.map(|item_comments| item_comments.len())
+            })
+            .await;
         Ok(())
     }
 
-    fn handle_inputs(&mut self, _ctx: &mut AppContext) -> Result<bool> {
+    async fn handle_inputs(&mut self, _ctx: &mut AppContext) -> Result<bool> {
         Ok(false)
     }
 
@@ -80,10 +90,6 @@ impl UiComponent for ItemDetails {
             .border_type(BorderType::Rounded);
 
         let item_title = viewed_item.title.clone().unwrap_or_else(|| "".into());
-        let comments_count = ctx
-            .get_state()
-            .get_currently_viewed_item_comments()
-            .map(|comments| comments.len());
         let text_base = vec![
             Line::from(item_title),
             Line::from(viewed_item.url_hostname.clone().unwrap_or_default()),
@@ -91,7 +97,7 @@ impl UiComponent for ItemDetails {
                 "{} points by {} {}",
                 viewed_item.score, viewed_item.by_username, viewed_item.posted_since
             )),
-            Line::from(if let Some(count) = comments_count {
+            Line::from(if let Some(count) = self.comments_count {
                 format!("{count} comments")
             } else {
                 "".into()

@@ -72,7 +72,11 @@ impl UiComponent for AlgoliaList {
         self.loader.stop();
     }
 
-    fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
+    async fn should_update(
+        &mut self,
+        elapsed_ticks: UiTickScalar,
+        ctx: &AppContext,
+    ) -> Result<bool> {
         self.debouncer.tick(elapsed_ticks);
         let should_update = Some(
             ctx.get_state()
@@ -121,6 +125,7 @@ impl UiComponent for AlgoliaList {
             let displayable_algolia_items = if for_stories {
                 let results = client
                     .algolia()
+                    .await
                     .search_stories(algolia_query, &[AlgoliaHnSearchTag::Story])
                     .await?;
                 results
@@ -131,7 +136,11 @@ impl UiComponent for AlgoliaList {
                     })
                     .collect()
             } else if for_comments {
-                let results = client.algolia().search_comments(algolia_query).await?;
+                let results = client
+                    .algolia()
+                    .await
+                    .search_comments(algolia_query)
+                    .await?;
                 results
                     .get_hits()
                     .iter()
@@ -140,7 +149,11 @@ impl UiComponent for AlgoliaList {
                     })
                     .collect()
             } else if for_usernames {
-                let results = client.algolia().search_user_stories(algolia_query).await?;
+                let results = client
+                    .algolia()
+                    .await
+                    .search_user_stories(algolia_query)
+                    .await?;
                 results
                     .get_hits()
                     .iter()
@@ -166,7 +179,7 @@ impl UiComponent for AlgoliaList {
         Ok(())
     }
 
-    fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
+    async fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
         if self.loading || !matches!(self.status, AlgoliaListStatus::Focused) {
             return Ok(false);
         }

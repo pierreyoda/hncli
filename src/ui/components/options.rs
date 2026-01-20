@@ -83,7 +83,11 @@ impl UiComponent for Options {
         OPTIONS_ID
     }
 
-    fn should_update(&mut self, elapsed_ticks: UiTickScalar, _ctx: &AppContext) -> Result<bool> {
+    async fn should_update(
+        &mut self,
+        elapsed_ticks: UiTickScalar,
+        _ctx: &AppContext,
+    ) -> Result<bool> {
         self.keyboard_debouncer.tick(elapsed_ticks);
 
         Ok(false)
@@ -93,7 +97,7 @@ impl UiComponent for Options {
         Ok(())
     }
 
-    fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
+    async fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
         if ctx
             .get_inputs()
             .is_active(&ApplicationAction::HomeToggleSortingOption)

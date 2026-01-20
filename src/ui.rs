@@ -290,7 +290,7 @@ impl UserInterface {
                         });
                         break 'ui;
                     }
-                    if self.app.handle_inputs() && !self.handle_inputs()? {
+                    if self.app.handle_inputs() && !self.handle_inputs().await? {
                         self.app.update_latest_interacted_with_component(None);
                     }
                 }
@@ -313,7 +313,8 @@ impl UserInterface {
             if wrapper.active
                 && wrapper
                     .component
-                    .should_update(wrapper.ticks_elapsed, &app_context)?
+                    .should_update(wrapper.ticks_elapsed, &app_context)
+                    .await?
             {
                 wrapper
                     .component
@@ -327,7 +328,7 @@ impl UserInterface {
     }
 
     /// Handle an incoming key event through all active components.
-    fn handle_inputs(&mut self) -> Result<bool> {
+    async fn handle_inputs(&mut self) -> Result<bool> {
         let mut swallowed = false;
         let mut latest_interacted_with_component = None;
         let mut app_context = self.app.get_context();
@@ -335,7 +336,7 @@ impl UserInterface {
             if !wrapper.active {
                 continue;
             }
-            if wrapper.component.handle_inputs(&mut app_context)? {
+            if wrapper.component.handle_inputs(&mut app_context).await? {
                 latest_interacted_with_component = Some(wrapper.component.id());
                 swallowed = true;
                 break;
