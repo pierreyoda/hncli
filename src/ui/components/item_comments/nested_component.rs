@@ -1,4 +1,4 @@
-use std::{sync::Arc, thread};
+use std::sync::Arc;
 
 use async_trait::async_trait;
 use log::warn;
@@ -40,6 +40,10 @@ impl UiComponent for CommentItemNestedComments {
         COMMENT_ITEM_NESTED_COMMENTS_ID
     }
 
+    fn before_unmount(&mut self) {
+        self.common.loader.stop();
+    }
+
     async fn should_update(
         &mut self,
         elapsed_ticks: UiTickScalar,
@@ -50,6 +54,7 @@ impl UiComponent for CommentItemNestedComments {
 
         let should_update = self.common.ticks_since_last_update >= MEAN_TICKS_BETWEEN_UPDATES
             || Self::get_parent_comment_id(ctx.get_state()) != self.parent_comment_id;
+        self.common.loader.update();
 
         if should_update {
             self.common.loading = true;
@@ -87,8 +92,8 @@ impl UiComponent for CommentItemNestedComments {
         let fetching = Arc::clone(&self.common.fetching);
         let fetched_comments = Arc::clone(&self.common.fetched_comments);
         let fetching_client = client.classic_non_blocking();
-        // fetching in a separate thread to avoid blocking the async runtime
-        thread::spawn(async move || {
+        // fetching in a separate task to avoid blocking the async runtime
+        tokio::spawn(async move {
             if *fetching.lock().await {
                 return Ok(());
             }
@@ -98,38 +103,37 @@ impl UiComponent for CommentItemNestedComments {
                 .await
                 .get_item_comments(&parent_comment_kids, &cached_comments_ids, false) // TODO: avoid .clone()
                 .await?;
-            *fetching.lock().await = false;
             let comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
             *fetched_comments.lock().await = Some(comments);
+            *fetching.lock().await = false;
             Ok::<(), HnCliError>(())
         });
-
-        // Widget state
         if let Some(fetched_comments) = self.common.fetched_comments.lock().await.take() {
             ctx.get_state_mut()
                 .update_currently_viewed_item_comments(Some(fetched_comments))
                 .await;
-            // TODO: avoid cloning
-            let cached_comments = Some(
-                ctx.get_state()
-                    .use_currently_viewed_item_comments(|comments| {
-                        comments
-                            .unwrap_or(&DisplayableHackerNewsItemComments::new())
-                            .clone()
-                    })
-                    .await,
-            );
-            self.common.widget_state.update(
-                &cached_comments
-                    .as_ref()
-                    .unwrap_or(&DisplayableHackerNewsItemComments::new()),
-                &Self::get_parent_comment_kids(ctx.get_state())
-                    .await
-                    .unwrap_or(vec![]),
-            );
+            let parent_comment_kids = Self::get_parent_comment_kids(ctx.get_state())
+                .await
+                .unwrap_or(vec![]);
+            ctx.get_state()
+                .use_currently_viewed_item_comments(|comments| {
+                    self.common.widget_state.update(
+                        &self
+                            .common
+                            .cached_comments
+                            .as_ref()
+                            .unwrap_or(&DisplayableHackerNewsItemComments::new()),
+                        &parent_comment_kids,
+                    );
+                    // TODO: avoid cloning
+                    self.common.cached_comments = comments.cloned();
+                    Ok::<(), HnCliError>(())
+                })
+                .await?;
         }
 
         self.common.loading = false;
+        self.common.ticks_since_last_update = 0;
 
         // Latest focused comment, if applicable
         if let Some(restored_comment_id) = ctx.get_state().get_previously_viewed_comment_id() {
