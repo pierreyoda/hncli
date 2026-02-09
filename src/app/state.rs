@@ -129,6 +129,11 @@ impl AppState {
         self.currently_viewed_item_switched
     }
 
+    /// Set has the currently viewed item (not a comment) changed recently?
+    pub fn set_currently_viewed_item_has_switched(&mut self, switched: bool) {
+        self.currently_viewed_item_switched = switched;
+    }
+
     /// Read-only usage of the currently viewed item comments.
     pub async fn use_currently_viewed_item_comments<F, R>(&self, function: F) -> R
     where

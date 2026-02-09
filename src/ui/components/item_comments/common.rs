@@ -61,7 +61,11 @@ impl ItemCommentsCommon {
         let theme = ctx.get_theme();
 
         // (Initial) loading case
-        if self.loading || self.cached_comments.is_none() {
+        let state = ctx.get_state();
+        if self.loading
+            || self.cached_comments.is_none()
+            || state.get_currently_viewed_item_switched()
+        {
             render_text_message(f, inside, &self.loader.text(), theme);
             return Ok(());
         }
