@@ -42,6 +42,7 @@ impl StoryDetailsScreen {
 impl Screen for StoryDetailsScreen {
     fn before_mount(&mut self, state: &mut AppState, config: &AppConfiguration) {
         state.set_currently_viewed_item(Some(self.item.clone()));
+        state.set_currently_viewed_item_has_switched(true);
 
         state.reset_currently_viewed_item_comments_chain();
         if let Some(item_kids) = self.item.kids.as_ref()
@@ -61,6 +62,11 @@ impl Screen for StoryDetailsScreen {
                 config.get_display_comments_panel_by_default(),
             );
         }
+    }
+
+    fn before_unmount(&mut self, state: &mut AppState) {
+        state.reset_currently_viewed_item_comments_chain();
+        state.set_currently_viewed_item_has_switched(true);
     }
 
     fn handle_inputs(

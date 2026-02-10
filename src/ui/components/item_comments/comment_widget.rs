@@ -2,7 +2,7 @@ use log::warn;
 use ratatui::{
     buffer::Buffer,
     layout::{Margin, Rect},
-    style::{Color, Style},
+    style::Style,
     widgets::Widget,
 };
 use unicode_width::UnicodeWidthStr;
@@ -197,12 +197,12 @@ impl<'a> Widget for ItemCommentsWidget<'a> {
         let focused_comment = if let Some(comment) = self.comments.get(focused_comment_id) {
             comment
         } else {
-            let prompt = "Error while displaying the comment.";
+            let prompt = "Loading the comment...";
             buf.set_string(
                 (area.right() - area.left()) / 2 - prompt.len() as u16 / 2,
                 (area.bottom() - area.top()) / 2,
                 prompt,
-                Style::default().fg(Color::LightRed),
+                Style::default().fg(self.theme.get_main_color()),
             );
             return;
         };

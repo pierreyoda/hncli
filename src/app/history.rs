@@ -132,8 +132,6 @@ impl SynchronizedHistory {
     ///
     /// This method should be not be called at every app interaction possible,
     /// for instance not at every top-level focused comment change.
-    ///
-    /// TODO: there is an edge case where, after heavy continuous usage, the storage(s) can run out of memory. Find a solution applied before saving.
     fn write_to_json_file(&self, history_filepath: PathBuf) -> Result<()> {
         let history_directory = history_filepath.parent().expect(
             "SynchronizedHistory.write_to_json_file: history filepath parent folder can be read",

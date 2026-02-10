@@ -28,6 +28,8 @@ use crate::{
 pub struct ItemSummary {
     /// HackerNews ID of the parent comment, cached for efficiency.
     parent_comment_id: Option<HnItemIdScalar>,
+    /// Username of the parent comment author.
+    parent_comment_username: Option<String>,
 }
 
 pub const ITEM_SUMMARY_ID: UiComponentId = "item_summary";
@@ -38,30 +40,39 @@ impl UiComponent for ItemSummary {
         ITEM_SUMMARY_ID
     }
 
-    fn should_update(&mut self, _elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
+    async fn should_update(
+        &mut self,
+        _elapsed_ticks: UiTickScalar,
+        ctx: &AppContext,
+    ) -> Result<bool> {
         Ok(self.get_parent_comment_id(ctx.get_state()) != self.parent_comment_id)
     }
 
     async fn update(&mut self, _client: &mut HnClient, ctx: &mut AppContext) -> Result<()> {
-        self.parent_comment_id = self.get_parent_comment_id(ctx.get_state());
+        let parent_comment_id = self.get_parent_comment_id(ctx.get_state());
+        self.parent_comment_id = parent_comment_id.clone();
+        self.parent_comment_username = ctx
+            .get_state()
+            .use_currently_viewed_item_comments(|comments| {
+                comments.as_ref().and_then(|comments_cache| {
+                    parent_comment_id
+                        .and_then(|id| comments_cache.get(&id))
+                        .map(|comment| comment.by_username.clone())
+                })
+            })
+            .await;
         Ok(())
     }
 
-    fn handle_inputs(&mut self, _ctx: &mut AppContext) -> Result<bool> {
+    async fn handle_inputs(&mut self, _ctx: &mut AppContext) -> Result<bool> {
         Ok(false)
     }
 
     fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
-        let comments = ctx
-            .get_state()
-            .get_currently_viewed_item_comments()
-            .expect("item_summary expects comments to be cached");
-        let parent_comment = if let Some(comment_id) = self.parent_comment_id {
-            if let Some(comment) = comments.get(&comment_id) {
-                comment
-            } else {
-                return Ok(());
-            }
+        let parent_comment_username = if self.parent_comment_id.is_some()
+            && let Some(username) = &self.parent_comment_username
+        {
+            username
         } else {
             return Ok(());
         };
@@ -74,7 +85,7 @@ impl UiComponent for ItemSummary {
             .border_type(BorderType::Rounded);
 
         let text_base = vec![
-            Line::from(format!("Parent comment by: {}", parent_comment.by_username)),
+            Line::from(format!("Parent comment by: {}", parent_comment_username)),
             Line::from(format!(
                 "Sub-comment level: {}",
                 ctx.get_state()

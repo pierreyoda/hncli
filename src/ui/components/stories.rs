@@ -71,7 +71,11 @@ impl UiComponent for StoriesPanel {
         self.loader.stop();
     }
 
-    fn should_update(&mut self, elapsed_ticks: UiTickScalar, ctx: &AppContext) -> Result<bool> {
+    async fn should_update(
+        &mut self,
+        elapsed_ticks: UiTickScalar,
+        ctx: &AppContext,
+    ) -> Result<bool> {
         self.ticks_since_last_update += elapsed_ticks;
 
         self.loading = self.ticks_since_last_update >= MEAN_TICKS_BETWEEN_UPDATES
@@ -96,7 +100,7 @@ impl UiComponent for StoriesPanel {
         let sorting_type = *ctx.get_state().get_main_stories_sorting();
 
         // Data fetching
-        let api = client.classic();
+        let api = client.classic().await;
         let router = ctx.get_router();
         let displayable_stories = {
             let fetched_stories =
@@ -145,7 +149,7 @@ impl UiComponent for StoriesPanel {
     }
 
     // TODO: when entering then leaving item details, cannot re-enter without moving in the items list
-    fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
+    async fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
         if ctx.get_state().get_main_stories_loading() {
             return Ok(false);
         }
