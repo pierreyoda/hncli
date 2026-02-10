@@ -2,7 +2,7 @@ use log::warn;
 use ratatui::{
     buffer::Buffer,
     layout::{Margin, Rect},
-    style::{Color, Style},
+    style::Style,
     widgets::Widget,
 };
 use unicode_width::UnicodeWidthStr;

@@ -24,7 +24,7 @@ pub struct HnClient {
 }
 
 impl HnClient {
-    pub async fn classic(&self) -> MutexGuard<ClassicHnClient> {
+    pub async fn classic(&self) -> MutexGuard<'_, ClassicHnClient> {
         self.classic_client.lock().await
     }
 
@@ -32,7 +32,7 @@ impl HnClient {
         Arc::clone(&self.classic_client)
     }
 
-    pub async fn algolia(&self) -> MutexGuard<AlgoliaHnClient> {
+    pub async fn algolia(&self) -> MutexGuard<'_, AlgoliaHnClient> {
         self.algolia_client.lock().await
     }
 }

@@ -39,6 +39,7 @@ impl Loader {
         };
     }
 
+    /// Stop and reset.
     pub fn stop(&mut self) {
         self.elapsed_time = SystemTime::UNIX_EPOCH;
         self.current_dots = 1;
