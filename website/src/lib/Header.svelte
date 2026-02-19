@@ -19,10 +19,10 @@
       href="https://www.newstackwhodis.com/blog/?tag=Rust"
       underline={false}
       red={false}
-      extraClass="mr-6 no-underline text-xl font-medium">Blog</ExternalLink
+      extraClass="mr-6 no-underline text-4xl sm:text-3xl font-medium">Blog</ExternalLink
     >
     <ExternalLink href="https://github.com/pierreyoda/hncli" red={false} extraClass="cursor-pointer">
-      <img alt="GitHub logo" src={GitHubLogo} class="w-10 h-10 ml-3 md:ml-6" />
+      <img alt="GitHub logo" src={GitHubLogo} class="w-10 h-10 ml-3 md:ml-6 hover:opacity-80" />
     </ExternalLink>
   </div>
 </header>

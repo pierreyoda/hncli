@@ -27,7 +27,7 @@
       @apply text-hncli-dark-red hover:text-hncli-dark-red/60;
     }
     &:not(.red) {
-      @apply text-white hover:text-gray-200;
+      @apply text-white hover:text-gray-300;
     }
   }
 </style>
