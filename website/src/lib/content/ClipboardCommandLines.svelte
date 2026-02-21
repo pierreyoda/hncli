@@ -23,6 +23,7 @@
     variant="outline"
     color="gray"
     title="Copy to Clipboard"
+    ariaLabel="Copy to Clipboard"
     onclick={onCopy}
     extraClass="copy-button"
   >

@@ -6,7 +6,6 @@
     lines: readonly string[];
   };
 
-  // tTODO: switch to grid when more options
   const options: readonly InstallationOption[] = [
     { title: "With Docker", lines: ["docker build -t hncli .  && docker run -it hncli"] },
     { title: "With Rust toolchain", lines: ["cargo run --release"] },
@@ -25,7 +24,7 @@
       {#each options as { title, lines } (title)}
         <div class="option-container">
           <h3 class="option-title">{title}:</h3>
-          <ClipboardCommandLines {lines} extraClass="md:ml-24" />
+          <ClipboardCommandLines {lines} />
         </div>
       {/each}
     </div>
@@ -47,10 +46,10 @@
   }
 
   .options-container {
-    @apply flex w-full flex-col pt-3 pb-6 md:flex-row md:justify-center;
+    @apply grid w-full grid-cols-1 gap-8 pt-3 pb-6 sm:grid-cols-2;
   }
   .option-container {
-    @apply flex flex-col items-center justify-around pt-2 pr-3;
+    @apply flex flex-col items-center justify-around pt-2;
     .option-title {
       @apply pb-1 text-center text-lg font-medium text-gray-500;
     }
