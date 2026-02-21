@@ -18,7 +18,7 @@
   <meta name="description" content="hncli, a modern TUI for browsing Hacker News" />
 </svelte:head>
 
-<div class="w-full">
+<div class="w-screen h-screen flex flex-col">
   <Header />
   <main class="flex-auto">
     {@render children()}

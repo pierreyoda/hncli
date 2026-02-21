@@ -6,74 +6,55 @@
   import RustLangLogo from "$lib/assets/rust.svg";
   import BookmarkLogo from "$lib/assets/bookmark.svg";
   import CommandLineLogo from "$lib/assets/command-line.svg";
-
-  // TODO: use grid instead of flex if needed
 </script>
 
-<section id="features" class="website-container">
+<section id="features" class="website-container mt-6">
   <div class="features-container">
-    <div class="two-features-container">
-      <FeatureCard small eyebrow="Built to last" title="Made in Rust with a custom architecture">
-        {#snippet image()}
-          <img slot="image" class="screenshot" alt="hncli source code excerpt" src={RustLangLogo} />
-        {/snippet}
-        {#snippet description()}
-          <span slot="description">
-            Built in the fast and safe Rust programming language, with a unique architecture
-            <ExternalLink
-              href="https://www.newstackwhodis.com/blog/hncli-2-architecture"
-              extraClass="font-semibold text-hncli-dark-red">described here</ExternalLink
-            >. <br /><br />hncli is first and foremost a labor of love, so questions or any kind of contribution are
-            more than welcome on the
-            <ExternalLink href="https://github.com/pierreyoda/hncli" extraClass="font-semibold text-hncli-dark-red"
-              >GitHub repository</ExternalLink
-            >.
-          </span>
-        {/snippet}
-      </FeatureCard>
-      <FeatureCard small eyebrow="Read-Only" title="No sign-in required" extraClass="col-span-3">
-        {#snippet image()}
-          <img slot="image" class="screenshot w-24 h-auto" alt="book logo" src={BookLogo} />
-        {/snippet}
-        {#snippet description()}
-          <span slot="description">
-            No Hacker News account required: hncli does not need nor store your credentials in any way whatsoever.<br
-            /><br />
-            Even a simple upvote function would go against both vision and architectural choices, even if desirable.
-          </span>
-        {/snippet}
-      </FeatureCard>
-    </div>
-    <div class="two-features-container">
-      <FeatureCard small eyebrow="Well deserved pause?" title="Terminal only">
-        {#snippet image()}
-          <img slot="image" class="screenshot w-24 h-auto" alt="terminal only" src={CommandLineLogo} />
-        {/snippet}
-        {#snippet description()}
-          <span slot="description">
-            hncli works in most terminals, and one of the initial goals was to make technological watch easier at a
-            glance. <br /> <br /> As described in the
-            <ExternalLink
-              href="https://www.newstackwhodis.com/blog/hncli-1-concept#project-description"
-              extraClass="font-semibold text-hncli-dark-red">first article</ExternalLink
-            >, refactoring for answering to topics or comments from hncli would be really difficult - even for me - both
-            in terms of engineering and UX.
-          </span>
-        {/snippet}
-      </FeatureCard>
-      <FeatureCard small eyebrow="Navigation history" title="Pick up from where you left off">
-        {#snippet image()}
-          <img slot="image" class="screenshot w-24 h-auto" alt="terminal only" src={BookmarkLogo} />
-        {/snippet}
-        {#snippet description()}
-          <span slot="description">
-            For now, you will be displayed - if possible, i.e. not deleted - the latest top-level comment on the
-            topic(s) you have read before. <br /> <br />Obviously, there is a hardcoded and unit tested limit to both
-            reading and writing the compressed JSON file storing this history.
-          </span>
-        {/snippet}
-      </FeatureCard>
-    </div>
+    <FeatureCard eyebrow="Built to last" title="Made in Rust">
+      {#snippet image()}
+        <img class="logo" alt="rustlang logo" src={RustLangLogo} />
+      {/snippet}
+      {#snippet description()}
+        <span>
+          Built in the fast and safe Rust programming language, with a unique architecture
+          <ExternalLink href="https://www.newstackwhodis.com/blog/hncli-2-architecture">described here</ExternalLink>.
+          <br /><br />hncli is first and foremost a labor of love, so questions or any kind of contribution are more
+          than welcome on the
+          <ExternalLink href="https://github.com/pierreyoda/hncli">GitHub repository</ExternalLink>.
+        </span>
+      {/snippet}
+    </FeatureCard>
+    <FeatureCard eyebrow="Read-Only" title="No sign-in required">
+      {#snippet image()}
+        <img class="logo" alt="book logo" src={BookLogo} />
+      {/snippet}
+      {#snippet description()}
+        <span>
+          No Hacker News account required: hncli does not need nor store your credentials.<br /><br />
+        </span>
+      {/snippet}
+    </FeatureCard>
+    <FeatureCard eyebrow="Well deserved pause?" title="Terminal only">
+      {#snippet image()}
+        <img class="logo" alt="terminal logo" src={CommandLineLogo} />
+      {/snippet}
+      {#snippet description()}
+        <span>
+          hncli works in most terminals, and one of the initial goals was to make technological watch on Hacker News
+          easier at a glance. <br /> <br /> Check out the
+          <ExternalLink href="https://www.newstackwhodis.com/blog/hncli-1-concept">vision article</ExternalLink> for further
+          explanation.
+        </span>
+      {/snippet}
+    </FeatureCard>
+    <FeatureCard eyebrow="Navigation history" title="Pick up from where you left off">
+      {#snippet image()}
+        <img class="logo" alt="bookmark logo" src={BookmarkLogo} />
+      {/snippet}
+      {#snippet description()}
+        <span> Go back to the latest read top-level comment on any topic previously visited. </span>
+      {/snippet}
+    </FeatureCard>
   </div>
 </section>
 
@@ -81,13 +62,10 @@
   @reference "tailwindcss";
 
   .features-container {
-    @apply flex flex-col;
-  }
-  .two-features-container {
-    @apply flex flex-col md:flex-row;
+    @apply grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-2;
   }
 
-  .screenshot {
-    @apply absolute bottom-0;
+  .logo {
+    @apply absolute bottom-0 h-auto w-16;
   }
 </style>

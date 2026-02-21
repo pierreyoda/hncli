@@ -19,7 +19,7 @@
   <div class="website-container">
     <div class="text-center">
       <h2 class="title">How to use</h2>
-      <p class="subtitle">More ways to come, at the very least homebrew.</p>
+      <p class="subtitle">More ways to come.</p>
     </div>
     <div class="options-container">
       {#each options as { title, lines } (title)}
@@ -40,10 +40,10 @@
   }
 
   .title {
-    @apply text-hncli-dark-red mb-1 text-4xl font-semibold;
+    @apply text-hncli-dark-red mb-1 text-5xl font-semibold;
   }
   .subtitle {
-    @apply text-hncli-dark-red/60 text-xs font-medium;
+    @apply text-hncli-dark-red/60 text-sm font-medium;
   }
 
   .options-container {
