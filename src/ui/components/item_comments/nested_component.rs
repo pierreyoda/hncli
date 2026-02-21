@@ -29,6 +29,7 @@ pub const COMMENT_ITEM_NESTED_COMMENTS_ID: UiComponentId = "item_nested_comments
 #[derive(Debug, Default)]
 pub struct CommentItemNestedComments {
     common: ItemCommentsCommon,
+    was_fetching: bool,
     /// Cached parent comment ID.
     parent_comment_id: Option<HnItemIdScalar>,
 }
@@ -52,10 +53,20 @@ impl UiComponent for CommentItemNestedComments {
         self.common.ticks_since_last_update += elapsed_ticks;
         self.common.inputs_debouncer.tick(elapsed_ticks);
 
-        let should_update = self.common.ticks_since_last_update >= MEAN_TICKS_BETWEEN_UPDATES
+        self.was_fetching = if *self.common.fetching.lock().await {
+            true
+        } else {
+            self.was_fetching
+        };
+
+        let mut should_update = self.common.ticks_since_last_update >= MEAN_TICKS_BETWEEN_UPDATES
             || Self::get_parent_comment_id(ctx.get_state()) != self.parent_comment_id;
         self.common.loader.update();
 
+        if self.was_fetching && !*self.common.fetching.lock().await {
+            should_update = true;
+            self.was_fetching = false;
+        }
         if should_update {
             self.common.loading = true;
         }
@@ -108,6 +119,7 @@ impl UiComponent for CommentItemNestedComments {
             *fetching.lock().await = false;
             Ok::<(), HnCliError>(())
         });
+
         if let Some(fetched_comments) = self.common.fetched_comments.lock().await.take() {
             ctx.get_state_mut()
                 .update_currently_viewed_item_comments(Some(fetched_comments))
@@ -160,16 +172,15 @@ impl UiComponent for CommentItemNestedComments {
             return Ok(false);
         }
 
-        let parent_comment_kids =
-            if let Some(kids) = Self::get_parent_comment_kids(ctx.get_state()).await {
-                kids
-            } else {
-                return Ok(false);
-            };
-
         let inputs = ctx.get_inputs();
         // TODO: refactor with top component usage as much as possible
         Ok(if inputs.is_active(&ApplicationAction::NavigateUp) {
+            let parent_comment_kids =
+                if let Some(kids) = Self::get_parent_comment_kids(ctx.get_state()).await {
+                    kids
+                } else {
+                    return Ok(false);
+                };
             let new_focused_id = self
                 .common
                 .widget_state
@@ -178,6 +189,12 @@ impl UiComponent for CommentItemNestedComments {
                 .replace_latest_in_currently_viewed_item_comments_chain(new_focused_id);
             true
         } else if inputs.is_active(&ApplicationAction::NavigateDown) {
+            let parent_comment_kids =
+                if let Some(kids) = Self::get_parent_comment_kids(ctx.get_state()).await {
+                    kids
+                } else {
+                    return Ok(false);
+                };
             let new_focused_id = self
                 .common
                 .widget_state

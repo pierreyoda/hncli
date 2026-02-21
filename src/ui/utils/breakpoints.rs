@@ -20,7 +20,7 @@ pub struct Breakpoints {
     default_breakpoints: SectionSizes,
     /// Internally used for storing computed breakpoint sizes.
     ///
-    /// A BTreeMap is used to optimize reads, which can be very frequent.
+    /// A BTreeMap is used for ordering keys and optimizing reads, which can be very frequent.
     sections_breakpoints: BTreeMap<u16, SectionSizes>,
 }
 
