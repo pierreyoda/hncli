@@ -6,7 +6,6 @@
     lines: readonly string[];
   };
 
-  // tTODO: switch to grid when more options
   const options: readonly InstallationOption[] = [
     { title: "With Docker", lines: ["docker build -t hncli .  && docker run -it hncli"] },
     { title: "With Rust toolchain", lines: ["cargo run --release"] },
@@ -19,13 +18,13 @@
   <div class="website-container">
     <div class="text-center">
       <h2 class="title">How to use</h2>
-      <p class="subtitle">More ways to come, at the very least homebrew.</p>
+      <p class="subtitle">More ways to come.</p>
     </div>
     <div class="options-container">
       {#each options as { title, lines } (title)}
         <div class="option-container">
           <h3 class="option-title">{title}:</h3>
-          <ClipboardCommandLines {lines} extraClass="md:ml-24" />
+          <ClipboardCommandLines {lines} />
         </div>
       {/each}
     </div>
@@ -40,17 +39,17 @@
   }
 
   .title {
-    @apply text-hncli-dark-red mb-1 text-4xl font-semibold;
+    @apply text-hncli-dark-red mb-1 text-5xl font-semibold;
   }
   .subtitle {
-    @apply text-hncli-dark-red/60 text-xs font-medium;
+    @apply text-hncli-dark-red/60 text-sm font-medium;
   }
 
   .options-container {
-    @apply flex w-full flex-col pt-3 pb-6 md:flex-row md:justify-center;
+    @apply grid w-full grid-cols-1 gap-8 pt-3 pb-6 sm:grid-cols-2;
   }
   .option-container {
-    @apply flex flex-col items-center justify-around pt-2 pr-3;
+    @apply flex flex-col items-center justify-around pt-2;
     .option-title {
       @apply pb-1 text-center text-lg font-medium text-gray-500;
     }

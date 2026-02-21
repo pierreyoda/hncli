@@ -3,7 +3,7 @@
 
   interface ExternalLinkProps {
     href: string;
-    extraClass: string;
+    extraClass?: string;
     /** True by default; */
     underline?: boolean;
     /** True by default. */
@@ -22,12 +22,12 @@
   @reference "../app.css";
 
   a {
-    @apply transition-colors duration-200;
+    @apply font-semibold transition-colors duration-400 ease-in-out;
     &.red {
       @apply text-hncli-dark-red hover:text-hncli-dark-red/60;
     }
     &:not(.red) {
-      @apply text-white hover:text-gray-200;
+      @apply text-white hover:text-gray-300;
     }
   }
 </style>

@@ -8,7 +8,7 @@
     extraClass?: string;
     fadeTop?: boolean;
     fadeBottom?: boolean;
-    small?: boolean;
+    large?: boolean;
     image: Snippet;
     description?: Snippet;
   }
@@ -17,27 +17,26 @@
     eyebrow,
     title,
     textDescription,
-    extraClass = "",
+    extraClass,
     fadeTop = false,
     fadeBottom = false,
-    small = false,
-    image: imageSlot,
+    large = false,
+    image,
     description,
   }: FeatureCardProps = $props();
 
   const containerClass = $derived<string>(
     [
       extraClass ?? "",
-      small ? "grid-rows-1" : "lg:grid-rows-2",
-      "group relative flex flex-col overflow-hidden rounded-lg",
+      "relative flex flex-col overflow-hidden rounded-lg",
       "bg-white shadow-xs ring-1 ring-black/5",
     ].join(" "),
   );
 </script>
 
 <div class={containerClass}>
-  <div class="image-container" class:large={!small}>
-    {@render imageSlot()}
+  <div class="image-container" class:large>
+    {@render image()}
     {#if fadeTop}
       <div class="absolute inset-0 bg-linear-to-b from-white to-50%"></div>
     {/if}
@@ -66,9 +65,9 @@
   @reference "tailwindcss";
 
   .image-container {
-    @apply relative flex h-40 shrink-0 items-center pl-10;
+    @apply relative flex h-20 shrink-0 items-center pl-10;
     &.large {
-      @apply h-80;
+      @apply h-40;
     }
   }
   .eyebrow {
@@ -78,6 +77,6 @@
     @apply mt-1 text-3xl font-medium tracking-tight text-gray-950;
   }
   .description {
-    @apply mt-2 max-w-[600px] text-base/6 text-gray-600;
+    @apply mt-4 max-w-150 text-justify text-base/6 text-gray-600;
   }
 </style>
