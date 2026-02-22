@@ -54,6 +54,7 @@ impl Screen for NestedCommentsScreen {
         state: &mut AppState,
         _history: &mut AppHistory,
     ) -> (ScreenEventResponse, Option<AppRoute>) {
+        // FIXME: restored comment ID does not seem to work right now
         if inputs.is_active(&ApplicationAction::Back) {
             let restored_comment_id = state.pop_currently_viewed_item_comments_chain();
             state.set_previously_viewed_comment_id(restored_comment_id);

@@ -129,6 +129,8 @@ impl UiComponent for CommentItemNestedComments {
                 .unwrap_or(vec![]);
             ctx.get_state()
                 .use_currently_viewed_item_comments(|comments| {
+                    // TODO: avoid cloning
+                    self.common.cached_comments = comments.cloned();
                     self.common.widget_state.update(
                         &self
                             .common
@@ -137,8 +139,6 @@ impl UiComponent for CommentItemNestedComments {
                             .unwrap_or(&DisplayableHackerNewsItemComments::new()),
                         &parent_comment_kids,
                     );
-                    // TODO: avoid cloning
-                    self.common.cached_comments = comments.cloned();
                     Ok::<(), HnCliError>(())
                 })
                 .await?;

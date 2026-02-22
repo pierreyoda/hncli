@@ -250,7 +250,7 @@ impl<'a> Widget for ItemCommentsWidget<'a> {
             )
         };
         buf.set_string(
-            (footer_area.right() - footer_area.left()) / 2 - footer_text.width() as u16 / 2,
+            footer_area.left() + (footer_area.width - footer_text.width() as u16) / 2,
             footer_area.y,
             footer_text,
             Style::default().fg(self.theme.get_main_color()),
