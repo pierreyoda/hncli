@@ -17,7 +17,7 @@ lto = true      # enable Link Time Optimization
 [dependencies]
 async-recursion = "1.1.1"
 async-trait = "0.1.89"
-chrono = { version = "0.4.43", features = ["serde"] }
+chrono = { version = "0.4.44", features = ["serde"] }
 crossterm = "0.29.0"
 directories = "6.0.0"
 futures = "0.3.31"
