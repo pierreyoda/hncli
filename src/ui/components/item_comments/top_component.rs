@@ -125,38 +125,7 @@ impl UiComponent for ItemTopLevelComments {
                 .set_currently_viewed_item_has_switched(false);
         }
 
-        // Comments fetching
-        let parent_item_kids = Self::get_parent_item_kids(ctx.get_state())?;
-        if parent_item_kids.is_empty() {
-            return Ok(());
-        }
-        let cached_comments_ids = ctx
-            .get_state()
-            .use_currently_viewed_item_comments(|comments| {
-                comments
-                    .unwrap_or(&DisplayableHackerNewsItemComments::new())
-                    .to_cached_ids()
-            })
-            .await;
-        let fetching = Arc::clone(&self.common.fetching);
-        let fetched_comments = Arc::clone(&self.common.fetched_comments);
-        let fetching_client = client.classic_non_blocking();
-        // fetching in a separate task to avoid blocking the async runtime
-        tokio::spawn(async move {
-            if *fetching.lock().await {
-                return Ok(());
-            }
-            *fetching.lock().await = true;
-            let comments_raw = fetching_client
-                .lock()
-                .await
-                .get_item_comments(&parent_item_kids, &cached_comments_ids, false) // TODO: avoid .clone()
-                .await?;
-            let comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
-            *fetched_comments.lock().await = Some(comments);
-            *fetching.lock().await = false;
-            Ok::<(), HnCliError>(())
-        });
+        let mut fetched = false;
         if let Some(fetched_comments) = self.common.fetched_comments.lock().await.take() {
             ctx.get_state_mut()
                 .update_currently_viewed_item_comments(Some(fetched_comments))
@@ -176,6 +145,42 @@ impl UiComponent for ItemTopLevelComments {
                     Ok::<(), HnCliError>(())
                 })
                 .await?;
+            fetched = true;
+        }
+
+        if !fetched {
+            // Comments fetching
+            let parent_item_kids = Self::get_parent_item_kids(ctx.get_state())?;
+            if parent_item_kids.is_empty() {
+                return Ok(());
+            }
+            let cached_comments_ids = ctx
+                .get_state()
+                .use_currently_viewed_item_comments(|comments| {
+                    comments
+                        .unwrap_or(&DisplayableHackerNewsItemComments::new())
+                        .to_cached_ids()
+                })
+                .await;
+            let fetching = Arc::clone(&self.common.fetching);
+            let fetched_comments = Arc::clone(&self.common.fetched_comments);
+            let fetching_client = client.classic_non_blocking();
+            // fetching in a separate task to avoid blocking the async runtime
+            tokio::spawn(async move {
+                if *fetching.lock().await {
+                    return Ok(());
+                }
+                *fetching.lock().await = true;
+                let comments_raw = fetching_client
+                    .lock()
+                    .await
+                    .get_item_comments(&parent_item_kids, &cached_comments_ids, false) // TODO: avoid .clone()
+                    .await?;
+                let comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
+                *fetched_comments.lock().await = Some(comments);
+                *fetching.lock().await = false;
+                Ok::<(), HnCliError>(())
+            });
         }
 
         self.common.loading = false;
@@ -195,7 +200,8 @@ impl UiComponent for ItemTopLevelComments {
             let new_focused_id = self
                 .common
                 .widget_state
-                .previous_main_comment(&parent_item_kids);
+                .previous_main_comment(&parent_item_kids)
+                .map(|(_, id)| id);
             ctx.get_state_mut()
                 .replace_latest_in_currently_viewed_item_comments_chain(new_focused_id);
             true
@@ -203,7 +209,8 @@ impl UiComponent for ItemTopLevelComments {
             let new_focused_id = self
                 .common
                 .widget_state
-                .next_main_comment(&parent_item_kids);
+                .next_main_comment(&parent_item_kids)
+                .map(|(_, id)| id);
             ctx.get_state_mut()
                 .replace_latest_in_currently_viewed_item_comments_chain(new_focused_id);
             true

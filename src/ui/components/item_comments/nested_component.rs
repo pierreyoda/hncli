@@ -83,43 +83,7 @@ impl UiComponent for CommentItemNestedComments {
             return Ok(());
         }
 
-        // Parent comments handling
-        let parent_comment_kids =
-            if let Some(kids) = Self::get_parent_comment_kids(ctx.get_state()).await {
-                kids
-            } else {
-                return Ok(());
-            };
-
-        // Comments fetching
-        let cached_comments_ids = ctx
-            .get_state()
-            .use_currently_viewed_item_comments(|cached_comments| {
-                cached_comments
-                    .unwrap_or(&DisplayableHackerNewsItemComments::new())
-                    .to_cached_ids()
-            })
-            .await;
-        let fetching = Arc::clone(&self.common.fetching);
-        let fetched_comments = Arc::clone(&self.common.fetched_comments);
-        let fetching_client = client.classic_non_blocking();
-        // fetching in a separate task to avoid blocking the async runtime
-        tokio::spawn(async move {
-            if *fetching.lock().await {
-                return Ok(());
-            }
-            *fetching.lock().await = true;
-            let comments_raw = fetching_client
-                .lock()
-                .await
-                .get_item_comments(&parent_comment_kids, &cached_comments_ids, false) // TODO: avoid .clone()
-                .await?;
-            let comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
-            *fetched_comments.lock().await = Some(comments);
-            *fetching.lock().await = false;
-            Ok::<(), HnCliError>(())
-        });
-
+        let mut fetched = false;
         if let Some(fetched_comments) = self.common.fetched_comments.lock().await.take() {
             ctx.get_state_mut()
                 .update_currently_viewed_item_comments(Some(fetched_comments))
@@ -142,6 +106,46 @@ impl UiComponent for CommentItemNestedComments {
                     Ok::<(), HnCliError>(())
                 })
                 .await?;
+            fetched = true;
+        }
+
+        if !fetched {
+            // Parent comments handling
+            let parent_comment_kids =
+                if let Some(kids) = Self::get_parent_comment_kids(ctx.get_state()).await {
+                    kids
+                } else {
+                    return Ok(());
+                };
+
+            // Comments fetching
+            let cached_comments_ids = ctx
+                .get_state()
+                .use_currently_viewed_item_comments(|cached_comments| {
+                    cached_comments
+                        .unwrap_or(&DisplayableHackerNewsItemComments::new())
+                        .to_cached_ids()
+                })
+                .await;
+            let fetching = Arc::clone(&self.common.fetching);
+            let fetched_comments = Arc::clone(&self.common.fetched_comments);
+            let fetching_client = client.classic_non_blocking();
+            // fetching in a separate task to avoid blocking the async runtime
+            tokio::spawn(async move {
+                if *fetching.lock().await {
+                    return Ok(());
+                }
+                *fetching.lock().await = true;
+                let comments_raw = fetching_client
+                    .lock()
+                    .await
+                    .get_item_comments(&parent_comment_kids, &cached_comments_ids, false) // TODO: avoid .clone()
+                    .await?;
+                let comments = DisplayableHackerNewsItem::transform_comments(comments_raw)?;
+                *fetched_comments.lock().await = Some(comments);
+                *fetching.lock().await = false;
+                Ok::<(), HnCliError>(())
+            });
         }
 
         self.common.loading = false;
@@ -162,12 +166,6 @@ impl UiComponent for CommentItemNestedComments {
     }
 
     async fn handle_inputs(&mut self, ctx: &mut AppContext) -> Result<bool> {
-        if ctx.get_inputs().is_active(&ApplicationAction::Back) {
-            // TODO: this should be handled at screen level but seems to be needed somehow
-            ctx.router_pop_navigation_stack();
-            return Ok(true);
-        }
-
         if self.common.loading || !self.common.inputs_debouncer.is_action_allowed() {
             return Ok(false);
         }
@@ -184,7 +182,8 @@ impl UiComponent for CommentItemNestedComments {
             let new_focused_id = self
                 .common
                 .widget_state
-                .previous_main_comment(parent_comment_kids.as_slice());
+                .previous_main_comment(parent_comment_kids.as_slice())
+                .map(|(_, id)| id);
             ctx.get_state_mut()
                 .replace_latest_in_currently_viewed_item_comments_chain(new_focused_id);
             true
@@ -198,7 +197,8 @@ impl UiComponent for CommentItemNestedComments {
             let new_focused_id = self
                 .common
                 .widget_state
-                .next_main_comment(parent_comment_kids.as_slice());
+                .next_main_comment(parent_comment_kids.as_slice())
+                .map(|(_, id)| id);
             ctx.get_state_mut()
                 .replace_latest_in_currently_viewed_item_comments_chain(new_focused_id);
             true

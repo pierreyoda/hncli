@@ -17,10 +17,8 @@ use super::corpus_widget::CommentWidget;
 /// Persistent state of `ItemCommentsWidget`.
 #[derive(Debug, Default)]
 pub struct ItemCommentsWidgetState {
-    /// ID of the currently focused comment.
-    focused_comment_id: Option<HnItemIdScalar>,
-    /// Index of the currently focused comment, among the parent item's kids (starts at 0).
-    focused_comment_index: Option<usize>,
+    /// Index (among the parent item's kids) and ID of the currently focused comment.
+    focused_comment: Option<(usize, HnItemIdScalar)>,
     /// Number of same-level comments currently being offered for display.
     focused_same_level_comments_count: usize,
     /// If Some, prepare to restore from history navigation state the focused comment.
@@ -40,21 +38,16 @@ impl ItemCommentsWidgetState {
     pub fn previous_main_comment(
         &mut self,
         parent_item_kids: &[HnItemIdScalar],
-    ) -> Option<HnItemIdScalar> {
+    ) -> &Option<(usize, HnItemIdScalar)> {
         self.focused_same_level_comments_count = parent_item_kids.len();
-        if let Some(focused_id) = self.focused_comment_id {
-            let focused_index = parent_item_kids
-                .iter()
-                .position(|id| id == &focused_id)
-                .unwrap_or(0);
+        if let Some((focused_index, _)) = self.focused_comment {
             let previous_index = if focused_index == 0 {
                 parent_item_kids.len() - 1
             } else {
                 focused_index - 1
             };
-            self.focused_comment_index = Some(previous_index);
-            self.focused_comment_id = Some(parent_item_kids[previous_index]);
-            self.focused_comment_id
+            self.focused_comment = Some((previous_index, parent_item_kids[previous_index]));
+            &self.focused_comment
         } else {
             self.reset_focused_comment(parent_item_kids)
         }
@@ -63,24 +56,19 @@ impl ItemCommentsWidgetState {
     pub fn next_main_comment(
         &mut self,
         parent_item_kids: &[HnItemIdScalar],
-    ) -> Option<HnItemIdScalar> {
+    ) -> &Option<(usize, HnItemIdScalar)> {
         self.focused_same_level_comments_count = parent_item_kids.len();
-        if let Some(focused_id) = self.focused_comment_id {
-            let focused_index = parent_item_kids
-                .iter()
-                .position(|id| id == &focused_id)
-                .unwrap_or(0);
+        if let Some((focused_index, _)) = self.focused_comment {
             let next_index = (focused_index + 1) % parent_item_kids.len();
-            self.focused_comment_index = Some(next_index);
-            self.focused_comment_id = Some(parent_item_kids[next_index]);
-            self.focused_comment_id
+            self.focused_comment = Some((next_index, parent_item_kids[next_index]));
+            &self.focused_comment
         } else {
             self.reset_focused_comment(parent_item_kids)
         }
     }
 
     pub fn get_focused_comment_id(&self) -> Option<HnItemIdScalar> {
-        self.focused_comment_id
+        self.focused_comment.map(|(_, id)| id)
     }
 
     pub fn restore_focused_comment_id(
@@ -91,8 +79,12 @@ impl ItemCommentsWidgetState {
         self.focused_same_level_comments_count = parent_item_kids.len();
         let comment_index = parent_item_kids.iter().position(|id| id == &comment_id);
         if let Some(index) = comment_index {
-            self.focused_comment_id = Some(comment_id);
-            self.focused_comment_index = Some(index);
+            self.focused_comment = Some((index, comment_id));
+        } else {
+            warn!(
+                "ItemCommentsWidgetState.restore_focused_comment_id: could not find comment ID: {comment_id}"
+            );
+            self.reset_focused_comment(parent_item_kids);
         }
     }
 
@@ -119,7 +111,18 @@ impl ItemCommentsWidgetState {
         // navigation history handling
         if let Some(history_focused_comment_id) = self.history_should_focus_comment_id {
             if comments.contains_key(&history_focused_comment_id) {
-                self.focused_comment_id = Some(history_focused_comment_id);
+                self.focused_comment = match parent_item_kids
+                    .iter()
+                    .position(|id| id == &history_focused_comment_id)
+                {
+                    Some(index) => Some((index, history_focused_comment_id)),
+                    None => {
+                        warn!(
+                            "ItemCommentsWidgetState.reconciliate_focused_comment: could not find comment ID: {history_focused_comment_id} among parent item kids"
+                        );
+                        None
+                    }
+                };
             } else {
                 warn!(
                     "ItemCommentsWidgetState.reconciliate_focused_comment: could not find comment ID: {history_focused_comment_id}"
@@ -128,8 +131,8 @@ impl ItemCommentsWidgetState {
             self.history_should_focus_comment_id = None;
         }
 
-        match self.focused_comment_id {
-            Some(comment_id) if comments.contains_key(&comment_id) => {
+        match self.focused_comment {
+            Some((_, comment_id)) if comments.contains_key(&comment_id) => {
                 self.focused_same_level_comments_count = parent_item_kids.len();
             }
             _ => {
@@ -143,16 +146,14 @@ impl ItemCommentsWidgetState {
     fn reset_focused_comment(
         &mut self,
         parent_item_kids: &[HnItemIdScalar],
-    ) -> Option<HnItemIdScalar> {
+    ) -> &Option<(usize, HnItemIdScalar)> {
         self.focused_same_level_comments_count = parent_item_kids.len();
-        let first_comment_id = parent_item_kids.first();
-        self.focused_comment_index = if first_comment_id.is_some() {
-            Some(0)
+        if let Some(first_comment_id) = parent_item_kids.first() {
+            self.focused_comment = Some((0, *first_comment_id));
         } else {
-            None
-        };
-        self.focused_comment_id = first_comment_id.cloned();
-        self.focused_comment_id
+            self.focused_comment = None;
+        }
+        &self.focused_comment
     }
 }
 
@@ -187,14 +188,15 @@ pub const FOOTER_HEIGHT: u16 = 1;
 impl<'a> Widget for ItemCommentsWidget<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         // No focused comment case
-        let focused_comment_id = if let Some(comment_id) = &self.state.focused_comment_id {
-            comment_id
-        } else {
-            return;
-        };
+        let (focused_comment_index, focused_comment_id) =
+            if let Some((index, comment_id)) = &self.state.focused_comment {
+                (*index, *comment_id)
+            } else {
+                return;
+            };
 
         // Current comment
-        let focused_comment = if let Some(comment) = self.comments.get(focused_comment_id) {
+        let focused_comment = if let Some(comment) = self.comments.get(&focused_comment_id) {
             comment
         } else {
             let prompt = "Loading the comment...";
@@ -219,11 +221,6 @@ impl<'a> Widget for ItemCommentsWidget<'a> {
 
         // Footer
         let focused_comment_kids_count = focused_comment.kids.as_ref().map_or(0, |kids| kids.len());
-        let focused_comment_index = if let Some(index) = self.state.focused_comment_index {
-            index
-        } else {
-            return;
-        };
         let footer_area = Rect::new(
             area.left(),
             area.bottom() - FOOTER_HEIGHT - PADDING,
