@@ -51,16 +51,16 @@ impl Screen for StoryDetailsScreen {
             state.push_currently_viewed_item_comments_chain(*first_comment_id);
         }
 
-        if state
-            .get_currently_viewed_item()
-            .as_ref()
-            .is_some_and(|item| item.is_job)
-        {
-            state.set_item_page_should_display_comments_panel(false);
-        } else {
-            state.set_item_page_should_display_comments_panel(
-                config.get_display_comments_panel_by_default(),
-            );
+        if let Some(item) = state.get_currently_viewed_item() {
+            if item.is_job {
+                state.set_item_page_should_display_comments_panel(false);
+            } else if item.text.is_none() {
+                state.set_item_page_should_display_comments_panel(true);
+            } else {
+                state.set_item_page_should_display_comments_panel(
+                    config.get_display_comments_panel_by_default(),
+                );
+            }
         }
     }
 
@@ -94,15 +94,18 @@ impl Screen for StoryDetailsScreen {
                 ScreenEventResponse::Caught,
                 Some(router.get_current_route().clone()),
             )
-        } else if inputs.is_active(&ApplicationAction::ItemToggleComments)
-            && !state
-                .get_currently_viewed_item()
-                .as_ref()
-                .is_some_and(|item| item.is_job)
-        {
-            state.set_item_page_should_display_comments_panel(
-                !state.get_item_page_should_display_comments_panel(),
-            );
+        } else if inputs.is_active(&ApplicationAction::ItemToggleComments) {
+            match state.get_currently_viewed_item() {
+                Some(item) if item.is_job => {
+                    state.set_item_page_should_display_comments_panel(false);
+                }
+                Some(item) if item.text.is_none() => {
+                    state.set_item_page_should_display_comments_panel(true);
+                }
+                _ => state.set_item_page_should_display_comments_panel(
+                    !state.get_item_page_should_display_comments_panel(),
+                ),
+            }
             (ScreenEventResponse::Caught, None)
         } else if inputs.is_active(&ApplicationAction::OpenHackerNewsLink) {
             let item_hn_link = self.item.get_hacker_news_link();
