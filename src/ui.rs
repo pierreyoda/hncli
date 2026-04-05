@@ -246,16 +246,19 @@ impl UserInterface {
                         } else {
                             clear_flash = true;
                         }
-                    } else if show_contextual_help {
-                        let app_context = app.get_context();
-                        let current_route = app_context.get_router().get_current_route();
-                        contextual_helper.render(
-                            frame,
-                            global_layout_chunks[1],
-                            current_route,
-                            app_context.get_state(),
-                            app_context.get_inputs(),
-                        );
+                    } else {
+                        flash_message_elapsed_ticks = 0;
+                        if show_contextual_help {
+                            let app_context = app.get_context();
+                            let current_route = app_context.get_router().get_current_route();
+                            contextual_helper.render(
+                                frame,
+                                global_layout_chunks[1],
+                                current_route,
+                                app_context.get_state(),
+                                app_context.get_inputs(),
+                            );
+                        }
                     }
 
                     if clear_flash {
