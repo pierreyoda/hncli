@@ -6,6 +6,7 @@ use ratatui::layout::Rect;
 use crate::{
     api::client::HnStoriesSections,
     config::AppConfiguration,
+    i18n::{TranslationEngine, TranslationLanguage, english::TranslationEngineEnglish},
     ui::{
         common::UiComponentId,
         handlers::{ApplicationAction, InputsController},
@@ -110,6 +111,8 @@ impl<'a> AppContext<'a> {
 /// Global application.
 #[derive(Debug)]
 pub struct App {
+    // Internationalization engines, each for one language.
+    i18n_en: TranslationEngineEnglish,
     /// Application state.
     state: AppState,
     /// Application router.

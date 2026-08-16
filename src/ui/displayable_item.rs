@@ -64,8 +64,6 @@ pub struct DisplayableHackerNewsItem {
     pub is_job: bool,
 }
 
-const MINUTES_PER_DAY: i64 = 24 * 60;
-
 impl DisplayableHackerNewsItem {
     pub fn get_hacker_news_link(&self) -> String {
         Self::hacker_news_link_for(self.id)
@@ -79,18 +77,6 @@ impl DisplayableHackerNewsItem {
         !self.is_comment
     }
 
-    pub fn formatted_posted_since(posted_at: &DateTime<Utc>) -> String {
-        let now = Utc::now();
-        let minutes = (now - *posted_at).num_minutes();
-        match minutes {
-            _ if minutes >= MINUTES_PER_DAY => {
-                format!("{} ago", Self::pluralized(minutes / MINUTES_PER_DAY, "day"))
-            }
-            _ if minutes >= 60 => format!("{} ago", Self::pluralized(minutes / 60, "hour")),
-            _ => format!("{} ago", Self::pluralized(minutes, "minute")),
-        }
-    }
-
     pub fn transform_comments(
         comments_raw: HnItemComments,
     ) -> Result<DisplayableHackerNewsItemComments> {
@@ -102,14 +88,6 @@ impl DisplayableHackerNewsItem {
             );
         }
         Ok(comments)
-    }
-
-    fn pluralized(value: i64, word: &str) -> String {
-        if value > 1 {
-            format!("{value} {word}s")
-        } else {
-            format!("{value} {word}")
-        }
     }
 }
 
