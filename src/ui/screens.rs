@@ -2,10 +2,7 @@ use std::{collections::HashMap, fmt::Debug};
 
 use ratatui::layout::Rect;
 
-use crate::{
-    app::{history::AppHistory, state::AppState},
-    config::AppConfiguration,
-};
+use crate::app::{AppContext, state::AppState};
 
 use super::{
     common::UiComponentId,
@@ -40,10 +37,10 @@ pub enum ScreenEventResponse {
 /// A Screen is a self-contained state of the application with its own update and rendering logic.
 pub trait Screen: Debug + Send + Sync {
     /// Called after instantiation and before mounting the screen.
-    fn before_mount(&mut self, _state: &mut AppState, _config: &AppConfiguration) {}
+    fn before_mount(&mut self, _ctx: &mut AppContext) {}
 
     /// Called before unmounting the screen.
-    fn before_unmount(&mut self, _state: &mut AppState, _history: &mut AppHistory) {}
+    fn before_unmount(&mut self, _ctx: &mut AppContext) {}
 
     /// Handle an incoming key event, at the application level.
     ///
@@ -62,4 +59,28 @@ pub trait Screen: Debug + Send + Sync {
         components_registry: &mut ScreenComponentsRegistry,
         state: &AppState,
     );
+}
+
+/// Inert `Screen`, standing in for the mounted screen while its lifecycle hooks
+/// run, since `AppContext` mutably borrows the currently mounted screen.
+#[derive(Debug)]
+pub struct PlaceholderScreen;
+
+impl Screen for PlaceholderScreen {
+    fn handle_inputs(
+        &mut self,
+        _inputs: &InputsController,
+        _router: &mut AppRouter,
+        _state: &mut AppState,
+    ) -> (ScreenEventResponse, Option<AppRoute>) {
+        (ScreenEventResponse::PassThrough, None)
+    }
+
+    fn compute_layout(
+        &self,
+        _frame_size: Rect,
+        _components_registry: &mut ScreenComponentsRegistry,
+        _state: &AppState,
+    ) {
+    }
 }

@@ -9,7 +9,10 @@ use ratatui::{
 
 use crate::{
     api::HnClient,
-    app::AppContext,
+    app::{
+        AppContext,
+        strings::{StringKey, StringValuesProvider},
+    },
     errors::Result,
     ui::{
         common::{RenderFrame, UiComponent, UiComponentId, UiTickScalar},
@@ -109,6 +112,7 @@ impl UiComponent for UserProfile {
     }
 
     fn render(&mut self, f: &mut RenderFrame, inside: Rect, ctx: &AppContext) -> Result<()> {
+        let svp = ctx.svp();
         let theme = ctx.get_theme();
 
         // Loading case
@@ -121,12 +125,7 @@ impl UiComponent for UserProfile {
         let viewed_user_id = if let Some(user_id) = ctx.get_state().get_currently_viewed_user_id() {
             user_id
         } else {
-            render_text_message(
-                f,
-                inside,
-                "Sorry, this user cannot be displayed due to an error.",
-                theme,
-            );
+            render_text_message(f, inside, &svp.v(StringKey::UserProfileError), theme);
             return Ok(());
         };
 
@@ -138,9 +137,9 @@ impl UiComponent for UserProfile {
             render_text_message(
                 f,
                 inside,
-                &format!(
-                    "The user data of '{viewed_user_id}' cannot be loaded, please retry later."
-                ),
+                &svp.v(StringKey::UserProfileFetchError {
+                    user_id: viewed_user_id,
+                }),
                 theme,
             );
             return Ok(());
@@ -153,10 +152,14 @@ impl UiComponent for UserProfile {
 
         let text_base = vec![
             Line::from(viewed_user.id.to_string()),
-            Line::from(format!("Created: {}", viewed_user.created_at_formatted)),
-            Line::from(format!("Karma: {}", viewed_user.karma)),
+            Line::from(svp.v(StringKey::UserProfileCreatedAt {
+                created_at: &viewed_user.created_at,
+            })),
+            Line::from(svp.v(StringKey::UserProfileKarma {
+                karma: viewed_user.karma,
+            })),
         ];
-        let about_corpus = self.build_user_about_spans(inside, &viewed_user.about)?;
+        let about_corpus = self.build_user_about_spans(inside, &viewed_user.about, svp)?;
 
         let paragraph = Paragraph::new([text_base, about_corpus].concat())
             .block(block)
@@ -172,6 +175,7 @@ impl UserProfile {
         &self,
         inside: Rect,
         about: &Option<String>,
+        svp: &dyn StringValuesProvider,
     ) -> Result<Vec<Line<'_>>> {
         Ok(if let Some(corpus) = about {
             let rendered = html_to_plain_text(corpus, inside.width as usize)?;
@@ -180,7 +184,11 @@ impl UserProfile {
                 .map(|line| Line::from(line.to_string()))
                 .collect();
             [
-                vec![Line::from(""), Line::from(""), Line::from("About:")],
+                vec![
+                    Line::from(""),
+                    Line::from(""),
+                    Line::from(svp.v(StringKey::UserProfileAbout)),
+                ],
                 spans,
             ]
             .concat()

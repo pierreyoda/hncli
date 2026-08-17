@@ -2,8 +2,7 @@ use ratatui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
     api::types::HnItemIdScalar,
-    app::state::AppState,
-    config::AppConfiguration,
+    app::{AppContext, state::AppState},
     ui::{
         components::{
             item_comments::COMMENT_ITEM_NESTED_COMMENTS_ID, item_summary::ITEM_SUMMARY_ID,
@@ -38,13 +37,13 @@ impl NestedCommentsScreen {
 }
 
 impl Screen for NestedCommentsScreen {
-    fn before_mount(&mut self, state: &mut AppState, _config: &AppConfiguration) {
+    fn before_mount(&mut self, ctx: &mut AppContext) {
         // When returning here from a deeper nesting level, the chain already
         // ends with this level's (parent, focused child) pair, restored by
         // `pop_currently_viewed_item_comments_chain`.
         // Pushing again here would duplicate the parent ID and reset the
         // focused child to the first kid, discarding the just-restored focus.
-        let chain = state.get_currently_viewed_item_comments_chain();
+        let chain = ctx.get_state().get_currently_viewed_item_comments_chain();
         if chain
             .len()
             .checked_sub(2)
@@ -54,6 +53,7 @@ impl Screen for NestedCommentsScreen {
             return;
         }
 
+        let state = ctx.get_state_mut();
         state.push_currently_viewed_item_comments_chain(self.parent_comment.id);
         state.push_currently_viewed_item_comments_chain(
             *Self::get_parent_comment_kids(&self.parent_comment)

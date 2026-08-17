@@ -1,11 +1,7 @@
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
-    app::{
-        history::{AppHistory, HistoryPersistCommand},
-        state::AppState,
-    },
-    config::AppConfiguration,
+    app::{AppContext, history::HistoryPersistCommand, state::AppState},
     ui::{
         components::{item_comments::ITEM_TOP_LEVEL_COMMENTS_ID, item_details::ITEM_DETAILS_ID},
         displayable_item::DisplayableHackerNewsItem,
@@ -43,7 +39,11 @@ impl StoryDetailsScreen {
 }
 
 impl Screen for StoryDetailsScreen {
-    fn before_mount(&mut self, state: &mut AppState, config: &AppConfiguration) {
+    fn before_mount(&mut self, ctx: &mut AppContext) {
+        let display_comments_panel_by_default =
+            ctx.get_config().get_display_comments_panel_by_default();
+
+        let state = ctx.get_state_mut();
         state.set_currently_viewed_item(Some(self.item.clone()));
         state.set_currently_viewed_item_has_switched(true);
 
@@ -60,18 +60,19 @@ impl Screen for StoryDetailsScreen {
             } else if item.text.is_none() {
                 state.set_item_page_should_display_comments_panel(true);
             } else {
-                state.set_item_page_should_display_comments_panel(
-                    config.get_display_comments_panel_by_default(),
-                );
+                state
+                    .set_item_page_should_display_comments_panel(display_comments_panel_by_default);
             }
         }
     }
 
-    fn before_unmount(&mut self, state: &mut AppState, history: &mut AppHistory) {
+    fn before_unmount(&mut self, ctx: &mut AppContext) {
         let mut history_commands: Vec<HistoryPersistCommand> = vec![];
         // navigation history handling, before any state reset
-        if let Some(focused_top_level_comment_id) =
-            state.get_currently_viewed_item_comments_chain().first()
+        if let Some(focused_top_level_comment_id) = ctx
+            .get_state()
+            .get_currently_viewed_item_comments_chain()
+            .first()
         {
             history_commands.push(HistoryPersistCommand::TopLevelCommentAdd {
                 story_id: self.item.id,
@@ -88,8 +89,9 @@ impl Screen for StoryDetailsScreen {
             });
         }
         // history persist to file
-        history.persist(&history_commands);
+        ctx.get_history_mut().persist(&history_commands);
 
+        let state = ctx.get_state_mut();
         state.reset_currently_viewed_item_comments_chain();
         state.set_currently_viewed_item_has_switched(true);
     }
