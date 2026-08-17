@@ -1,7 +1,7 @@
 use ratatui::layout::Rect;
 
 use crate::{
-    app::{history::AppHistory, state::AppState},
+    app::{AppContext, state::AppState},
     ui::{
         components::{navigation::NAVIGATION_ID, settings::SETTINGS_ID},
         flash::{FLASH_MESSAGE_DEFAULT_DURATION_MS, FlashMessage, FlashMessageType},
@@ -31,9 +31,12 @@ impl SettingsScreen {
 }
 
 impl Screen for SettingsScreen {
-    fn before_unmount(&mut self, state: &mut AppState, _history: &mut AppHistory) {
-        state.set_flash_message(FlashMessage::new(
-            "Settings successfully saved.",
+    fn before_unmount(&mut self, ctx: &mut AppContext) {
+        let flash_message = ctx
+            .svp()
+            .v(crate::app::strings::StringKey::SettingsSavedFlash);
+        ctx.get_state_mut().set_flash_message(FlashMessage::new(
+            flash_message,
             FlashMessageType::Info,
             FLASH_MESSAGE_DEFAULT_DURATION_MS,
         ));

@@ -1,11 +1,9 @@
 use chrono::{DateTime, Utc};
 
-use crate::api::types::HnItemIdScalar;
-
-pub mod english;
+pub mod values;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum TranslationKey<'a> {
+pub enum StringKey<'a> {
     // Common
     Loading,
     // Home screen stories list
@@ -54,14 +52,16 @@ pub enum TranslationKey<'a> {
     ItemResumeFetchError,
     ItemResumeError,
     ItemResumeNoItems,
-    ItemResumeLastRead,
+    ItemResumeLastRead {
+        since: &DateTime<Utc>,
+    },
     // User Profile
     UserProfileError,
     UserProfileFetchError {
-        user_id: HnItemIdScalar,
+        user_id: &'a str,
     },
     UserProfileCreatedAt {
-        created_at: DateTime<Utc>,
+        created_at: &'a DateTime<Utc>,
     },
     UserProfileKarma {
         karma: u32,
@@ -82,39 +82,12 @@ pub enum TranslationKey<'a> {
     SettingsSavedFlash,
     // Help
     HelpMultilineText,
-    // Contextual Help
-    ContextualHelpEscapeKey,
-    ContextualHelpEnterKey,
-    ContextualHelpBackspaceKey,
-    ContextualHelpTabKey,
-    ContextualHelpUpKey,
-    ContextualHelpDownKey,
-    ContextualHelpLeftKey,
-    ContextualHelpRightKey,
 }
 
-#[derive(Hash, Debug, PartialEq, Eq)]
-pub enum TranslationLanguage {
-    English,
-    French,
-    Spanish,
-}
-
-pub const MINUTES_PER_DAY: i64 = 24 * 60;
-
-pub fn pluralized(value: i64, word: &str) -> String {
-    if value > 1 {
-        format!("{value} {word}s")
-    } else {
-        format!("{value} {word}")
-    }
-}
-
-pub trait TranslationEngine {
-    fn t(key: TranslationKey) -> String;
-    fn t_multiline(key: TranslationKey) -> Vec<String>;
-    /// In English, formats dates just like on the official Hacker News website,
-    /// for instance "June 6, 2019".
-    fn t_date(date: &DateTime<Utc>) -> String;
-    fn t_since(date: &DateTime<Utc>) -> String;
+pub trait StringValuesProvider: Send + Sync {
+    fn v(&self, key: StringKey) -> String;
+    fn v_multiline(&self, key: StringKey) -> Vec<String>;
+    /// Formats dates just like on the official Hacker News website, for instance "June 6, 2019".
+    fn date(&self, date: &DateTime<Utc>) -> String;
+    fn since(&self, date: &DateTime<Utc>) -> String;
 }

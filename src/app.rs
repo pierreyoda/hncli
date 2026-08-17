@@ -5,13 +5,13 @@ use ratatui::layout::Rect;
 
 use crate::{
     api::client::HnStoriesSections,
+    app::strings::{StringValuesProvider, values::StringValuesProviderEnglish},
     config::AppConfiguration,
-    i18n::{TranslationEngine, TranslationLanguage, english::TranslationEngineEnglish},
     ui::{
         common::UiComponentId,
         handlers::{ApplicationAction, InputsController},
         router::{AppRoute, AppRouter},
-        screens::{Screen, ScreenComponentsRegistry, ScreenEventResponse},
+        screens::{PlaceholderScreen, Screen, ScreenComponentsRegistry, ScreenEventResponse},
         theme::UiTheme,
     },
 };
@@ -20,9 +20,11 @@ use self::{history::AppHistory, state::AppState};
 
 pub mod history;
 pub mod state;
+pub mod strings;
 
 /// Interact with application state from the components.
 pub struct AppContext<'a> {
+    strings_values_provider: &'a dyn StringValuesProvider,
     state: &'a mut AppState,
     router: &'a mut AppRouter,
     config: &'a mut AppConfiguration,
@@ -33,6 +35,11 @@ pub struct AppContext<'a> {
 }
 
 impl<'a> AppContext<'a> {
+    /// Get the rendered string values provider.
+    pub fn svp(&self) -> &dyn StringValuesProvider {
+        self.strings_values_provider
+    }
+
     pub fn get_state(&self) -> &AppState {
         self.state
     }
@@ -103,16 +110,19 @@ impl<'a> AppContext<'a> {
     }
 
     fn update_screen(&mut self) {
-        *self.screen = AppRouter::build_screen_from_route(self.router.get_current_route().clone());
-        self.screen.before_mount(self.state, self.config);
+        let mut screen =
+            AppRouter::build_screen_from_route(self.router.get_current_route().clone());
+        // the hook runs before the screen is stored, since the context borrows the current one
+        screen.before_mount(self);
+        *self.screen = screen;
     }
 }
 
 /// Global application.
 #[derive(Debug)]
 pub struct App {
-    // Internationalization engines, each for one language.
-    i18n_en: TranslationEngineEnglish,
+    // Application-wide rendered string values provider.
+    strings_provider: StringValuesProviderEnglish,
     /// Application state.
     state: AppState,
     /// Application router.
@@ -136,25 +146,29 @@ pub struct App {
 
 impl App {
     pub fn new(config: AppConfiguration) -> Self {
-        let mut state = AppState::from_config(&config);
+        let state = AppState::from_config(&config);
         let initial_route = AppRoute::Home(HnStoriesSections::Home);
-        let (router, current_screen) = AppRouter::new(initial_route, &mut state, &config);
+        let (router, initial_screen) = AppRouter::new(initial_route);
         let history = AppHistory::restored();
 
-        Self {
+        let mut app = Self {
+            strings_provider: StringValuesProviderEnglish,
             state,
             router,
             config,
             history,
-            current_screen,
+            current_screen: Box::new(PlaceholderScreen),
             inputs: InputsController::new(),
             layout_components: HashMap::new(),
-        }
+        };
+        app.mount_screen(initial_screen);
+        app
     }
 
     /// Get the context handle allowing components to interact with the application.
     pub fn get_context(&mut self) -> AppContext<'_> {
         AppContext {
+            strings_values_provider: &self.strings_provider,
             inputs: &self.inputs,
             state: &mut self.state,
             router: &mut self.router,
@@ -162,6 +176,24 @@ impl App {
             history: &mut self.history,
             screen: &mut self.current_screen,
         }
+    }
+
+    /// Mount the given screen as the current one, running its `before_mount` hook.
+    ///
+    /// The hook runs before the screen is stored, since `AppContext` mutably
+    /// borrows the currently mounted screen.
+    fn mount_screen(&mut self, mut screen: Box<dyn Screen>) {
+        screen.before_mount(&mut self.get_context());
+        self.current_screen = screen;
+    }
+
+    /// Unmount the current screen, running its `before_unmount` hook.
+    ///
+    /// The screen is moved out of `self` beforehand, since `AppContext` mutably
+    /// borrows the currently mounted screen.
+    fn unmount_current_screen(&mut self) {
+        let mut screen = std::mem::replace(&mut self.current_screen, Box::new(PlaceholderScreen));
+        screen.before_unmount(&mut self.get_context());
     }
 
     /// Inject an event to be processed into `InputsController`.
@@ -191,12 +223,9 @@ impl App {
                 .handle_inputs(&self.inputs, &mut self.router, &mut self.state);
         if let Some(route) = new_route {
             // screen unmount hook
-            self.current_screen
-                .before_unmount(&mut self.state, &mut self.history);
+            self.unmount_current_screen();
             // update the current screen if the route changed
-            self.current_screen = AppRouter::build_screen_from_route(route);
-            self.current_screen
-                .before_mount(&mut self.state, &self.config);
+            self.mount_screen(AppRouter::build_screen_from_route(route));
         }
         match response {
             ScreenEventResponse::Caught => false,
@@ -234,8 +263,7 @@ impl App {
 
     /// Unmount every screen of the navigation stack, from the current one down to the root.
     pub fn before_quit(&mut self) {
-        self.current_screen
-            .before_unmount(&mut self.state, &mut self.history);
+        self.unmount_current_screen();
         // parent screens are not instantiated: rebuild them from their route,
         // which fully determines their state
         let parent_routes: Vec<AppRoute> = self
@@ -245,8 +273,7 @@ impl App {
             .cloned()
             .collect();
         for route in parent_routes {
-            AppRouter::build_screen_from_route(route)
-                .before_unmount(&mut self.state, &mut self.history);
+            AppRouter::build_screen_from_route(route).before_unmount(&mut self.get_context());
         }
         self.history.persist(&[]);
     }

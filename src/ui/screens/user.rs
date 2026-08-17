@@ -1,8 +1,7 @@
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 
 use crate::{
-    app::state::AppState,
-    config::AppConfiguration,
+    app::{AppContext, state::AppState},
     ui::{
         components::user_profile::USER_PROFILE_ID,
         displayable_item::user::DisplayableHackerNewsUser,
@@ -30,8 +29,9 @@ impl UserDetailsScreen {
 }
 
 impl Screen for UserDetailsScreen {
-    fn before_mount(&mut self, state: &mut AppState, _config: &AppConfiguration) {
-        state.set_currently_viewed_user_id(Some(self.user_id.clone()));
+    fn before_mount(&mut self, ctx: &mut AppContext) {
+        ctx.get_state_mut()
+            .set_currently_viewed_user_id(Some(self.user_id.clone()));
     }
 
     fn handle_inputs(

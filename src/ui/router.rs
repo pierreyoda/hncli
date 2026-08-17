@@ -2,8 +2,6 @@ use std::fmt;
 
 use crate::{
     api::client::HnStoriesSections,
-    app::state::AppState,
-    config::AppConfiguration,
     ui::screens::{
         help::HelpScreen, home::HomeScreen, nested_comments::NestedCommentsScreen,
         resume::ResumeScreen, search_help::SearchHelpScreen, settings::SettingsScreen,
@@ -75,13 +73,9 @@ pub struct AppRouter {
 }
 
 impl AppRouter {
-    pub fn new(
-        initial_route: AppRoute,
-        state: &mut AppState,
-        config: &AppConfiguration,
-    ) -> (Self, Box<dyn Screen>) {
-        let mut initial_screen = Self::build_screen_from_route(initial_route.clone());
-        initial_screen.before_mount(state, config);
+    /// Build the router and its initial screen.
+    pub fn new(initial_route: AppRoute) -> (Self, Box<dyn Screen>) {
+        let initial_screen = Self::build_screen_from_route(initial_route.clone());
         (
             Self {
                 navigation_stack: vec![initial_route],

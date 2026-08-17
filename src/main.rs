@@ -14,7 +14,7 @@ mod api;
 mod app;
 mod config;
 mod errors;
-mod i18n;
+mod strings;
 mod ui;
 
 // TODO: set terminal title (dynamically if possible)

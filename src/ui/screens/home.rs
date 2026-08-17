@@ -2,8 +2,7 @@ use ratatui::layout::Rect;
 
 use crate::{
     api::client::HnStoriesSections,
-    app::state::AppState,
-    config::AppConfiguration,
+    app::{AppContext, state::AppState},
     ui::{
         components::{navigation::NAVIGATION_ID, options::OPTIONS_ID, stories::STORIES_PANEL_ID},
         handlers::InputsController,
@@ -49,7 +48,8 @@ impl HomeScreen {
 }
 
 impl Screen for HomeScreen {
-    fn before_mount(&mut self, state: &mut AppState, _config: &AppConfiguration) {
+    fn before_mount(&mut self, ctx: &mut AppContext) {
+        let state = ctx.get_state_mut();
         state.set_main_stories_section(self.section);
 
         // Restore the default focus to the stories list, matching the app's initial state.

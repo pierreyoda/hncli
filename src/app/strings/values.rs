@@ -1,16 +1,24 @@
-use std::fmt::format;
-
 use chrono::{DateTime, Utc};
 use log::warn;
 
-use crate::i18n::{MINUTES_PER_DAY, TranslationEngine, TranslationKey, pluralized};
+use crate::app::strings::{StringKey, StringValuesProvider};
+
+pub const MINUTES_PER_DAY: i64 = 24 * 60;
+
+pub fn pluralized(value: i64, word: &str) -> String {
+    if value > 1 {
+        format!("{value} {word}s")
+    } else {
+        format!("{value} {word}")
+    }
+}
 
 #[derive(Debug)]
-pub struct TranslationEngineEnglish;
+pub struct StringValuesProviderEnglish;
 
-impl TranslationEngine for TranslationEngineEnglish {
-    fn t(key: TranslationKey) -> String {
-        use TranslationKey::*;
+impl StringValuesProvider for StringValuesProviderEnglish {
+    fn v(&self, key: StringKey) -> String {
+        use StringKey::*;
         match key {
     // Common
     Loading => "Loading".into(),
@@ -31,29 +39,29 @@ impl TranslationEngine for TranslationEngineEnglish {
     NavbarHelp => "Help".into(),
     NavbarResume => "Resume".into(),
     // Item details
-    ItemDetailsMeta { score, by, posted_at } => format("{score} points by {by} {}", Self::t_since(posted_at)),
-    ItemDetailsCommentsCount { count } => format("{count} comments"),
+    ItemDetailsMeta { score, by, posted_at } => format!("{score} points by {by} {}", Self::t_since(posted_at)),
+    ItemDetailsCommentsCount { count } => format!("{count} comments"),
     // Item summary
     ItemSummaryParentCommentBy { parent_comment_by
-     } => format("Parent comment by: {parent_comment_by}"),
-    ItemSummarySubCommentLevel { level } => format("Sub-comment level: {level"),
+     } => format!("Parent comment by: {parent_comment_by}"),
+    ItemSummarySubCommentLevel { level } => format!("Sub-comment level: {level"),
     // Item comments
     ItemCommentsFetchError => "Comments fetching issue. Please retry later.".into(),
     ItemCommentsError => "An error has occurred on this thread. Please retry later.".into(),
     ItemCommentsNoComments => "No comments yet.".into(),
     ItemCommentsMeta { index, total, kids } => format!(
-        "Comment {} / {} | {}", index + 1, total, pluralized(kids, "sub-comment")
+        "Comment {} / {} | {}", index + 1, total, pluralized(kids as i64, "sub-comment")
     ),
     ItemCommentsLevelIndex,
     // Resume reading tab
-    ItemResumeFetchError,
-    ItemResumeError,
-    ItemResumeNoItems,
-    ItemResumeLastRead,
+    ItemResumeFetchError => "Could not open this Item, it may no longer be available.".into(),
+    ItemResumeError => "Could not open this Item, it may no longer be available.".into(),
+    ItemResumeNoItems => "No items in history.".into(),
+    ItemResumeLastRead {since}=> format!("last read {}", self.since(since)),
     // User Profile
     UserProfileError => "Sorry, this user cannot be displayed due to an error.".into(),
-    UserProfileFetchError { user_id: HnItemIdScalar } => format!("The user data of '{user_id}' cannot be loaded, please retry later."),
-    UserProfileCreatedAt { created_at },
+    UserProfileFetchError { user_id } => format!("The user data of '{user_id}' cannot be loaded, please retry later."),
+    UserProfileCreatedAt { created_at } => format("Created: {}", self.date(created_at)),
     UserProfileKarma { karma: u32 } => format!("Karma: {karma}"),
     UserProfileAbout => "About:".into(),
     // Settings
@@ -85,8 +93,8 @@ impl TranslationEngine for TranslationEngineEnglish {
     ContextualHelpRightKey => "right".into(),
 }}
 
-    fn t_multiline(key: TranslationKey) -> Vec<String> {
-        use TranslationKey::*;
+    fn v_multiline(&self, key: StringKey) -> Vec<String> {
+        use StringKey::*;
         match key {
             HelpMultilineText => todo!(),
             _ => {
@@ -96,11 +104,11 @@ impl TranslationEngine for TranslationEngineEnglish {
         }
     }
 
-    fn t_date(date: &DateTime<Utc>) -> String {
+    fn date(&self, date: &DateTime<Utc>) -> String {
         date.format("%B %d, %Y").to_string()
     }
 
-    fn t_since(date: &DateTime<Utc>) -> String {
+    fn since(&self, date: &DateTime<Utc>) -> String {
         let now = Utc::now();
         let minutes = (now - *date).num_minutes();
         match minutes {
