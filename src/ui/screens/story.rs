@@ -44,6 +44,14 @@ impl StoryDetailsScreen {
 
 impl Screen for StoryDetailsScreen {
     fn before_mount(&mut self, state: &mut AppState, config: &AppConfiguration) {
+        // The comments chain is only ever non-empty here if we're returning from a
+        // nested comments screen for this same item: `before_unmount` always clears
+        // it on a full exit, so an empty chain means this is a fresh entry into the item.
+        let returning_from_nested_comments = state
+            .get_currently_viewed_item()
+            .is_some_and(|item| item.id == self.item.id)
+            && !state.get_currently_viewed_item_comments_chain().is_empty();
+
         state.set_currently_viewed_item(Some(self.item.clone()));
         state.set_currently_viewed_item_has_switched(true);
 
@@ -57,7 +65,7 @@ impl Screen for StoryDetailsScreen {
         if let Some(item) = state.get_currently_viewed_item() {
             if item.is_job {
                 state.set_item_page_should_display_comments_panel(false);
-            } else if item.text.is_none() {
+            } else if item.text.is_none() || returning_from_nested_comments {
                 state.set_item_page_should_display_comments_panel(true);
             } else {
                 state.set_item_page_should_display_comments_panel(
