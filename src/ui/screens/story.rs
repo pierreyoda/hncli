@@ -52,14 +52,19 @@ impl Screen for StoryDetailsScreen {
             .is_some_and(|item| item.id == self.item.id)
             && !state.get_currently_viewed_item_comments_chain().is_empty();
 
-        state.set_currently_viewed_item(Some(self.item.clone()));
-        state.set_currently_viewed_item_has_switched(true);
+        // Re-initializing the chain here would reset the focus to the first
+        // top-level comment and wrongly flag an item switch, discarding the
+        // focused comment id that was just restored on the way back up.
+        if !returning_from_nested_comments {
+            state.set_currently_viewed_item(Some(self.item.clone()));
+            state.set_currently_viewed_item_has_switched(true);
 
-        state.reset_currently_viewed_item_comments_chain();
-        if let Some(item_kids) = self.item.kids.as_ref()
-            && let Some(first_comment_id) = item_kids.first()
-        {
-            state.push_currently_viewed_item_comments_chain(*first_comment_id);
+            state.reset_currently_viewed_item_comments_chain();
+            if let Some(item_kids) = self.item.kids.as_ref()
+                && let Some(first_comment_id) = item_kids.first()
+            {
+                state.push_currently_viewed_item_comments_chain(*first_comment_id);
+            }
         }
 
         if let Some(item) = state.get_currently_viewed_item() {

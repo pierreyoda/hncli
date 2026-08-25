@@ -132,16 +132,15 @@ impl UiComponent for ItemTopLevelComments {
                 .await;
             ctx.get_state()
                 .use_currently_viewed_item_comments(|comments| {
+                    // TODO: avoid cloning
+                    self.common.cached_comments = comments.cloned();
                     self.common.widget_state.update(
-                        &self
-                            .common
+                        self.common
                             .cached_comments
                             .as_ref()
                             .unwrap_or(&DisplayableHackerNewsItemComments::new()),
                         &Self::get_parent_item_kids(ctx.get_state())?,
                     );
-                    // TODO: avoid cloning
-                    self.common.cached_comments = comments.cloned();
                     Ok::<(), HnCliError>(())
                 })
                 .await?;
