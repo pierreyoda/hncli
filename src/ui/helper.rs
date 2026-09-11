@@ -66,7 +66,7 @@ impl ContextualHelper {
             AppRoute::SearchHelp => self.render_search_page_help(f, inside),
             // AppRoute::Search => self.render_search_page_help(f, inside),
             AppRoute::Settings => self.render_settings_page_help(f, inside),
-            AppRoute::Resume => self.render_resume_page_help(f, inside),
+            AppRoute::Resume => self.render_resume_page_help(f, inside, app_state),
             AppRoute::Help => self.render_help_page_help(f, inside),
         }
     }
@@ -187,9 +187,13 @@ impl ContextualHelper {
         Self::render_widgets(f, inside, &widgets);
     }
 
-    fn render_resume_page_help(&self, f: &mut RenderFrame, inside: Rect) {
+    fn render_resume_page_help(&self, f: &mut RenderFrame, inside: Rect, app_state: &AppState) {
         let widgets = vec![
-            HelpWidget::KeyReminder('c', "delete entry".into(), Key::Char('c')),
+            HelpWidget::KeyReminder('c', if app_state.get_resume_screen_confirming_deletion() {
+                "confirm deletion".into()
+            } else {
+                "delete entry".into()
+            }, Key::Char('c')),
             HelpWidget::KeyReminder('🎯', "go to item".into(), Key::Enter),
         ];
         Self::render_widgets(f, inside, &widgets);

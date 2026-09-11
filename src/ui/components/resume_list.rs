@@ -137,18 +137,29 @@ impl UiComponent for ResumeList {
         let selected = *self.list_state.selected();
         Ok(if inputs.is_active(&ApplicationAction::NavigateUp) {
             self.list_state.previous();
+            ctx.get_state_mut()
+                .set_resume_screen_confirming_deletion(false);
             true
         } else if inputs.is_active(&ApplicationAction::NavigateDown) {
             self.list_state.next();
+            ctx.get_state_mut()
+                .set_resume_screen_confirming_deletion(false);
             true
         } else if let Some(selected_index) = selected {
             let selected_item_id = self.list_state.get_items()[selected_index].get_id();
             if inputs.is_active(&ApplicationAction::ResumeClearEntry) {
-                ctx.get_history_mut()
-                    .persist(&[HistoryPersistCommand::ResumeRemove {
-                        item_id: selected_item_id,
-                    }]);
-                self.loaded = false;
+                if ctx.get_state().get_resume_screen_confirming_deletion() {
+                    ctx.get_history_mut()
+                        .persist(&[HistoryPersistCommand::ResumeRemove {
+                            item_id: selected_item_id,
+                        }]);
+                    ctx.get_state_mut()
+                        .set_resume_screen_confirming_deletion(false);
+                    self.loaded = false;
+                } else {
+                    ctx.get_state_mut()
+                        .set_resume_screen_confirming_deletion(true);
+                }
                 true
             } else if inputs.is_active(&ApplicationAction::OpenHackerNewsLink)
                 // the external URL of a stored Item, if any, is unknown until it is

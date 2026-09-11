@@ -51,6 +51,8 @@ pub struct AppState {
     currently_used_algolia_part: SearchScreenPart,
     /// The currently searched Hacker News Algolia category.
     currently_searched_algolia_category: Option<AlgoliaHnSearchTag>,
+    /// On the resume screen, is the user currently confirming the deletion of an item?
+    resume_screen_confirming_deletion: bool,
     /// Flash message to display globally. Automatically clears after the configured duration.
     flash_message: Option<FlashMessage>,
 }
@@ -73,6 +75,7 @@ impl AppState {
             currently_used_algolia_part: SearchScreenPart::Input,
             currently_searched_algolia_category: None,
             flash_message: None,
+            resume_screen_confirming_deletion: false,
         }
     }
 }
@@ -284,6 +287,16 @@ impl AppState {
         category: Option<AlgoliaHnSearchTag>,
     ) {
         self.currently_searched_algolia_category = category;
+    }
+
+    /// Get the is the user currently confirming the deletion of an item on the resume screen.
+    pub fn get_resume_screen_confirming_deletion(&self) -> bool {
+        self.resume_screen_confirming_deletion
+    }
+
+    /// Set the is the user currently confirming the deletion of an item on the resume screen.
+    pub fn set_resume_screen_confirming_deletion(&mut self, value: bool) {
+        self.resume_screen_confirming_deletion = value;
     }
 
     /// Get the currently active flash message, if any, and as mutable.
