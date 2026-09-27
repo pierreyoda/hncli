@@ -22,16 +22,16 @@ crossterm = "0.29.0"
 directories = "6.0.0"
 futures = "0.3.34"
 html2text = "0.17.1"
-log = "0.4.33"
+log = "0.4.34"
 num-traits = "0.2.19"
 ratatui = "0.30.2"
-reqwest = { version = "0.13.4", features = ["json"] }
+reqwest = { version = "0.13.5", features = ["json"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
 simplelog = "0.12.2"
-thiserror = "2.0.20"
+thiserror = "2.0.21"
 tokio = { version = "1.53.1", features = ["full"] }
-toml = { version = "1.1.4", features = ["serde"] }
+toml = { version = "1.1.6", features = ["serde"] }
 unicode-width = "0.2.2"
 url = "2.5.8"
 webbrowser = "1.2.4"
