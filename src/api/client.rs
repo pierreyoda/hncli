@@ -6,14 +6,12 @@ use reqwest::Client;
 
 use crate::errors::{HnCliError, Result};
 
-use super::types::{HnDead, HnDeleted, HnItem, HnItemIdScalar, HnUser};
+use super::{
+    types::{HnDead, HnDeleted, HnItem, HnItemIdScalar, HnUser},
+    with_retries,
+};
 
 const HACKER_NEWS_API_BASE_URL: &str = "https://hacker-news.firebaseio.com/v0";
-
-/// Maximum number of attempts for a single `get_item` fetch, before giving up.
-const GET_ITEM_MAX_ATTEMPTS: u8 = 3;
-/// Base delay between `get_item` retry attempts (multiplied by the attempt count).
-const GET_ITEM_RETRY_DELAY: Duration = Duration::from_millis(250);
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum HnStoriesSorting {
@@ -97,8 +95,18 @@ impl ClassicHnClient {
     /// From my own testing, unknown/inaccessible user accounts return the string "null".
     /// In such a case, we return the error `HnCliError::UserNotFound`.
     pub async fn get_user_data(&self, username: &str) -> Result<HnUser> {
-        let raw = self
-            .client
+        let raw = with_retries(|| self.get_user_data_raw(username)).await?;
+        // handle null case (not found or no public activity)
+        if raw == "null" {
+            return Err(HnCliError::UserNotFound(username.into()));
+        }
+        // general case
+        let user: HnUser = serde_json::from_str(&raw)?;
+        Ok(user)
+    }
+
+    async fn get_user_data_raw(&self, username: &str) -> Result<String> {
+        self.client
             .get(format!(
                 "{}/{}.json",
                 self.base_url,
@@ -108,14 +116,7 @@ impl ClassicHnClient {
             .await?
             .text()
             .await
-            .map_err(HnCliError::HttpError)?;
-        // handle null case (not found or no public activity)
-        if raw == "null" {
-            return Err(HnCliError::UserNotFound(username.into()));
-        }
-        // general case
-        let user: HnUser = serde_json::from_str(&raw)?;
-        Ok(user)
+            .map_err(HnCliError::HttpError)
     }
 
     /// Try to fetch the items of the home page, with the given sorting strategy.
@@ -141,13 +142,16 @@ impl ClassicHnClient {
         &self,
         sorting: &HnStoriesSorting,
     ) -> Result<Vec<HnItemIdScalar>> {
-        self.client
-            .get(format!("{}/{}.json", self.base_url, sorting.get_resource()))
-            .send()
-            .await?
-            .json()
-            .await
-            .map_err(HnCliError::HttpError)
+        with_retries(|| async {
+            self.client
+                .get(format!("{}/{}.json", self.base_url, sorting.get_resource()))
+                .send()
+                .await?
+                .json()
+                .await
+                .map_err(HnCliError::HttpError)
+        })
+        .await
     }
 
     /// Try to fetch the stories' IDs of the home page for the given section option.
@@ -155,13 +159,16 @@ impl ClassicHnClient {
         &self,
         section: &HnStoriesSections,
     ) -> Result<Vec<HnItemIdScalar>> {
-        self.client
-            .get(format!("{}/{}.json", self.base_url, section.get_resource()))
-            .send()
-            .await?
-            .json()
-            .await
-            .map_err(HnCliError::HttpError)
+        with_retries(|| async {
+            self.client
+                .get(format!("{}/{}.json", self.base_url, section.get_resource()))
+                .send()
+                .await?
+                .json()
+                .await
+                .map_err(HnCliError::HttpError)
+        })
+        .await
     }
 
     /// Try to fetch the comments of an item, starting from the main descendants.
@@ -226,17 +233,7 @@ impl ClassicHnClient {
     /// network hiccup should not permanently drop that item from the thread (it would
     /// otherwise silently never be fetched again for a long while, see `get_items`).
     pub async fn get_item(&self, id: HnItemIdScalar) -> Result<HnItem> {
-        let mut last_error = None;
-        for attempt in 0..GET_ITEM_MAX_ATTEMPTS {
-            if attempt > 0 {
-                tokio::time::sleep(GET_ITEM_RETRY_DELAY * attempt as u32).await;
-            }
-            match self.get_item_once(id).await {
-                Ok(item) => return Ok(item),
-                Err(err) => last_error = Some(err),
-            }
-        }
-        Err(last_error.expect("get_item: at least one attempt was made"))
+        with_retries(|| self.get_item_once(id)).await
     }
 
     async fn get_item_once(&self, id: HnItemIdScalar) -> Result<HnItem> {
