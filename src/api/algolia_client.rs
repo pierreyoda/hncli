@@ -62,17 +62,15 @@ impl AlgoliaHnClient {
         );
 
         // request
-        let result: AlgoliaHnStoriesHits = self
+        let raw = self
             .client
             .get(url)
             .send()
             .await?
             .text()
             .await
-            .map(|raw| {
-                serde_json::from_str(&raw).expect("api.algolia.search: deserialization should work")
-            })
             .map_err(HnCliError::HttpError)?;
+        let result: AlgoliaHnStoriesHits = serde_json::from_str(&raw)?;
 
         Ok(result)
     }
@@ -84,18 +82,15 @@ impl AlgoliaHnClient {
             self.base_url, ALGOLIA_HACKER_NEWS_API_MAX_HITS, query
         );
 
-        let result: AlgoliaHnCommentsHits = self
+        let raw = self
             .client
             .get(url)
             .send()
             .await?
             .text()
             .await
-            .map(|raw| {
-                serde_json::from_str(&raw)
-                    .expect("api.algolia.search_comments: deserialization should work")
-            })
             .map_err(HnCliError::HttpError)?;
+        let result: AlgoliaHnCommentsHits = serde_json::from_str(&raw)?;
 
         Ok(result)
     }
@@ -109,18 +104,15 @@ impl AlgoliaHnClient {
             AlgoliaHnSearchTag::AuthorUsername(username.into()).to_query()
         );
 
-        let result: AlgoliaHnStoriesHits = self
+        let raw = self
             .client
             .get(url)
             .send()
             .await?
             .text()
             .await
-            .map(|raw| {
-                serde_json::from_str(&raw)
-                    .expect("api.algolia.search_user_stories: deserialization should work")
-            })
             .map_err(HnCliError::HttpError)?;
+        let result: AlgoliaHnStoriesHits = serde_json::from_str(&raw)?;
 
         Ok(result)
     }

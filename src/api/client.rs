@@ -114,9 +114,7 @@ impl ClassicHnClient {
             return Err(HnCliError::UserNotFound(username.into()));
         }
         // general case
-        let user: HnUser = serde_json::from_str(&raw).unwrap_or_else(|_| {
-            panic!("api.get_user_data: deserialization should work for user with ID: {username}")
-        });
+        let user: HnUser = serde_json::from_str(&raw)?;
         Ok(user)
     }
 
@@ -242,33 +240,29 @@ impl ClassicHnClient {
     }
 
     async fn get_item_once(&self, id: HnItemIdScalar) -> Result<HnItem> {
-        self.client
+        let raw = self
+            .client
             .get(format!("{}/item/{}.json", self.base_url, id))
             .send()
             .await?
             .text()
             .await
-            .map(|raw| {
-                // handle null case
-                if raw == "null" {
-                    return HnItem::Null;
-                }
-                // handle deleted case
-                if let Ok(deleted) = serde_json::from_str::<HnDeleted>(&raw) {
-                    return HnItem::Deleted(deleted);
-                }
-                // handle dead case
-                if let Ok(dead) = serde_json::from_str::<HnDead>(&raw) {
-                    return HnItem::Dead(dead);
-                }
-                // general case
-                serde_json::from_str(&raw).unwrap_or_else(|_| {
-                    panic!(
-                        "api.classic.get_item: deserialization should work for item with ID: {id}"
-                    )
-                })
-            })
-            .map_err(HnCliError::HttpError)
+            .map_err(HnCliError::HttpError)?;
+
+        // handle null case
+        if raw == "null" {
+            return Ok(HnItem::Null);
+        }
+        // handle deleted case
+        if let Ok(deleted) = serde_json::from_str::<HnDeleted>(&raw) {
+            return Ok(HnItem::Deleted(deleted));
+        }
+        // handle dead case
+        if let Ok(dead) = serde_json::from_str::<HnDead>(&raw) {
+            return Ok(HnItem::Dead(dead));
+        }
+        // general case
+        Ok(serde_json::from_str(&raw)?)
     }
 
     /// Try to *concurrently* fetch multiple `HnItem`s by their given IDs.

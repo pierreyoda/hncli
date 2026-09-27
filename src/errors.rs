@@ -27,6 +27,8 @@ pub enum HnCliError {
     HistorySynchronizationError(String),
     #[error("URL parsing error")]
     UrlParsingError(#[from] ParseError),
+    #[error("JSON parsing error: {0}")]
+    JsonParsingError(#[from] serde_json::Error),
     #[error("The HN item with ID {0} was not found")]
     ItemNotFound(HnItemIdScalar),
     #[error("The HN user with ID {0} was not found")]
