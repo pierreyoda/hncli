@@ -4,14 +4,17 @@
     tag: string;
     subtitle?: string;
     changes?: readonly string[];
-  } & ({
-    media: "image";
-    imageSrc: string;
-    imageAlt: string;
-   } | {
-    media: "video";
-    videoSrc: string;
-   });
+  } & (
+    | {
+        media: "image";
+        imageSrc: string;
+        imageAlt: string;
+      }
+    | {
+        media: "video";
+        videoSrc: string;
+      }
+  );
 </script>
 
 <script lang="ts">
@@ -22,9 +25,7 @@
 
 <article class="entry">
   <div class="title">
-    <a href={resolve(`/changelog#${tag}`)} class="link">
-      #
-    </a>
+    <a href={resolve(`changelog#${tag}`)} class="link">#</a>
     <h2 class="tag" id={tag}>v{tag}</h2>
   </div>
   {#if subtitle}
@@ -54,7 +55,7 @@
       @apply flex items-center gap-2;
       @apply font-mono text-2xl font-semibold tracking-tight;
       .link {
-        @apply text-gray-300 hover:text-gray-500 transition-colors duration-500;
+        @apply text-gray-300 transition-colors duration-500 hover:text-gray-500;
       }
     }
     .media {

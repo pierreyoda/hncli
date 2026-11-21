@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Button from "$lib/Button.svelte";
+  import Button from "#lib/Button.svelte";
 </script>
 
 <section id="contribute" aria-label="Contribute to hncli" class="bg-gray-900 py-20 sm:py-6 md:py-12 mt-12">

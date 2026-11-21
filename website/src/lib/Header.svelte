@@ -3,25 +3,28 @@
 
   import ExternalLink from "./ExternalLink.svelte";
 
-  import GitHubLogo from "$lib/assets/github.svg";
-  import HnCliTextLogo from "$lib/assets/hncli-logo-text.png";
+  import GitHubLogo from "#lib/assets/github.svg";
+  import HnCliTextLogo from "#lib/assets/hncli-logo-text.png";
 </script>
 
 <header>
   <nav>
-    <a href={resolve("/")} aria-label="Home" class="flex flex-col items-center">
+    <a href={resolve("/", {})} aria-label="Home" class="flex flex-col items-center">
       <img alt="hncli logo" src={HnCliTextLogo} class="max-w-40 h-auto" />
       <h1 class="hidden">hncli</h1>
     </a>
   </nav>
+
   <div class="flex flex-col sm:flex-row items-center sm:pr-12 sm:justify-around pt-4 sm:pt-0 gap-6 md:gap-12">
-    <a href={resolve("/changelog")} class="text-4xl sm:text-3xl font-medium text-white"> Changelog </a>
+    <a href={resolve("changelog")} class="text-4xl sm:text-3xl font-medium text-white">Changelog</a>
+
     <ExternalLink
       href="https://www.newstackwhodis.com/blog/?tag=Rust"
       underline={false}
       red={false}
       extraClass="no-underline text-4xl sm:text-3xl font-medium">Blog</ExternalLink
     >
+
     <ExternalLink href="https://github.com/pierreyoda/hncli" red={false} extraClass="cursor-pointer">
       <img alt="GitHub logo" src={GitHubLogo} class="w-10 h-10 hover:opacity-80" />
     </ExternalLink>

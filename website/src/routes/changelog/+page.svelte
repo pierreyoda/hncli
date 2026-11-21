@@ -1,7 +1,7 @@
 <script lang="ts">
-  import ChangelogEntry, { type ChangelogEntryProps } from "$lib/content/ChangelogEntry.svelte";
-  import ChangelogImageResume from "$lib/assets/hncli-v0.5-resume.png";
-  import HnCliDemoVideo from "$lib/assets/hncli-demo.mp4";
+  import ChangelogEntry, { type ChangelogEntryProps } from "#lib/content/ChangelogEntry.svelte";
+  import ChangelogImageResume from "#lib/assets/hncli-v0.5-resume.png";
+  import HnCliDemoVideo from "#lib/assets/hncli-demo.mp4";
 
   const entries: readonly ChangelogEntryProps[] = [
     {
@@ -22,7 +22,7 @@
       subtitle: "First beta tagged version of hncli.",
       media: "video",
       videoSrc: HnCliDemoVideo,
-    }
+    },
   ];
 </script>
 

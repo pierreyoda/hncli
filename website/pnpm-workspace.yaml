@@ -1,0 +1,2 @@
+minimumReleaseAgeExclude:
+  - svelte@5.59.1

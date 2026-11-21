@@ -1,14 +1,16 @@
 <script lang="ts">
   import { resolve } from "$app/paths";
 
-  import ExternalLink from "$lib/ExternalLink.svelte";
+  import ExternalLink from "#lib/ExternalLink.svelte";
 </script>
 
 <section id="hero-title" aria-label="hero section title">
   <h2 class="text-4xl font-semibold tracking-tight text-gray-800">
     Browse
-    <ExternalLink extraClass="underline" href="https://news.ycombinator.com/">Hacker News</ExternalLink>&nbsp;from your
-    terminal.
+
+    <ExternalLink extraClass="underline" href="https://news.ycombinator.com/">Hacker News</ExternalLink>
+
+    from your terminal.
   </h2>
   <p class="mt-6 text-lg text-gray-600 font-medium">
     Convenient, fast, and will run well on most computers, even old ones.
@@ -21,7 +23,7 @@
       Concept, vision and UX</ExternalLink
     >
     <a
-      href={resolve("/changelog")}
+      href={resolve("changelog")}
       class="font-semibold transition-colors duration-400 ease-in-out text-hncli-dark-red hover:text-hncli-dark-red/60 underline"
     >
       Changelog

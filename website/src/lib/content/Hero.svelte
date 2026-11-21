@@ -1,6 +1,6 @@
 <script lang="ts">
   // TODO: better MP4 compression if possible
-  import HnCliDemoVideo from "$lib/assets/hncli-demo.mp4";
+  import HnCliDemoVideo from "#lib/assets/hncli-demo.mp4";
 </script>
 
 <section id="hero" aria-label="Hero section">

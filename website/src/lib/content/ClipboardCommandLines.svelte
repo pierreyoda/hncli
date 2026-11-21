@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Button from "$lib/Button.svelte";
-  import CopyIcon from "$lib/assets/copy.svg";
+  import Button from "#lib/Button.svelte";
+  import CopyIcon from "#lib/assets/copy.svg";
   import { writeToClipboard } from "../../utils";
 
   interface ClipboardCommandLinesProps {

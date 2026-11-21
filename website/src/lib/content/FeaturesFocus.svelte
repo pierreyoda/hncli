@@ -1,11 +1,11 @@
 <script lang="ts">
   import FeatureFocus from "./FeatureFocus.svelte";
 
-  import CommentsScreenshot from "$lib/assets/hncli-comments.webp";
-  import SettingsScreenshot from "$lib/assets/hncli-settings.webp";
-  import ThemingSystemScreenshot from "$lib/assets/hncli-theme.webp";
-  import ObsoleteSearchScreenshot from "$lib/assets/hncli-limited-search.png";
-  import ContextualHelpScreenshot from "$lib/assets/hncli-contextual-help.webp";
+  import CommentsScreenshot from "#lib/assets/hncli-comments.webp";
+  import SettingsScreenshot from "#lib/assets/hncli-settings.webp";
+  import ThemingSystemScreenshot from "#lib/assets/hncli-theme.webp";
+  import ObsoleteSearchScreenshot from "#lib/assets/hncli-limited-search.png";
+  import ContextualHelpScreenshot from "#lib/assets/hncli-contextual-help.webp";
 </script>
 
 <section id="screenshots" aria-label="hncli screenshots" class="features-container">

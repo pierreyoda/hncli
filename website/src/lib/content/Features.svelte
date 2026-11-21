@@ -1,11 +1,11 @@
 <script lang="ts">
   import FeatureCard from "./FeatureCard.svelte";
-  import ExternalLink from "$lib/ExternalLink.svelte";
+  import ExternalLink from "#lib/ExternalLink.svelte";
 
-  import BookLogo from "$lib/assets/book.svg";
-  import RustLangLogo from "$lib/assets/rust.svg";
-  import BookmarkLogo from "$lib/assets/bookmark.svg";
-  import CommandLineLogo from "$lib/assets/command-line.svg";
+  import BookLogo from "#lib/assets/book.svg";
+  import RustLangLogo from "#lib/assets/rust.svg";
+  import BookmarkLogo from "#lib/assets/bookmark.svg";
+  import CommandLineLogo from "#lib/assets/command-line.svg";
 </script>
 
 <section id="features" class="website-container mt-6">
